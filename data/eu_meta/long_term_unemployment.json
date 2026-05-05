@@ -1,0 +1,80 @@
+{
+  "code": "une_ltu_a",
+  "label": "Long-term unemployment by sex - annual data",
+  "updated": "2026-01-21T23:00:00+0100",
+  "dimensions": [
+    "freq",
+    "indic_em",
+    "age",
+    "sex",
+    "unit",
+    "geo",
+    "time"
+  ],
+  "categories": {
+    "freq": [
+      "A"
+    ],
+    "indic_em": [
+      "LTU",
+      "VLTU"
+    ],
+    "age": [
+      "Y15-74",
+      "Y20-64"
+    ],
+    "sex": [
+      "T",
+      "M",
+      "F"
+    ],
+    "unit": [
+      "THS_PER",
+      "PC_UNE",
+      "PC_ACT"
+    ],
+    "geo": [
+      "EU27_2020",
+      "EA21",
+      "EA20",
+      "BE",
+      "BG",
+      "CZ",
+      "DK",
+      "DE",
+      "EE",
+      "IE",
+      "EL",
+      "ES",
+      "FR",
+      "HR",
+      "IT",
+      "CY",
+      "LV",
+      "LT",
+      "LU",
+      "HU",
+      "MT",
+      "NL",
+      "AT",
+      "PL",
+      "PT",
+      "RO",
+      "SI",
+      "SK",
+      "FI",
+      "SE",
+      "IS",
+      "NO",
+      "CH",
+      "BA",
+      "ME",
+      "MK",
+      "RS",
+      "TR"
+    ],
+    "time": [
+      "2024"
+    ]
+  }
+}

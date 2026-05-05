@@ -1,0 +1,107 @@
+{
+  "code": "lfso_19plwk28",
+  "label": "Persons in employment by commuting time, educational attainment level and degree of urbanisation",
+  "updated": "2022-02-04T23:00:00+0100",
+  "dimensions": [
+    "freq",
+    "deg_urb",
+    "isced11",
+    "duration",
+    "age",
+    "sex",
+    "unit",
+    "geo",
+    "time"
+  ],
+  "categories": {
+    "freq": [
+      "A"
+    ],
+    "deg_urb": [
+      "TOTAL",
+      "DEG1",
+      "DEG2",
+      "DEG3",
+      "NRP"
+    ],
+    "isced11": [
+      "TOTAL",
+      "ED0-2",
+      "ED3_4",
+      "ED5-8",
+      "NRP"
+    ],
+    "duration": [
+      "MN0",
+      "MN1-9",
+      "MN1-14",
+      "MN_GE1",
+      "MN10-14",
+      "MN15-19",
+      "MN15-29",
+      "MN20-29",
+      "MN30-44",
+      "MN30-59",
+      "MN_GE30",
+      "MN45-59",
+      "MN_GE60",
+      "NRP"
+    ],
+    "age": [
+      "Y15-34",
+      "Y15-74",
+      "Y20-64",
+      "Y35-49",
+      "Y50-74"
+    ],
+    "sex": [
+      "T",
+      "M",
+      "F"
+    ],
+    "unit": [
+      "MN",
+      "THS_PER"
+    ],
+    "geo": [
+      "EU27_2020",
+      "EU28",
+      "EA19",
+      "BE",
+      "BG",
+      "CZ",
+      "DK",
+      "DE",
+      "EE",
+      "IE",
+      "EL",
+      "ES",
+      "FR",
+      "HR",
+      "IT",
+      "CY",
+      "LV",
+      "LT",
+      "LU",
+      "HU",
+      "MT",
+      "NL",
+      "AT",
+      "PL",
+      "PT",
+      "RO",
+      "SI",
+      "SK",
+      "FI",
+      "SE",
+      "IS",
+      "NO",
+      "CH",
+      "UK",
+      "TR"
+    ],
+    "time": [
+      "2019"
+    ]
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "code": "TESSI164",
+  "label": "Housing cost overburden rate by tenure status - EU-SILC survey",
+  "updated": "2026-01-30T23:00:00+0100",
+  "dimensions": [
+    "freq",
+    "unit",
+    "tenure",
+    "geo",
+    "time"
+  ],
+  "categories": {
+    "freq": [
+      "A"
+    ],
+    "unit": [
+      "PC"
+    ],
+    "tenure": [
+      "OWN_L",
+      "OWN_NL",
+      "RENT_MKT",
+      "RENT_FR"
+    ],
+    "geo": [
+      "EU27_2020",
+      "EU28",
+      "EU27_2007",
+      "EA21",
+      "EA20",
+      "EA19",
+      "BE",
+      "BG",
+      "CZ",
+      "DK",
+      "DE",
+      "EE",
+      "IE",
+      "EL",
+      "ES",
+      "FR",
+      "HR",
+      "IT",
+      "CY",
+      "LV",
+      "LT",
+      "LU",
+      "HU",
+      "MT",
+      "NL",
+      "AT",
+      "PL",
+      "PT",
+      "RO",
+      "SI",
+      "SK",
+      "FI",
+      "SE",
+      "IS",
+      "NO",
+      "CH",
+      "UK",
+      "ME",
+      "MK",
+      "AL",
+      "TR",
+      "RS",
+      "EA",
+      "EA18",
+      "EU",
+      "XK"
+    ],
+    "time": [
+      "2025"
+    ]
+  }
+}

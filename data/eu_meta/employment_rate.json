@@ -1,0 +1,83 @@
+{
+  "code": "lfsi_emp_a",
+  "label": "Employment and activity by sex and age - annual data",
+  "updated": "2026-01-21T23:00:00+0100",
+  "dimensions": [
+    "freq",
+    "indic_em",
+    "sex",
+    "age",
+    "unit",
+    "geo",
+    "time"
+  ],
+  "categories": {
+    "freq": [
+      "A"
+    ],
+    "indic_em": [
+      "ACT",
+      "EMP_LFS"
+    ],
+    "sex": [
+      "T",
+      "M",
+      "F"
+    ],
+    "age": [
+      "Y15-24",
+      "Y15-29",
+      "Y15-64",
+      "Y20-64",
+      "Y25-54",
+      "Y55-64"
+    ],
+    "unit": [
+      "THS_PER",
+      "PC_POP"
+    ],
+    "geo": [
+      "EU27_2020",
+      "EA21",
+      "EA20",
+      "BE",
+      "BG",
+      "CZ",
+      "DK",
+      "DE",
+      "EE",
+      "IE",
+      "EL",
+      "ES",
+      "FR",
+      "HR",
+      "IT",
+      "CY",
+      "LV",
+      "LT",
+      "LU",
+      "HU",
+      "MT",
+      "NL",
+      "AT",
+      "PL",
+      "PT",
+      "RO",
+      "SI",
+      "SK",
+      "FI",
+      "SE",
+      "IS",
+      "NO",
+      "CH",
+      "BA",
+      "ME",
+      "MK",
+      "RS",
+      "TR"
+    ],
+    "time": [
+      "2024"
+    ]
+  }
+}

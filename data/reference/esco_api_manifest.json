@@ -1,0 +1,23 @@
+{
+  "generated_at": "2026-03-13T11:49:57.969368+00:00",
+  "source": "official_esco_api",
+  "version": "v1.2.1",
+  "language": "en",
+  "assets": [
+    {
+      "asset_type": "esco_occupations",
+      "rows": 100,
+      "output": "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/reference/esco_occupations.parquet"
+    },
+    {
+      "asset_type": "esco_skills",
+      "rows": 300,
+      "output": "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/reference/esco_skills.parquet"
+    },
+    {
+      "asset_type": "esco_occupation_skill_relations",
+      "rows": 2401,
+      "output": "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/reference/esco_occupation_skill_relations.parquet"
+    }
+  ]
+}

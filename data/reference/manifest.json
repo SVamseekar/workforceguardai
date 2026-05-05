@@ -1,0 +1,35 @@
+{
+  "generated_at": "2026-03-13T12:21:18.750938+00:00",
+  "sources": {
+    "esco_download_page": "https://esco.ec.europa.eu/en/use-esco/download",
+    "esco_crosswalk_page": "https://esco.ec.europa.eu/en/use-esco/other-crosswalks",
+    "esco_nace_crosswalk_file": "https://esco.ec.europa.eu/system/files/2026-02/ESCO-NACE%20rev.%202.1%20crosswalk.xlsx"
+  },
+  "assets": [
+    {
+      "asset_type": "esco_occupations",
+      "version": "1.2.1",
+      "record_count": 3039,
+      "output": "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/reference/esco_occupations.parquet"
+    },
+    {
+      "asset_type": "esco_skills",
+      "version": "1.2.1",
+      "record_count": 13939,
+      "output": "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/reference/esco_skills.parquet"
+    },
+    {
+      "asset_type": "esco_occupation_skill_relations",
+      "version": "1.2.1",
+      "record_count": 126051,
+      "output": "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/reference/esco_occupation_skill_relations.parquet"
+    },
+    {
+      "asset_type": "esco_nace_crosswalk",
+      "version": "2026-rev2.1",
+      "record_count": 4564,
+      "output": "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/reference/esco_nace_crosswalk.parquet"
+    }
+  ],
+  "missing_inputs": []
+}

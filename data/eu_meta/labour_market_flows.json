@@ -1,0 +1,87 @@
+{
+  "code": "lfsi_long_q",
+  "label": "Labour market transitions - quarterly data",
+  "updated": "2026-03-12T23:00:00+0100",
+  "dimensions": [
+    "freq",
+    "unit",
+    "s_adj",
+    "indic_em",
+    "sex",
+    "geo",
+    "time"
+  ],
+  "categories": {
+    "freq": [
+      "Q"
+    ],
+    "unit": [
+      "THS_PER",
+      "PC_EMP",
+      "PC_UNE",
+      "PC_INAC"
+    ],
+    "s_adj": [
+      "NSA",
+      "SA"
+    ],
+    "indic_em": [
+      "E_E",
+      "E_U",
+      "E_I",
+      "U_E",
+      "U_U",
+      "U_I",
+      "I_E",
+      "I_U",
+      "I_I"
+    ],
+    "sex": [
+      "T",
+      "M",
+      "F"
+    ],
+    "geo": [
+      "EU27_2020",
+      "EA21",
+      "BE",
+      "BG",
+      "CZ",
+      "DK",
+      "DE",
+      "EE",
+      "IE",
+      "EL",
+      "ES",
+      "FR",
+      "HR",
+      "IT",
+      "CY",
+      "LV",
+      "LT",
+      "LU",
+      "HU",
+      "NL",
+      "AT",
+      "PL",
+      "PT",
+      "RO",
+      "SI",
+      "SK",
+      "FI",
+      "SE",
+      "IS",
+      "NO",
+      "CH",
+      "UK",
+      "BA",
+      "ME",
+      "MK",
+      "RS",
+      "TR"
+    ],
+    "time": [
+      "2025-Q4"
+    ]
+  }
+}

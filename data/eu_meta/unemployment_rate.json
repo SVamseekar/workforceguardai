@@ -1,0 +1,80 @@
+{
+  "code": "une_rt_a",
+  "label": "Unemployment by sex and age - annual data",
+  "updated": "2026-01-21T23:00:00+0100",
+  "dimensions": [
+    "freq",
+    "age",
+    "unit",
+    "sex",
+    "geo",
+    "time"
+  ],
+  "categories": {
+    "freq": [
+      "A"
+    ],
+    "age": [
+      "Y15-24",
+      "Y15-29",
+      "Y15-74",
+      "Y20-64",
+      "Y25-54",
+      "Y25-74",
+      "Y55-74"
+    ],
+    "unit": [
+      "THS_PER",
+      "PC_POP",
+      "PC_ACT"
+    ],
+    "sex": [
+      "T",
+      "M",
+      "F"
+    ],
+    "geo": [
+      "EU27_2020",
+      "EA21",
+      "EA20",
+      "BE",
+      "BG",
+      "CZ",
+      "DK",
+      "DE",
+      "EE",
+      "IE",
+      "EL",
+      "ES",
+      "FR",
+      "HR",
+      "IT",
+      "CY",
+      "LV",
+      "LT",
+      "LU",
+      "HU",
+      "MT",
+      "NL",
+      "AT",
+      "PL",
+      "PT",
+      "RO",
+      "SI",
+      "SK",
+      "FI",
+      "SE",
+      "IS",
+      "NO",
+      "CH",
+      "BA",
+      "ME",
+      "MK",
+      "RS",
+      "TR"
+    ],
+    "time": [
+      "2024"
+    ]
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "code": "TESSI162",
+  "label": "Housing cost overburden rate by income quintile - EU-SILC survey",
+  "updated": "2026-01-30T23:00:00+0100",
+  "dimensions": [
+    "freq",
+    "unit",
+    "quantile",
+    "geo",
+    "time"
+  ],
+  "categories": {
+    "freq": [
+      "A"
+    ],
+    "unit": [
+      "PC"
+    ],
+    "quantile": [
+      "QU1",
+      "QU2",
+      "QU3",
+      "QU4",
+      "QU5"
+    ],
+    "geo": [
+      "EU27_2020",
+      "EU28",
+      "EU27_2007",
+      "EA21",
+      "EA20",
+      "EA19",
+      "BE",
+      "BG",
+      "CZ",
+      "DK",
+      "DE",
+      "EE",
+      "IE",
+      "EL",
+      "ES",
+      "FR",
+      "HR",
+      "IT",
+      "CY",
+      "LV",
+      "LT",
+      "LU",
+      "HU",
+      "MT",
+      "NL",
+      "AT",
+      "PL",
+      "PT",
+      "RO",
+      "SI",
+      "SK",
+      "FI",
+      "SE",
+      "IS",
+      "NO",
+      "CH",
+      "UK",
+      "ME",
+      "MK",
+      "AL",
+      "TR",
+      "RS",
+      "EA",
+      "EA18",
+      "EU",
+      "XK"
+    ],
+    "time": [
+      "2025"
+    ]
+  }
+}

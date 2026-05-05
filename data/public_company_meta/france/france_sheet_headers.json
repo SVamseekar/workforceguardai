@@ -1,0 +1,27 @@
+{
+  "Données publiques Index Egapro": {
+    "header_row": 0,
+    "columns": [
+      "Année",
+      "Structure",
+      "Tranche d'effectifs",
+      "SIREN",
+      "Raison Sociale",
+      "Nom UES",
+      "Entreprises UES (SIREN)",
+      "Région",
+      "Département",
+      "Pays",
+      "Code NAF",
+      "Note Ecart rémunération",
+      "Note Ecart taux d'augmentation (hors promotion)",
+      "Note Ecart taux de promotion",
+      "Note Ecart taux d'augmentation",
+      "Note Retour congé maternité",
+      "Note Hautes rémunérations",
+      "Note Index"
+    ],
+    "num_rows": 212991,
+    "num_cols": 18
+  }
+}

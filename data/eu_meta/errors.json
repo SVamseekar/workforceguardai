@@ -1,0 +1,12 @@
+[
+  {
+    "dataset": "labour_market_flows",
+    "code": "lfsi_long_q",
+    "error": "HTTPSConnectionPool(host='ec.europa.eu', port=443): Max retries exceeded with url: /eurostat/api/dissemination/statistics/1.0/data/lfsi_long_q?lang=EN&lastTimePeriod=1 (Caused by NameResolutionError(\"HTTPSConnection(host='ec.europa.eu', port=443): Failed to resolve 'ec.europa.eu' ([Errno 8] nodename nor servname provided, or not known)\"))"
+  },
+  {
+    "dataset": "labour_market_slack",
+    "code": "lfsi_sla_q",
+    "error": "HTTPSConnectionPool(host='ec.europa.eu', port=443): Max retries exceeded with url: /eurostat/api/dissemination/statistics/1.0/data/lfsi_sla_q?lang=EN&lastTimePeriod=1 (Caused by NameResolutionError(\"HTTPSConnection(host='ec.europa.eu', port=443): Failed to resolve 'ec.europa.eu' ([Errno 8] nodename nor servname provided, or not known)\"))"
+  }
+]

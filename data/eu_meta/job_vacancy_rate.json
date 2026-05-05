@@ -1,0 +1,105 @@
+{
+  "code": "jvs_q_nace2",
+  "label": "Job vacancy statistics by NACE Rev. 2 activity - quarterly data (from 2001 onwards)",
+  "updated": "2026-01-28T23:00:00+0100",
+  "dimensions": [
+    "freq",
+    "s_adj",
+    "nace_r2",
+    "sizeclas",
+    "indic_em",
+    "geo",
+    "time"
+  ],
+  "categories": {
+    "freq": [
+      "Q"
+    ],
+    "s_adj": [
+      "NSA",
+      "SA"
+    ],
+    "nace_r2": [
+      "A-S",
+      "A",
+      "B-S",
+      "B-N",
+      "B-F",
+      "B-E",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+      "G-N",
+      "G-I",
+      "G",
+      "H",
+      "I",
+      "J",
+      "K",
+      "L",
+      "M_N",
+      "M",
+      "N",
+      "O-S",
+      "O-Q",
+      "O",
+      "P",
+      "Q",
+      "R_S",
+      "R",
+      "S"
+    ],
+    "sizeclas": [
+      "TOTAL",
+      "GE10"
+    ],
+    "indic_em": [
+      "JOBVAC",
+      "JOBOCC",
+      "JVR",
+      "JVRCH_Q"
+    ],
+    "geo": [
+      "EU27_2020",
+      "EA20",
+      "BE",
+      "BG",
+      "CZ",
+      "DK",
+      "DE",
+      "EE",
+      "IE",
+      "EL",
+      "ES",
+      "FR",
+      "HR",
+      "IT",
+      "CY",
+      "LV",
+      "LT",
+      "LU",
+      "HU",
+      "MT",
+      "NL",
+      "AT",
+      "PL",
+      "PT",
+      "RO",
+      "SI",
+      "SK",
+      "FI",
+      "SE",
+      "IS",
+      "NO",
+      "CH",
+      "UK",
+      "MK",
+      "TR"
+    ],
+    "time": [
+      "2025-Q3"
+    ]
+  }
+}

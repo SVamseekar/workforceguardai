@@ -1,0 +1,33 @@
+{
+  "chosen_sheet": "Données publiques Index Egapro",
+  "detected_header_row": 0,
+  "mapped_columns": {
+    "employer_name": "Raison Sociale",
+    "employer_id": "SIREN",
+    "reporting_year": "Année",
+    "overall_score": "Note Index",
+    "pay_gap_indicator_score": "Note Ecart rémunération",
+    "promotion_gap_score": "Note Ecart taux de promotion",
+    "maternity_return_score": "Note Retour congé maternité",
+    "top10_underrepresented_gender_score": "Note Hautes rémunérations",
+    "effectif": "Tranche d'effectifs"
+  },
+  "unmatched_columns": [
+    "Structure",
+    "Nom UES",
+    "Entreprises UES (SIREN)",
+    "Région",
+    "Département",
+    "Pays",
+    "Code NAF",
+    "Note Ecart taux d'augmentation (hors promotion)",
+    "Note Ecart taux d'augmentation"
+  ],
+  "num_candidate_rows_total": 107,
+  "num_totalenergies_candidates": 66,
+  "num_edf_candidates": 41,
+  "num_selected_benchmarks": 2,
+  "source_url": "https://www.data.gouv.fr/api/1/datasets/r/d434859f-8d3b-4381-bcdb-ec9200653ae6",
+  "source_published_at": "2026-04-13",
+  "source_retrieved_at": "2026-04-15T07:57:05.667898+00:00"
+}

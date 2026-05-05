@@ -1,0 +1,111 @@
+{
+  "code": "ilc_di03",
+  "label": "Mean and median income by age and sex",
+  "updated": "2026-01-30T23:00:00+0100",
+  "dimensions": [
+    "freq",
+    "age",
+    "sex",
+    "indic_il",
+    "unit",
+    "geo",
+    "time"
+  ],
+  "categories": {
+    "freq": [
+      "A"
+    ],
+    "age": [
+      "TOTAL",
+      "Y_LT6",
+      "Y6-10",
+      "Y6-11",
+      "Y11-15",
+      "Y12-17",
+      "Y_LT16",
+      "Y16-24",
+      "Y16-64",
+      "Y_GE16",
+      "Y_LT18",
+      "Y18-24",
+      "Y18-64",
+      "Y_GE18",
+      "Y25-49",
+      "Y25-54",
+      "Y50-64",
+      "Y55-64",
+      "Y_LT60",
+      "Y_GE60",
+      "Y_LT65",
+      "Y65-74",
+      "Y_GE65",
+      "Y_LT75",
+      "Y_GE75"
+    ],
+    "sex": [
+      "T",
+      "M",
+      "F"
+    ],
+    "indic_il": [
+      "MEI_E",
+      "MED_E"
+    ],
+    "unit": [
+      "EUR",
+      "NAC",
+      "PPS"
+    ],
+    "geo": [
+      "EU",
+      "EU27_2020",
+      "EU28",
+      "EU27_2007",
+      "EU15",
+      "EA",
+      "EA20",
+      "EA19",
+      "EA18",
+      "BE",
+      "BG",
+      "CZ",
+      "DK",
+      "DE",
+      "EE",
+      "IE",
+      "EL",
+      "ES",
+      "FR",
+      "HR",
+      "IT",
+      "CY",
+      "LV",
+      "LT",
+      "LU",
+      "HU",
+      "MT",
+      "NL",
+      "AT",
+      "PL",
+      "PT",
+      "RO",
+      "SI",
+      "SK",
+      "FI",
+      "SE",
+      "IS",
+      "NO",
+      "CH",
+      "UK",
+      "ME",
+      "MK",
+      "AL",
+      "RS",
+      "TR",
+      "XK"
+    ],
+    "time": [
+      "2025"
+    ]
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "code": "earn_gr_gpgr2ag",
+  "label": "Gender pay gap in unadjusted form by age - NACE Rev. 2 activity (B-S except O), structure of earnings survey methodology",
+  "updated": "2025-02-21T23:00:00+0100",
+  "dimensions": [
+    "freq",
+    "unit",
+    "age",
+    "geo",
+    "time"
+  ],
+  "categories": {
+    "freq": [
+      "A"
+    ],
+    "unit": [
+      "PC"
+    ],
+    "age": [
+      "Y_LT25",
+      "Y25-34",
+      "Y35-44",
+      "Y45-54",
+      "Y55-64",
+      "Y_GE65"
+    ],
+    "geo": [
+      "BE",
+      "BG",
+      "CZ",
+      "DK",
+      "DE",
+      "EE",
+      "IE",
+      "EL",
+      "ES",
+      "FR",
+      "HR",
+      "IT",
+      "CY",
+      "LV",
+      "LT",
+      "LU",
+      "HU",
+      "MT",
+      "NL",
+      "AT",
+      "PL",
+      "PT",
+      "RO",
+      "SI",
+      "SK",
+      "FI",
+      "SE",
+      "IS",
+      "NO",
+      "CH",
+      "UK",
+      "ME",
+      "MK",
+      "AL",
+      "RS",
+      "TR"
+    ],
+    "time": [
+      "2023"
+    ]
+  }
+}
