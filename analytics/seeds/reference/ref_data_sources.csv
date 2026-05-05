@@ -1,0 +1,12 @@
+source_id,source_name,source_family,source_version,coverage_notes
+eurostat_lfs,Eurostat Labour Force Survey,eurostat,2026-Q1,"Primary labour-market reference for employment, unemployment, and labour-market transitions."
+eurostat_jvs,Eurostat Job Vacancy Statistics,eurostat,2026-Q1,"Primary vacancy and labour-demand reference by sector."
+esco_taxonomy,ESCO taxonomy,esco,1.2.1,"European occupations and skills backbone for standardised workforce semantics."
+esco_nace_crosswalk,ESCO-NACE crosswalk,esco,2026-rev2.1,"Official bridge between occupations and economic sectors."
+cedefop_skills,Cedefop skills intelligence,cedefop,2026,"Skills demand and transition context for later phases."
+eurofound_conditions,Eurofound working conditions,eurofound,2026,"Working-conditions context for workforce quality and retention signals."
+internal_payroll_snapshot,Internal payroll snapshot,internal,local,"Employer-provided payroll snapshot used for company-aware benchmarking in Phase 3."
+internal_job_architecture,Internal job architecture,internal,local,"Employer-provided role and worker-category mapping used to align internal jobs for Phase 3."
+internal_hris_workforce_snapshot,Internal HRIS workforce snapshot,internal,local,"Employer-provided HRIS workforce snapshot used for internal composition and workforce condition benchmarking in Phase 3."
+internal_ats_requisition_snapshot,Internal ATS requisition snapshot,internal,local,"Employer-provided recruiting requisition snapshot used to compare internal hiring demand against external market scarcity in Phase 3."
+internal_learning_skill_snapshot,Internal learning skill snapshot,internal,local,"Employer-provided employee skill snapshot used to compare internal skill coverage against transition-readiness signals in Phase 3."

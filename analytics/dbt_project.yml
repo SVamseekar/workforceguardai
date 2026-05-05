@@ -1,0 +1,38 @@
+name: workforceguard_analytics
+version: 0.1.0
+config-version: 2
+
+profile: workforceguard_analytics
+
+model-paths:
+  - models
+seed-paths:
+  - seeds
+macro-paths:
+  - macros
+test-paths:
+  - tests
+
+clean-targets:
+  - target
+  - dbt_packages
+
+vars:
+  eu_raw_path: "data/eu_raw"
+  internal_path: "data/internal"
+  reference_path: "data/reference"
+  metric_registry_seed_version: "2026.03"
+
+models:
+  workforceguard_analytics:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table
+
+seeds:
+  workforceguard_analytics:
+    reference:
+      +quote_columns: false
+    governance:
+      +quote_columns: false

@@ -1,0 +1,58 @@
+version: 2
+
+models:
+  - name: dim_worker_category
+    description: Explicit worker-category dimension derived from the internal job architecture.
+    columns:
+      - name: worker_category_id
+        tests:
+          - unique
+          - not_null
+
+  - name: fct_internal_pay_snapshot
+    description: Internal pay snapshot facts aggregated by country, worker category, and snapshot date.
+    columns:
+      - name: internal_pay_snapshot_id
+        tests:
+          - unique
+          - not_null
+
+  - name: mart_internal_market_pay_benchmark
+    description: Directional internal-vs-market pay benchmark using the latest internal pay snapshot and broad market pay-gap comparator.
+    columns:
+      - name: benchmark_row_id
+        tests:
+          - unique
+          - not_null
+
+  - name: fct_internal_workforce_snapshot
+    description: Internal HRIS workforce facts aggregated by country, worker category, and snapshot date.
+    columns:
+      - name: internal_workforce_snapshot_id
+        tests:
+          - unique
+          - not_null
+
+  - name: fct_internal_hiring_demand
+    description: Internal ATS hiring-demand facts aggregated by country and worker category.
+    columns:
+      - name: internal_hiring_demand_id
+        tests:
+          - unique
+          - not_null
+
+  - name: fct_internal_skill_snapshot
+    description: Internal learning and skills facts aggregated by country and worker category.
+    columns:
+      - name: internal_skill_snapshot_id
+        tests:
+          - unique
+          - not_null
+
+  - name: mart_company_decision_support
+    description: Blended Phase 3 company decision-support mart joining pay, workforce, hiring, skills, and market semantic signals.
+    columns:
+      - name: company_decision_row_id
+        tests:
+          - unique
+          - not_null

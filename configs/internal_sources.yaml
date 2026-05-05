@@ -1,0 +1,13 @@
+versions:
+  internal_payroll_snapshot: "local"
+  internal_job_architecture: "local"
+  internal_hris_workforce_snapshot: "local"
+  internal_ats_requisition_snapshot: "local"
+  internal_learning_skill_snapshot: "local"
+
+inputs:
+  payroll_snapshot: "payroll_snapshot.csv"
+  job_architecture: "job_architecture.csv"
+  hris_workforce_snapshot: "hris_workforce_snapshot.csv"
+  ats_requisition_snapshot: "ats_requisition_snapshot.csv"
+  learning_skill_snapshot: "learning_skill_snapshot.csv"

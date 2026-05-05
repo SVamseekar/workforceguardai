@@ -1,0 +1,7 @@
+action_code,action_name,requires_reason
+review_required,Human review required,false
+approved,Approved,false
+overridden,Overridden,true
+reversed,Reversed,true
+exported,Evidence pack exported,false
+

@@ -1,0 +1,67 @@
+version: 2
+
+models:
+  - name: stg_internal__payroll_snapshot
+    description: Canonical internal payroll snapshot prepared for Phase 3 company-aware benchmarking.
+    columns:
+      - name: employee_id
+        tests:
+          - not_null
+      - name: job_code
+        tests:
+          - not_null
+      - name: country_code
+        tests:
+          - not_null
+      - name: worker_category_id
+        tests:
+          - not_null
+
+  - name: stg_internal__job_architecture
+    description: Canonical internal job architecture mapping worker categories to job codes and reference semantics.
+    columns:
+      - name: job_code
+        tests:
+          - not_null
+      - name: worker_category_id
+        tests:
+          - not_null
+      - name: worker_category_label
+        tests:
+          - not_null
+
+  - name: stg_internal__hris_workforce_snapshot
+    description: Canonical optional HRIS workforce snapshot for Phase 3 internal composition benchmarking.
+    columns:
+      - name: employee_id
+        tests:
+          - not_null
+      - name: country_code
+        tests:
+          - not_null
+      - name: worker_category_id
+        tests:
+          - not_null
+
+  - name: stg_internal__ats_requisition_snapshot
+    description: Canonical optional ATS requisition snapshot for Phase 3 internal hiring-demand benchmarking.
+    columns:
+      - name: requisition_id
+        tests:
+          - not_null
+      - name: country_code
+        tests:
+          - not_null
+      - name: worker_category_id
+        tests:
+          - not_null
+
+  - name: stg_internal__learning_skill_snapshot
+    description: Canonical optional learning and skills snapshot for Phase 3 internal skill-coverage benchmarking.
+    columns:
+      - name: employee_id
+        tests:
+          - not_null
+      - name: skill_uri
+        tests:
+          - not_null

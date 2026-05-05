@@ -1,0 +1,103 @@
+settings:
+  base_url: "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data"
+  lang: "EN"
+  time_start: 2019
+  time_end: 2025
+  geo:
+    level: "country"
+    eu27:
+      - AT
+      - BE
+      - BG
+      - HR
+      - CY
+      - CZ
+      - DK
+      - EE
+      - FI
+      - FR
+      - DE
+      - EL
+      - HU
+      - IE
+      - IT
+      - LV
+      - LT
+      - LU
+      - MT
+      - NL
+      - PL
+      - PT
+      - RO
+      - SK
+      - SI
+      - ES
+      - SE
+
+# Dataset list for EU-wide, free, official data (Eurostat API).
+# Filters are applied only if the dimension exists in the dataset.
+# If a filter key is not found, it is skipped automatically.
+
+datasets:
+  - name: "job_vacancy_rate"
+    code: "jvs_q_nace2"
+    filters:
+      freq: ["Q"]
+      unit: ["PC"]
+      nace_r2: ["TOTAL"]
+  - name: "unemployment_rate"
+    code: "une_rt_a"
+    filters: {}
+  - name: "long_term_unemployment"
+    code: "une_ltu_a"
+    filters: {}
+  - name: "employment_rate"
+    code: "lfsi_emp_a"
+    filters:
+      indic_em: ["EMP_LFS"]
+      sex: ["T"]
+      age: ["Y20-64"]
+      unit: ["PC_POP"]
+  - name: "labour_market_flows"
+    code: "lfsi_long_q"
+    filters: {}
+  - name: "labour_market_slack"
+    code: "lfsi_sla_q"
+    filters: {}
+  - name: "gender_pay_gap_sector"
+    code: "earn_gr_gpgr2"
+    filters:
+      unit: ["PC"]
+      nace_r2: ["TOTAL"]
+  - name: "gender_pay_gap_age"
+    code: "earn_gr_gpgr2ag"
+    filters:
+      unit: ["PC"]
+  - name: "at_risk_of_poverty_or_exclusion"
+    code: "ilc_peps01n"
+    filters:
+      unit: ["PC"]
+  - name: "median_equivalised_income"
+    code: "ilc_di03"
+    filters: {}
+  - name: "gini_coefficient"
+    code: "ilc_di12"
+    filters: {}
+  - name: "housing_overburden_total"
+    code: "TESSI162"
+    filters:
+      unit: ["PC"]
+  - name: "housing_overburden_by_tenure"
+    code: "TESSI164"
+    filters:
+      unit: ["PC"]
+  - name: "housing_overburden_by_income"
+    code: "TESSI166"
+    filters:
+      unit: ["PC"]
+  - name: "gdp_per_capita"
+    code: "nama_10_pc"
+    filters: {}
+  - name: "commuting_time"
+    code: "lfso_19plwk28"
+    filters: {}

@@ -1,0 +1,43 @@
+seed: 42
+
+scale:
+  total_rows_per_dataset: 2000000
+  years: [2019, 2020, 2021, 2022, 2023, 2024, 2025]
+  year_weights: [1, 1, 1, 1, 1, 1, 1]
+  nuts2_count: 240
+  company_count: 500
+  chunk_size: 100000
+
+priors:
+  vacancy_rate_pct:
+    min: 1.0
+    max: 6.0
+  housing_overburden_pct:
+    min: 5.0
+    max: 25.0
+  commute_minutes:
+    min: 15
+    max: 60
+  gender_pay_gap_pct:
+    min: 5.0
+    max: 20.0
+  job_quality_index:
+    min: 40
+    max: 80
+  employment_rate_pct:
+    min: 60
+    max: 80
+  rent_inflation_pct:
+    min: 0.0
+    max: 10.0
+
+bounds:
+  eu_latitude:
+    min: 36.0
+    max: 70.0
+  eu_longitude:
+    min: -10.0
+    max: 30.0
+
+notes:
+  - "Priors are EU-informed ranges and should be updated with exact values from RESEARCH_LOG.md."

@@ -1,0 +1,48 @@
+version: 2
+
+models:
+  - name: dim_geography
+    description: Common geography dimension for current Eurostat-backed WorkforceGuard models.
+    columns:
+      - name: geo_id
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_sector
+    description: Common sector dimension built from the current vacancy and pay-gap extracts.
+    columns:
+      - name: sector_id
+        tests:
+          - unique
+          - not_null
+
+  - name: fct_labour_market_region_sector
+    description: Region and sector market signals aligned for WorkforceGuard analytics and API consumption.
+    columns:
+      - name: signal_id
+        tests:
+          - unique
+          - not_null
+
+  - name: mart_workforce_command_center
+    description: Curated command-centre dataset for the dashboard and later AI recommendation layers.
+    columns:
+      - name: mart_row_id
+        tests:
+          - unique
+          - not_null
+
+  - name: mart_semantic_metrics
+    description: Versioned semantic metric scores used by the dashboard and evidence-backed analyst layer.
+    columns:
+      - name: semantic_metric_id
+        tests:
+          - unique
+          - not_null
+      - name: metric_id
+        tests:
+          - not_null
+      - name: metric_value
+        tests:
+          - not_null

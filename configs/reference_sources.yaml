@@ -1,0 +1,15 @@
+versions:
+  esco: "1.2.1"
+  esco_nace_crosswalk: "2026-rev2.1"
+
+sources:
+  esco_download_page: "https://esco.ec.europa.eu/en/use-esco/download"
+  esco_crosswalk_page: "https://esco.ec.europa.eu/en/use-esco/other-crosswalks"
+  esco_nace_crosswalk_file: "https://esco.ec.europa.eu/system/files/2026-02/ESCO-NACE%20rev.%202.1%20crosswalk.xlsx"
+
+inputs:
+  esco_classification_zip: "ESCO classification - csv - en.zip"
+  esco_occupations: "occupations_en.csv"
+  esco_skills: "skills_en.csv"
+  esco_occupation_skill_relations: "occupationSkillRelations_en.csv"
+  esco_nace_crosswalk: "ESCO - NACE Crosswalk.xlsx"

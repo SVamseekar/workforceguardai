@@ -1,0 +1,7 @@
+workforceguard_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: data/workforceguard_analytics.duckdb
+      threads: 4

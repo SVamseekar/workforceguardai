@@ -1,0 +1,62 @@
+version: 2
+
+models:
+  - name: stg_eurostat__employment_rate
+    description: Employment-rate observations standardized from the current Eurostat Parquet extract.
+    columns:
+      - name: region_code
+        tests:
+          - not_null
+      - name: period_code
+        tests:
+          - not_null
+
+  - name: stg_eurostat__unemployment_rate
+    description: Unemployment-rate observations standardized from the current Eurostat Parquet extract.
+    columns:
+      - name: region_code
+        tests:
+          - not_null
+      - name: period_code
+        tests:
+          - not_null
+
+  - name: stg_eurostat__job_vacancy_rate
+    description: Job-vacancy observations standardized from the current Eurostat Parquet extract.
+    columns:
+      - name: region_code
+        tests:
+          - not_null
+      - name: sector_code
+        tests:
+          - not_null
+
+  - name: stg_eurostat__gender_pay_gap_sector
+    description: Gender pay-gap observations standardized from the current Eurostat Parquet extract.
+    columns:
+      - name: region_code
+        tests:
+          - not_null
+      - name: sector_code
+        tests:
+          - not_null
+
+  - name: stg_eurostat__labour_market_flows
+    description: Labour-market transition observations standardized from the current Eurostat Parquet extract.
+    columns:
+      - name: region_code
+        tests:
+          - not_null
+      - name: indicator_code
+        tests:
+          - not_null
+
+  - name: stg_eurostat__labour_market_slack
+    description: Labour-market slack observations standardized from the current Eurostat Parquet extract.
+    columns:
+      - name: region_code
+        tests:
+          - not_null
+      - name: slack_status_code
+        tests:
+          - not_null
