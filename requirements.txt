@@ -1,0 +1,7 @@
+numpy
+pandas
+pyarrow
+pyyaml
+openpyxl
+requests
+urllib3<2

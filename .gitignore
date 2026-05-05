@@ -1,0 +1,37 @@
+.DS_Store
+
+# Local secrets and machine-specific config
+.env
+.env.*
+!.env.example
+analytics/.user.yml
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Local virtual environments
+.venv/
+.venv-data/
+dashboard/backend/.venv/
+
+# Analytics build outputs
+analytics/logs/
+analytics/target/
+
+# Frontend build outputs
+dashboard/frontend/node_modules/
+dashboard/frontend/dist/
+
+# Local internal/company data
+data/governance_events.json
+data/internal/*
+!data/internal/.gitkeep
+data/internal_meta/*
+!data/internal_meta/.gitkeep
+data/internal_raw/*
+!data/internal_raw/.gitkeep
