@@ -304,6 +304,7 @@ class AnalyticsRepositoryTests(unittest.TestCase):
         self.assertIn("governance", evidence_pack)
         self.assertIn("internal_data", evidence_pack)
         self.assertIn("company_benchmark", evidence_pack)
+        self.assertIn("pay_transparency", evidence_pack)
 
     def test_build_overview_reports_internal_data_as_unavailable_by_default(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -313,8 +314,10 @@ class AnalyticsRepositoryTests(unittest.TestCase):
 
             self.assertIn("internal_data", overview)
             self.assertIn("company_benchmark", overview)
+            self.assertIn("pay_transparency", overview)
             self.assertFalse(overview["internal_data"]["available"])
             self.assertFalse(overview["company_benchmark"]["available"])
+            self.assertFalse(overview["pay_transparency"]["available"])
 
     def test_record_governance_event_persists_to_local_store(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -428,17 +431,35 @@ class AnalyticsRepositoryTests(unittest.TestCase):
             self.assertEqual(overview["company_benchmark"]["worker_category"]["id"], "eng_ic")
             self.assertGreater(overview["company_benchmark"]["headcount"], 0)
             self.assertEqual(overview["company_benchmark"]["market_sector_id"], "B-S")
+            self.assertTrue(overview["pay_transparency"]["available"])
+            self.assertEqual(overview["pay_transparency"]["evidence_basis"], "blended")
+            self.assertEqual(overview["pay_transparency"]["summary"]["category_count"], 1)
+            self.assertEqual(overview["pay_transparency"]["summary"]["unresolved_review_item_count"], 1)
+            self.assertEqual(
+                overview["pay_transparency"]["top_review_items"][0]["review_state"],
+                "unresolved_review_item",
+            )
+            self.assertEqual(
+                overview["pay_transparency"]["governance_target"]["target_type"],
+                "compliance_simulation",
+            )
 
             answer = repo.answer_question("How does our pay compare with the market?", geography="DE")
             self.assertEqual(answer["category"], "company")
             self.assertNotIn("Benchmark basis", answer["answer"])
             self.assertTrue(answer["internal_data_available"])
 
+            compliance_answer = repo.answer_question("Run the pay transparency compliance simulation", geography="DE")
+            self.assertEqual(compliance_answer["category"], "compliance")
+            self.assertEqual(compliance_answer["evidence_basis"], "blended")
+            self.assertIn("unresolved review items", compliance_answer["answer"])
+
     def test_local_sample_internal_rows_do_not_activate_company_claims_without_trust_manifest(self):
         overview = self.repo.build_overview(country="DE", geography="DE")
 
         self.assertFalse(overview["internal_data"]["available"])
         self.assertFalse(overview["company_benchmark"]["available"])
+        self.assertFalse(overview["pay_transparency"]["available"])
         self.assertIn("untrusted internal rows", overview["internal_data"]["note"])
 
     def test_real_internal_files_do_not_activate_company_benchmark_without_modeled_rows(self):
@@ -495,6 +516,17 @@ class AnalyticsRepositoryTests(unittest.TestCase):
             self.assertEqual(response["evidence_basis"], "external")
             self.assertIn("cannot make a company-specific pay claim", response["answer"])
             self.assertNotIn("Benchmark basis", response["answer"])
+
+    def test_pay_transparency_question_is_blocked_without_trusted_internal_data(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            db_path = self._copy_analytics_db_with_empty_internal_models(temp_dir)
+            repo = AnalyticsRepository(ROOT_DIR, analytics_db_path=db_path)
+            response = repo.answer_question("Run the pay transparency compliance simulation", geography="DE")
+
+            self.assertEqual(response["category"], "compliance")
+            self.assertFalse(response["internal_data_available"])
+            self.assertEqual(response["evidence_basis"], "external")
+            self.assertIn("not active", response["answer"])
 
     def test_sparse_geography_overview_degrades_gracefully(self):
         overview = self.repo.build_overview(country="ALL", geography="IT", sector="ALL", period="latest")

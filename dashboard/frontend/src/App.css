@@ -661,6 +661,52 @@
   font-size: 0.84rem;
 }
 
+.compliance-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.compliance-review-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.compliance-review-item {
+  display: grid;
+  gap: 10px;
+  padding: 15px;
+  border: 1px solid rgba(159, 185, 214, 0.14);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.compliance-review-item p {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.panel__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  margin-top: 16px;
+  padding: 10px 13px;
+  border: 1px solid rgba(127, 244, 234, 0.26);
+  border-radius: 999px;
+  color: var(--text-strong);
+  background: rgba(127, 244, 234, 0.1);
+}
+
+.panel__action:hover {
+  border-color: rgba(127, 244, 234, 0.46);
+  background: rgba(127, 244, 234, 0.16);
+}
+
 .comparison-overview__notes {
   display: grid;
   gap: 10px;

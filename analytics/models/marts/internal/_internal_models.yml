@@ -25,6 +25,14 @@ models:
           - unique
           - not_null
 
+  - name: mart_pay_transparency_category_review
+    description: Phase 4 pay-transparency simulation mart classifying worker-category pay gaps into observed, monitored, and unresolved review states.
+    columns:
+      - name: pay_transparency_review_id
+        tests:
+          - unique
+          - not_null
+
   - name: fct_internal_workforce_snapshot
     description: Internal HRIS workforce facts aggregated by country, worker category, and snapshot date.
     columns:

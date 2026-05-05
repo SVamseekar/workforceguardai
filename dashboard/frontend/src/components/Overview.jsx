@@ -5,9 +5,11 @@ import {
   AlertTriangle,
   ArrowUpRight,
   Briefcase,
+  ClipboardCheck,
   Download,
   FileSearch,
   RefreshCw,
+  Scale,
   ShieldCheck,
   TrendingUp,
   Users,
@@ -48,6 +50,12 @@ const PRIORITY_CLASS = {
   high: 'priority-badge--high',
   medium: 'priority-badge--medium',
   low: 'priority-badge--low',
+}
+
+const REVIEW_STATE_LABELS = {
+  observed_gap: 'Observed gap',
+  justified_difference: 'Monitored difference',
+  unresolved_review_item: 'Unresolved review item',
 }
 
 const GOVERNANCE_CLASS = {
@@ -1180,6 +1188,139 @@ function CompanyBenchmarkSection({ internalData, companyBenchmark }) {
   )
 }
 
+function buildPayTransparencyEvidence(payTransparency) {
+  if (!payTransparency?.available) {
+    return null
+  }
+
+  const summary = payTransparency.summary ?? {}
+  return {
+    title: payTransparency.title,
+    summary: payTransparency.note,
+    evidence: [
+      { label: 'Unresolved review items', value: String(summary.unresolved_review_item_count ?? 0) },
+      { label: 'Observed gaps', value: String(summary.observed_gap_count ?? 0) },
+      { label: 'Monitored differences', value: String(summary.justified_difference_count ?? 0) },
+      { label: 'Formula version', value: payTransparency.formula_version },
+    ],
+    provenance: payTransparency.provenance ?? [],
+    governance_target: payTransparency.governance_target,
+  }
+}
+
+function ComplianceSimulationSection({ payTransparency, onOpenEvidence }) {
+  const available = Boolean(payTransparency?.available)
+  const summary = payTransparency?.summary ?? {}
+  const reviewItems = payTransparency?.top_review_items ?? []
+
+  return (
+    <section className="comparison-section">
+      <article className="panel panel--intelligence">
+        <div className="panel__header">
+          <div>
+            <p className="panel__eyebrow">Compliance Suite</p>
+            <h2>Pay-transparency category review</h2>
+          </div>
+          <div className="comparison-focus__chips">
+            <ToneChip tone={available ? toneFromCoverageStatus(payTransparency.coverage_status) : 'watch'}>
+              {available ? payTransparency.coverage_status : 'simulation inactive'}
+            </ToneChip>
+            {payTransparency?.evidence_basis ? (
+              <ToneChip tone={toneFromEvidenceBasis(payTransparency.evidence_basis)}>
+                {payTransparency.evidence_basis} evidence
+              </ToneChip>
+            ) : null}
+          </div>
+        </div>
+
+        <p className="comparison-overview__summary">{payTransparency?.note}</p>
+
+        {available ? (
+          <>
+            <div className="compliance-summary-grid">
+              <div className="comparison-meta">
+                <div className="comparison-meta__top">
+                  <strong>Unresolved review items</strong>
+                  <AlertTriangle size={16} />
+                </div>
+                <div className="comparison-meta__detail-list">
+                  <span>{summary.unresolved_review_item_count ?? 0}</span>
+                  <span>{formatMetricValue(summary.max_internal_gap)} max gap</span>
+                </div>
+              </div>
+
+              <div className="comparison-meta">
+                <div className="comparison-meta__top">
+                  <strong>Observed gaps</strong>
+                  <Scale size={16} />
+                </div>
+                <div className="comparison-meta__detail-list">
+                  <span>{summary.observed_gap_count ?? 0}</span>
+                  <span>{summary.category_count ?? 0} categories reviewed</span>
+                </div>
+              </div>
+
+              <div className="comparison-meta">
+                <div className="comparison-meta__top">
+                  <strong>Monitored differences</strong>
+                  <ClipboardCheck size={16} />
+                </div>
+                <div className="comparison-meta__detail-list">
+                  <span>{summary.justified_difference_count ?? 0}</span>
+                  <span>{payTransparency.formula_version}</span>
+                </div>
+              </div>
+            </div>
+
+            {!!reviewItems.length && (
+              <div className="compliance-review-list">
+                {reviewItems.map((item) => (
+                  <div key={item.worker_category.id} className="compliance-review-item">
+                    <div className="comparison-meta__top">
+                      <strong>{item.worker_category.label}</strong>
+                      <span className={`priority-badge ${PRIORITY_CLASS[item.priority] ?? ''}`}>
+                        {REVIEW_STATE_LABELS[item.review_state] ?? item.review_label}
+                      </span>
+                    </div>
+                    <div className="comparison-meta__detail-list">
+                      <span>{formatMetricValue(item.internal_gap)} internal gap</span>
+                      <span>{item.market_gap == null ? 'No market comparator' : `${formatMetricValue(item.market_gap)} market`}</span>
+                      <span>{item.headcount} employees</span>
+                    </div>
+                    <p>{item.rationale}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button
+              className="panel__action"
+              type="button"
+              onClick={() => onOpenEvidence(buildPayTransparencyEvidence(payTransparency))}
+            >
+              <FileSearch size={16} />
+              Open compliance evidence
+            </button>
+          </>
+        ) : (
+          <div className="comparison-focus">
+            <div className="comparison-focus__top">
+              <div>
+                <p className="panel__eyebrow">Current state</p>
+                <h3>Simulation unavailable</h3>
+              </div>
+              <ToneChip tone="watch">needs trusted internal data</ToneChip>
+            </div>
+            <p className="comparison-focus__summary">
+              {payTransparency?.unavailable_reason ?? 'Trusted internal category pay data is required before compliance simulation can run.'}
+            </p>
+          </div>
+        )}
+      </article>
+    </section>
+  )
+}
+
 function EvidenceDrawer({
   evidence,
   governance,
@@ -1862,6 +2003,11 @@ function Overview() {
       <CompanyBenchmarkSection
         internalData={overview.internal_data}
         companyBenchmark={overview.company_benchmark}
+      />
+
+      <ComplianceSimulationSection
+        payTransparency={overview.pay_transparency}
+        onOpenEvidence={setSelectedEvidence}
       />
 
       <section className="metric-section">

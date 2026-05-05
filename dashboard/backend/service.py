@@ -1028,6 +1028,189 @@ class AnalyticsRepository:
             ],
         }
 
+    def _build_pay_transparency_simulation(
+        self,
+        filters: FilterState,
+        internal_data_status: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        metric_config = OBSERVED_METRIC_CONFIG["gender_pay_gap"]
+
+        def unavailable(reason: str) -> Dict[str, Any]:
+            return {
+                "id": "pay_transparency_category_review",
+                "title": "Pay transparency category review",
+                "available": False,
+                "confidence": "low",
+                "coverage_status": "unavailable",
+                "evidence_basis": "external",
+                "formula_version": "pay-transparency-review-v1",
+                "thresholds": {
+                    "observed_gap_pct": 5.0,
+                    "unresolved_review_pct": 10.0,
+                    "market_delta_pct": 2.0,
+                },
+                "summary": {
+                    "category_count": 0,
+                    "observed_gap_count": 0,
+                    "justified_difference_count": 0,
+                    "unresolved_review_item_count": 0,
+                    "max_internal_gap": None,
+                },
+                "review_items": [],
+                "top_review_items": [],
+                "governance_target": {
+                    "target_type": "compliance_simulation",
+                    "target_id": "pay_transparency_category_review",
+                },
+                "provenance": [],
+                "note": reason,
+                "unavailable_reason": reason,
+            }
+
+        if not internal_data_status.get("available"):
+            return unavailable(internal_data_status.get("note", "Pay-transparency simulation requires trusted internal data."))
+
+        if filters.geography == "EU27_AVG" or len(filters.geography) != 2:
+            return unavailable("Pay-transparency simulation currently requires a country-level scope such as DE or FR.")
+
+        params: List[Any] = [filters.geography]
+        sector_clause = ""
+        if filters.sector != "ALL":
+            sector_clause = "and starts_with(upper(coalesce(representative_nace_code, '')), upper(?))"
+            params.append(filters.sector)
+
+        rows = self._query(
+            f"""
+            select
+                worker_category_id,
+                coalesce(worker_category_label, worker_category_id) as worker_category_label,
+                headcount,
+                female_count,
+                male_count,
+                round(cast(internal_gender_pay_gap as double), 1) as internal_pay_gap,
+                round(cast(market_gender_pay_gap as double), 1) as market_pay_gap,
+                round(cast(gap_to_market as double), 1) as gap_to_market,
+                cast(snapshot_date as varchar) as snapshot_date,
+                market_sector_id,
+                market_period_code,
+                representative_nace_code,
+                market_benchmark_available
+            from mart_internal_market_pay_benchmark
+            where upper(country_code) = upper(?)
+              and internal_gender_pay_gap is not null
+              {sector_clause}
+            order by abs(internal_gender_pay_gap) desc, headcount desc
+            """,
+            params,
+        )
+
+        if not rows:
+            return unavailable(
+                "The internal benchmark mart does not contain category-level pay-gap rows for this scope yet."
+            )
+
+        thresholds = {
+            "observed_gap_pct": 5.0,
+            "unresolved_review_pct": 10.0,
+            "market_delta_pct": 2.0,
+        }
+        review_items = []
+        for row in rows:
+            internal_gap = float(row["internal_pay_gap"])
+            market_gap = float(row["market_pay_gap"]) if row["market_pay_gap"] is not None else None
+            market_delta = float(row["gap_to_market"]) if row["gap_to_market"] is not None else None
+            absolute_gap = abs(internal_gap)
+            absolute_delta = abs(market_delta) if market_delta is not None else 0.0
+
+            if absolute_gap >= thresholds["unresolved_review_pct"] or absolute_delta >= thresholds["market_delta_pct"]:
+                review_state = "unresolved_review_item"
+                review_label = "Unresolved review item"
+                priority = "high" if absolute_gap >= thresholds["unresolved_review_pct"] else "medium"
+                rationale = (
+                    "Internal category gap or gap-to-market exceeds the review threshold and requires documented human review."
+                )
+            elif absolute_gap >= thresholds["observed_gap_pct"]:
+                review_state = "observed_gap"
+                review_label = "Observed gap"
+                priority = "medium"
+                rationale = "A category-level pay gap is observed, but it is below the unresolved review threshold."
+            else:
+                review_state = "justified_difference"
+                review_label = "No unresolved gap"
+                priority = "low"
+                rationale = (
+                    "The observed category gap is below the review threshold. Any formal justification still belongs in the governance record."
+                )
+
+            review_items.append(
+                {
+                    "worker_category": {
+                        "id": row["worker_category_id"],
+                        "label": row["worker_category_label"],
+                    },
+                    "headcount": int(row["headcount"] or 0),
+                    "female_count": int(row["female_count"] or 0),
+                    "male_count": int(row["male_count"] or 0),
+                    "internal_gap": internal_gap,
+                    "market_gap": market_gap,
+                    "gap_to_market": market_delta,
+                    "snapshot_date": row["snapshot_date"],
+                    "market_period_code": row["market_period_code"],
+                    "market_sector_id": row["market_sector_id"],
+                    "representative_nace_code": row["representative_nace_code"],
+                    "review_state": review_state,
+                    "review_label": review_label,
+                    "priority": priority,
+                    "rationale": rationale,
+                    "evidence_basis": "blended" if row["market_benchmark_available"] else "internal",
+                }
+            )
+
+        summary = {
+            "category_count": len(review_items),
+            "observed_gap_count": sum(1 for item in review_items if item["review_state"] == "observed_gap"),
+            "justified_difference_count": sum(1 for item in review_items if item["review_state"] == "justified_difference"),
+            "unresolved_review_item_count": sum(
+                1 for item in review_items if item["review_state"] == "unresolved_review_item"
+            ),
+            "max_internal_gap": max(abs(item["internal_gap"]) for item in review_items),
+        }
+        evidence_basis = "blended" if any(item["evidence_basis"] == "blended" for item in review_items) else "internal"
+        coverage_status = "review_required" if summary["unresolved_review_item_count"] else "monitored"
+        provenance = [
+            self._build_provenance("internal_payroll_snapshot", "internal_pay_gap", "internal-v1", True),
+            self._build_provenance("internal_job_architecture", "worker_category_mapping", "internal-v1", False),
+            self._build_provenance(
+                metric_config["source_id"],
+                "gender_pay_gap",
+                metric_config["formula_version"],
+                metric_config["human_review_required"],
+            ),
+        ]
+
+        return {
+            "id": "pay_transparency_category_review",
+            "title": "Pay transparency category review",
+            "available": True,
+            "confidence": "medium",
+            "coverage_status": coverage_status,
+            "evidence_basis": evidence_basis,
+            "formula_version": "pay-transparency-review-v1",
+            "thresholds": thresholds,
+            "summary": summary,
+            "review_items": review_items,
+            "top_review_items": review_items[:3],
+            "governance_target": {
+                "target_type": "compliance_simulation",
+                "target_id": "pay_transparency_category_review",
+            },
+            "provenance": provenance,
+            "note": (
+                "This Phase 4 simulation classifies modeled worker-category pay gaps into observed gaps, "
+                "low-risk monitored differences, and unresolved review items. It is a review workflow, not an automated HR decision."
+            ),
+        }
+
     def _all_geographies(self) -> List[Dict[str, Any]]:
         rows = self._query(
             """
@@ -3118,6 +3301,7 @@ class AnalyticsRepository:
         intelligence = self._build_intelligence(filters, observed_metrics, semantic_metrics, charts, comparisons)
         internal_data = self._build_internal_data_status()
         company_benchmark = self._build_company_benchmark(filters, observed_metrics, internal_data)
+        pay_transparency = self._build_pay_transparency_simulation(filters, internal_data)
         missing_observed_metric_ids = [
             metric_id
             for metric_id in OBSERVED_METRIC_IDS
@@ -3135,14 +3319,25 @@ class AnalyticsRepository:
             notes.append(
                 f"Some observed metrics are unavailable for this filter state: {', '.join(missing_titles)}."
             )
-        notes.append(internal_data["note"])
+        def append_note_once(note: Optional[str]) -> None:
+            if note and note not in notes:
+                notes.append(note)
+
+        append_note_once(internal_data["note"])
         if company_benchmark.get("available"):
             notes.append(
                 f"Company-aware preview is active for {company_benchmark['worker_category']['label']} "
                 f"using {company_benchmark['evidence_basis']} evidence."
             )
         else:
-            notes.append(company_benchmark["note"])
+            append_note_once(company_benchmark["note"])
+        if pay_transparency.get("available"):
+            unresolved_count = pay_transparency["summary"]["unresolved_review_item_count"]
+            notes.append(
+                f"Phase 4 pay-transparency simulation is active with {unresolved_count} unresolved category review items."
+            )
+        else:
+            append_note_once(pay_transparency["note"])
 
         return {
             "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -3165,6 +3360,7 @@ class AnalyticsRepository:
             "intelligence": intelligence,
             "internal_data": internal_data,
             "company_benchmark": company_benchmark,
+            "pay_transparency": pay_transparency,
             "governance": self.build_governance_payload(),
         }
 
@@ -3196,6 +3392,7 @@ class AnalyticsRepository:
         active_benchmark_context = self._comparison_basis_context(comparison_layer)
         internal_data = overview.get("internal_data", {})
         company_benchmark = overview.get("company_benchmark", {})
+        pay_transparency = overview.get("pay_transparency", {})
 
         def observed_value(metric_id: str) -> Optional[float]:
             value = observed.get(metric_id, {}).get("value")
@@ -3293,6 +3490,86 @@ class AnalyticsRepository:
             return max(
                 comparable,
                 key=lambda metric: abs(float(metric["comparisons"][benchmark_id]["delta"] or 0)),
+            )
+
+        if any(
+            keyword in normalized
+            for keyword in [
+                "pay transparency",
+                "transparency exposure",
+                "compliance simulation",
+                "compliance simulator",
+                "unresolved review",
+                "review item",
+                "category review",
+            ]
+        ):
+            if pay_transparency.get("available"):
+                summary = pay_transparency["summary"]
+                top_item = pay_transparency["top_review_items"][0] if pay_transparency["top_review_items"] else None
+                top_sentence = (
+                    f" The highest-priority category is {top_item['worker_category']['label']} with a "
+                    f"{top_item['internal_gap']:.1f}% internal gap."
+                    if top_item
+                    else ""
+                )
+                return response(
+                    "compliance",
+                    pay_transparency.get("confidence", "medium"),
+                    (
+                        f"The Phase 4 pay-transparency simulation reviewed {summary['category_count']} worker categories "
+                        f"and found {summary['unresolved_review_item_count']} unresolved review items, "
+                        f"{summary['observed_gap_count']} observed gaps, and "
+                        f"{summary['justified_difference_count']} monitored low-risk differences."
+                        f"{top_sentence}"
+                    ),
+                    [
+                        {"label": "Unresolved review items", "value": str(summary["unresolved_review_item_count"])},
+                        {"label": "Observed gaps", "value": str(summary["observed_gap_count"])},
+                        {"label": "Formula version", "value": pay_transparency["formula_version"]},
+                    ],
+                    pay_transparency["provenance"],
+                    [
+                        "Which worker category deserves closer pay review?",
+                        "Export the evidence pack.",
+                        "Is this answer based on internal data, market data, or both?",
+                    ],
+                    limitations=[
+                        pay_transparency["note"],
+                        "The simulation does not decide whether a difference is legally justified; that requires documented human review.",
+                    ],
+                    evidence_basis=pay_transparency["evidence_basis"],
+                    include_benchmark_citation=False,
+                    coverage_override={
+                        "status": pay_transparency["coverage_status"],
+                        "summary": pay_transparency["note"],
+                        "applicable_metric_count": summary["category_count"],
+                        "total_metric_count": summary["category_count"],
+                    },
+                )
+
+            return response(
+                "compliance",
+                "low",
+                "The pay-transparency simulation is not active because trusted internal category-level pay data is not available for this scope.",
+                [
+                    {"label": "Simulation status", "value": "Unavailable"},
+                    {"label": "Current basis", "value": pay_transparency.get("evidence_basis", "external")},
+                ],
+                [metric["provenance"] for metric in overview["metrics"][:2]],
+                [
+                    "How does this market compare to the EU benchmark?",
+                    "What limits this comparison?",
+                ],
+                limitations=[pay_transparency.get("note", "Trusted internal data is required.")],
+                evidence_basis=pay_transparency.get("evidence_basis", "external"),
+                include_benchmark_citation=False,
+                coverage_override={
+                    "status": "unavailable",
+                    "summary": pay_transparency.get("note", ""),
+                    "applicable_metric_count": 0,
+                    "total_metric_count": 1,
+                },
             )
 
         if any(
@@ -4175,6 +4452,7 @@ class AnalyticsRepository:
             "semantic_metrics": overview["semantic_metrics"],
             "internal_data": overview["internal_data"],
             "company_benchmark": overview["company_benchmark"],
+            "pay_transparency": overview["pay_transparency"],
             "recommendations": overview["intelligence"]["recommendations"],
             "governance": overview["governance"],
         }

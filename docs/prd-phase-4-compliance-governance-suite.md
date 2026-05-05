@@ -6,7 +6,12 @@ Turn WorkforceGuard into a compliance-ready HR RegTech product by building forma
 
 ## Status
 
-Planned.
+Started for the first production slice.
+
+The live Phase 4 path now supports a pay-transparency category-review simulation on top of the modeled internal
+pay benchmark mart. The API classifies trusted internal worker-category pay gaps into observed gaps, monitored
+low-risk differences, and unresolved review items, while the dashboard exposes the result with evidence-basis
+labels and governance actions. This remains a human-review workflow, not an automated HR decision.
 
 ## Problem Statement
 
@@ -88,9 +93,9 @@ After Phase 4, a user should be able to:
 ## Delivery Plan
 
 1. Finalize worker-category and pay-review models.
-2. Build compliance simulation marts and rules.
-3. Add governance console and approval flows.
-4. Add exportable legal/compliance evidence packs.
+2. Build compliance simulation marts and rules. Started with `mart_pay_transparency_category_review` and API-level review rules.
+3. Add governance console and approval flows. Started through reusable evidence-drawer governance events.
+4. Add exportable legal/compliance evidence packs. Started by including the pay-transparency simulation in evidence-pack output.
 5. Add policy and access-control hardening.
 
 ## Exit Criteria
