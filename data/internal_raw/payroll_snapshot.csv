@@ -1,0 +1,351 @@
+employee_id,job_code,job_title,country_code,worker_category_id,gender,base_pay_amount,pay_currency,snapshot_date,employment_status,version
+emp-0347,SALES-1,Account Executive,FR,sales_gtm,male,56000,EUR,2025-12-31,active,demo-v1
+emp-0132,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,60500,EUR,2025-12-31,active,demo-v1
+emp-0038,SE-IC-3,Senior Software Engineer,FR,eng_ic,female,48000,EUR,2025-12-31,active,demo-v1
+emp-0300,HR-2,Senior HR Business Partner,FR,hr_generalist,female,42500,EUR,2025-12-31,active,demo-v1
+emp-0076,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,64500,EUR,2025-12-31,active,demo-v1
+emp-0330,FIN-1,Financial Analyst,FR,finance_legal,male,52000,EUR,2025-12-31,active,demo-v1
+emp-0312,FIN-1,Financial Analyst,FR,finance_legal,female,45500,EUR,2025-12-31,active,demo-v1
+emp-0348,SALES-1,Account Executive,FR,sales_gtm,male,51500,EUR,2025-12-31,active,demo-v1
+emp-0003,SE-IC-2,Software Engineer II,FR,eng_ic,female,48000,EUR,2025-12-31,active,demo-v1
+emp-0131,SE-IC-1,Software Engineer,FR,eng_ic,male,62500,EUR,2025-12-31,active,demo-v1
+emp-0034,SE-IC-3,Senior Software Engineer,FR,eng_ic,female,54500,EUR,2025-12-31,active,demo-v1
+emp-0315,FIN-1,Financial Analyst,FR,finance_legal,female,50000,EUR,2025-12-31,active,demo-v1
+emp-0263,PD-1,Product Manager,FR,product_design,female,55000,EUR,2025-12-31,active,demo-v1
+emp-0137,SE-IC-1,Software Engineer,FR,eng_ic,male,58500,EUR,2025-12-31,active,demo-v1
+emp-0049,SE-IC-1,Software Engineer,FR,eng_ic,female,54000,EUR,2025-12-31,active,demo-v1
+emp-0287,HR-1,HR Generalist,FR,hr_generalist,female,39500,EUR,2025-12-31,active,demo-v1
+emp-0281,PD-2,Senior Product Manager,FR,product_design,male,57000,EUR,2025-12-31,active,demo-v1
+emp-0023,SE-IC-1,Software Engineer,FR,eng_ic,female,56500,EUR,2025-12-31,active,demo-v1
+emp-0267,PD-2,Senior Product Manager,FR,product_design,female,60000,EUR,2025-12-31,active,demo-v1
+emp-0194,SE-SR-1,Staff Engineer,FR,eng_senior,female,61500,EUR,2025-12-31,active,demo-v1
+emp-0087,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,53000,EUR,2025-12-31,active,demo-v1
+emp-0108,SE-IC-2,Software Engineer II,FR,eng_ic,male,66500,EUR,2025-12-31,active,demo-v1
+emp-0056,SE-IC-1,Software Engineer,FR,eng_ic,male,57000,EUR,2025-12-31,active,demo-v1
+emp-0205,SE-SR-2,Principal Engineer,FR,eng_senior,male,81500,EUR,2025-12-31,active,demo-v1
+emp-0253,PD-2,Senior Product Manager,FR,product_design,female,53500,EUR,2025-12-31,active,demo-v1
+emp-0050,SE-IC-3,Senior Software Engineer,FR,eng_ic,female,47000,EUR,2025-12-31,active,demo-v1
+emp-0135,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,64000,EUR,2025-12-31,active,demo-v1
+emp-0325,FIN-1,Financial Analyst,FR,finance_legal,male,47500,EUR,2025-12-31,active,demo-v1
+emp-0171,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,59000,EUR,2025-12-31,active,demo-v1
+emp-0297,HR-2,Senior HR Business Partner,FR,hr_generalist,female,43500,EUR,2025-12-31,active,demo-v1
+emp-0097,SE-IC-1,Software Engineer,FR,eng_ic,male,57000,EUR,2025-12-31,active,demo-v1
+emp-0260,PD-1,Product Manager,FR,product_design,female,57000,EUR,2025-12-31,active,demo-v1
+emp-0319,FIN-1,Financial Analyst,FR,finance_legal,female,50000,EUR,2025-12-31,active,demo-v1
+emp-0193,SE-SR-2,Principal Engineer,FR,eng_senior,female,70500,EUR,2025-12-31,active,demo-v1
+emp-0331,SALES-1,Account Executive,FR,sales_gtm,female,53500,EUR,2025-12-31,active,demo-v1
+emp-0096,SE-IC-2,Software Engineer II,FR,eng_ic,male,57000,EUR,2025-12-31,active,demo-v1
+emp-0242,SE-SR-2,Principal Engineer,FR,eng_senior,male,90000,EUR,2025-12-31,active,demo-v1
+emp-0317,FIN-1,Financial Analyst,FR,finance_legal,female,47000,EUR,2025-12-31,active,demo-v1
+emp-0309,HR-1,HR Generalist,FR,hr_generalist,male,47500,EUR,2025-12-31,active,demo-v1
+emp-0204,SE-SR-1,Staff Engineer,FR,eng_senior,male,71000,EUR,2025-12-31,active,demo-v1
+emp-0201,SE-SR-1,Staff Engineer,FR,eng_senior,male,87500,EUR,2025-12-31,active,demo-v1
+emp-0106,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,59500,EUR,2025-12-31,active,demo-v1
+emp-0184,SE-SR-1,Staff Engineer,FR,eng_senior,female,70000,EUR,2025-12-31,active,demo-v1
+emp-0214,SE-SR-1,Staff Engineer,FR,eng_senior,male,94000,EUR,2025-12-31,active,demo-v1
+emp-0165,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,52000,EUR,2025-12-31,active,demo-v1
+emp-0013,SE-IC-3,Senior Software Engineer,FR,eng_ic,female,47500,EUR,2025-12-31,active,demo-v1
+emp-0090,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,56000,EUR,2025-12-31,active,demo-v1
+emp-0147,SE-IC-2,Software Engineer II,FR,eng_ic,male,49500,EUR,2025-12-31,active,demo-v1
+emp-0036,SE-IC-1,Software Engineer,FR,eng_ic,female,55500,EUR,2025-12-31,active,demo-v1
+emp-0169,SE-IC-1,Software Engineer,FR,eng_ic,male,58000,EUR,2025-12-31,active,demo-v1
+emp-0158,SE-IC-1,Software Engineer,FR,eng_ic,male,66000,EUR,2025-12-31,active,demo-v1
+emp-0136,SE-IC-1,Software Engineer,FR,eng_ic,male,63000,EUR,2025-12-31,active,demo-v1
+emp-0180,SE-IC-1,Software Engineer,FR,eng_ic,male,63500,EUR,2025-12-31,active,demo-v1
+emp-0082,SE-IC-1,Software Engineer,FR,eng_ic,male,59000,EUR,2025-12-31,active,demo-v1
+emp-0018,SE-IC-2,Software Engineer II,FR,eng_ic,female,57500,EUR,2025-12-31,active,demo-v1
+emp-0172,SE-IC-2,Software Engineer II,FR,eng_ic,male,59500,EUR,2025-12-31,active,demo-v1
+emp-0102,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,54500,EUR,2025-12-31,active,demo-v1
+emp-0338,SALES-1,Account Executive,FR,sales_gtm,female,54500,EUR,2025-12-31,active,demo-v1
+emp-0046,SE-IC-1,Software Engineer,FR,eng_ic,female,55000,EUR,2025-12-31,active,demo-v1
+emp-0154,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,59500,EUR,2025-12-31,active,demo-v1
+emp-0010,SE-IC-1,Software Engineer,FR,eng_ic,female,48000,EUR,2025-12-31,active,demo-v1
+emp-0222,SE-SR-2,Principal Engineer,FR,eng_senior,male,77000,EUR,2025-12-31,active,demo-v1
+emp-0101,SE-IC-1,Software Engineer,FR,eng_ic,male,65000,EUR,2025-12-31,active,demo-v1
+emp-0270,PD-2,Senior Product Manager,FR,product_design,male,56500,EUR,2025-12-31,active,demo-v1
+emp-0093,SE-IC-1,Software Engineer,FR,eng_ic,male,60000,EUR,2025-12-31,active,demo-v1
+emp-0273,PD-1,Product Manager,FR,product_design,male,53500,EUR,2025-12-31,active,demo-v1
+emp-0029,SE-IC-1,Software Engineer,FR,eng_ic,female,56000,EUR,2025-12-31,active,demo-v1
+emp-0334,SALES-1,Account Executive,FR,sales_gtm,female,46000,EUR,2025-12-31,active,demo-v1
+emp-0350,SALES-1,Account Executive,FR,sales_gtm,male,54500,EUR,2025-12-31,active,demo-v1
+emp-0002,SE-IC-1,Software Engineer,FR,eng_ic,female,56500,EUR,2025-12-31,active,demo-v1
+emp-0040,SE-IC-1,Software Engineer,FR,eng_ic,female,58500,EUR,2025-12-31,active,demo-v1
+emp-0179,SE-IC-2,Software Engineer II,FR,eng_ic,male,58500,EUR,2025-12-31,active,demo-v1
+emp-0228,SE-SR-2,Principal Engineer,FR,eng_senior,male,92000,EUR,2025-12-31,active,demo-v1
+emp-0004,SE-IC-1,Software Engineer,FR,eng_ic,female,46500,EUR,2025-12-31,active,demo-v1
+emp-0174,SE-IC-2,Software Engineer II,FR,eng_ic,male,52500,EUR,2025-12-31,active,demo-v1
+emp-0063,SE-IC-1,Software Engineer,FR,eng_ic,male,58000,EUR,2025-12-31,active,demo-v1
+emp-0084,SE-IC-2,Software Engineer II,FR,eng_ic,male,49500,EUR,2025-12-31,active,demo-v1
+emp-0149,SE-IC-2,Software Engineer II,FR,eng_ic,male,58500,EUR,2025-12-31,active,demo-v1
+emp-0299,HR-2,Senior HR Business Partner,FR,hr_generalist,female,48000,EUR,2025-12-31,active,demo-v1
+emp-0225,SE-SR-2,Principal Engineer,FR,eng_senior,male,79000,EUR,2025-12-31,active,demo-v1
+emp-0035,SE-IC-2,Software Engineer II,FR,eng_ic,female,53500,EUR,2025-12-31,active,demo-v1
+emp-0027,SE-IC-2,Software Engineer II,FR,eng_ic,female,54000,EUR,2025-12-31,active,demo-v1
+emp-0091,SE-IC-1,Software Engineer,FR,eng_ic,male,61500,EUR,2025-12-31,active,demo-v1
+emp-0057,SE-IC-1,Software Engineer,FR,eng_ic,male,59500,EUR,2025-12-31,active,demo-v1
+emp-0081,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,60500,EUR,2025-12-31,active,demo-v1
+emp-0207,SE-SR-1,Staff Engineer,FR,eng_senior,male,92000,EUR,2025-12-31,active,demo-v1
+emp-0080,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,58000,EUR,2025-12-31,active,demo-v1
+emp-0130,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,52500,EUR,2025-12-31,active,demo-v1
+emp-0067,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,62500,EUR,2025-12-31,active,demo-v1
+emp-0025,SE-IC-1,Software Engineer,FR,eng_ic,female,50500,EUR,2025-12-31,active,demo-v1
+emp-0168,SE-IC-1,Software Engineer,FR,eng_ic,male,59500,EUR,2025-12-31,active,demo-v1
+emp-0115,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,51000,EUR,2025-12-31,active,demo-v1
+emp-0188,SE-SR-1,Staff Engineer,FR,eng_senior,female,72500,EUR,2025-12-31,active,demo-v1
+emp-0262,PD-1,Product Manager,FR,product_design,female,47500,EUR,2025-12-31,active,demo-v1
+emp-0227,SE-SR-2,Principal Engineer,FR,eng_senior,male,90500,EUR,2025-12-31,active,demo-v1
+emp-0191,SE-SR-2,Principal Engineer,FR,eng_senior,female,69500,EUR,2025-12-31,active,demo-v1
+emp-0066,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,63500,EUR,2025-12-31,active,demo-v1
+emp-0118,SE-IC-1,Software Engineer,FR,eng_ic,male,66000,EUR,2025-12-31,active,demo-v1
+emp-0280,PD-1,Product Manager,FR,product_design,male,58500,EUR,2025-12-31,active,demo-v1
+emp-0333,SALES-1,Account Executive,FR,sales_gtm,female,50500,EUR,2025-12-31,active,demo-v1
+emp-0326,FIN-1,Financial Analyst,FR,finance_legal,male,54500,EUR,2025-12-31,active,demo-v1
+emp-0033,SE-IC-3,Senior Software Engineer,FR,eng_ic,female,49000,EUR,2025-12-31,active,demo-v1
+emp-0192,SE-SR-1,Staff Engineer,FR,eng_senior,female,64000,EUR,2025-12-31,active,demo-v1
+emp-0128,SE-IC-2,Software Engineer II,FR,eng_ic,male,64500,EUR,2025-12-31,active,demo-v1
+emp-0345,SALES-1,Account Executive,FR,sales_gtm,male,46000,EUR,2025-12-31,active,demo-v1
+emp-0005,SE-IC-3,Senior Software Engineer,FR,eng_ic,female,46000,EUR,2025-12-31,active,demo-v1
+emp-0071,SE-IC-1,Software Engineer,FR,eng_ic,male,53000,EUR,2025-12-31,active,demo-v1
+emp-0217,SE-SR-1,Staff Engineer,FR,eng_senior,male,92500,EUR,2025-12-31,active,demo-v1
+emp-0206,SE-SR-1,Staff Engineer,FR,eng_senior,male,81500,EUR,2025-12-31,active,demo-v1
+emp-0274,PD-2,Senior Product Manager,FR,product_design,male,53500,EUR,2025-12-31,active,demo-v1
+emp-0085,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,58000,EUR,2025-12-31,active,demo-v1
+emp-0163,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,57500,EUR,2025-12-31,active,demo-v1
+emp-0229,SE-SR-2,Principal Engineer,FR,eng_senior,male,70500,EUR,2025-12-31,active,demo-v1
+emp-0089,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,66000,EUR,2025-12-31,active,demo-v1
+emp-0246,PD-2,Senior Product Manager,FR,product_design,female,60000,EUR,2025-12-31,active,demo-v1
+emp-0122,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,65000,EUR,2025-12-31,active,demo-v1
+emp-0232,SE-SR-2,Principal Engineer,FR,eng_senior,male,71000,EUR,2025-12-31,active,demo-v1
+emp-0212,SE-SR-1,Staff Engineer,FR,eng_senior,male,75500,EUR,2025-12-31,active,demo-v1
+emp-0236,SE-SR-1,Staff Engineer,FR,eng_senior,male,82500,EUR,2025-12-31,active,demo-v1
+emp-0086,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,55000,EUR,2025-12-31,active,demo-v1
+emp-0042,SE-IC-2,Software Engineer II,FR,eng_ic,female,51500,EUR,2025-12-31,active,demo-v1
+emp-0160,SE-IC-1,Software Engineer,FR,eng_ic,male,51500,EUR,2025-12-31,active,demo-v1
+emp-0259,PD-2,Senior Product Manager,FR,product_design,female,50000,EUR,2025-12-31,active,demo-v1
+emp-0295,HR-2,Senior HR Business Partner,FR,hr_generalist,female,42000,EUR,2025-12-31,active,demo-v1
+emp-0061,SE-IC-1,Software Engineer,FR,eng_ic,male,65500,EUR,2025-12-31,active,demo-v1
+emp-0012,SE-IC-3,Senior Software Engineer,FR,eng_ic,female,44500,EUR,2025-12-31,active,demo-v1
+emp-0303,HR-2,Senior HR Business Partner,FR,hr_generalist,female,43500,EUR,2025-12-31,active,demo-v1
+emp-0314,FIN-1,Financial Analyst,FR,finance_legal,female,48000,EUR,2025-12-31,active,demo-v1
+emp-0112,SE-IC-1,Software Engineer,FR,eng_ic,male,57000,EUR,2025-12-31,active,demo-v1
+emp-0047,SE-IC-2,Software Engineer II,FR,eng_ic,female,55500,EUR,2025-12-31,active,demo-v1
+emp-0072,SE-IC-1,Software Engineer,FR,eng_ic,male,54500,EUR,2025-12-31,active,demo-v1
+emp-0215,SE-SR-2,Principal Engineer,FR,eng_senior,male,83000,EUR,2025-12-31,active,demo-v1
+emp-0186,SE-SR-1,Staff Engineer,FR,eng_senior,female,70000,EUR,2025-12-31,active,demo-v1
+emp-0335,SALES-1,Account Executive,FR,sales_gtm,female,47500,EUR,2025-12-31,active,demo-v1
+emp-0324,FIN-1,Financial Analyst,FR,finance_legal,male,55000,EUR,2025-12-31,active,demo-v1
+emp-0164,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,50500,EUR,2025-12-31,active,demo-v1
+emp-0320,FIN-1,Financial Analyst,FR,finance_legal,female,55000,EUR,2025-12-31,active,demo-v1
+emp-0059,SE-IC-1,Software Engineer,FR,eng_ic,male,56000,EUR,2025-12-31,active,demo-v1
+emp-0264,PD-2,Senior Product Manager,FR,product_design,female,49000,EUR,2025-12-31,active,demo-v1
+emp-0258,PD-1,Product Manager,FR,product_design,female,56000,EUR,2025-12-31,active,demo-v1
+emp-0249,PD-1,Product Manager,FR,product_design,female,60500,EUR,2025-12-31,active,demo-v1
+emp-0083,SE-IC-2,Software Engineer II,FR,eng_ic,male,54500,EUR,2025-12-31,active,demo-v1
+emp-0279,PD-2,Senior Product Manager,FR,product_design,male,58000,EUR,2025-12-31,active,demo-v1
+emp-0011,SE-IC-1,Software Engineer,FR,eng_ic,female,52500,EUR,2025-12-31,active,demo-v1
+emp-0198,SE-SR-2,Principal Engineer,FR,eng_senior,male,88000,EUR,2025-12-31,active,demo-v1
+emp-0268,PD-1,Product Manager,FR,product_design,male,54000,EUR,2025-12-31,active,demo-v1
+emp-0127,SE-IC-2,Software Engineer II,FR,eng_ic,male,63000,EUR,2025-12-31,active,demo-v1
+emp-0290,HR-1,HR Generalist,FR,hr_generalist,female,37000,EUR,2025-12-31,active,demo-v1
+emp-0288,HR-2,Senior HR Business Partner,FR,hr_generalist,female,47000,EUR,2025-12-31,active,demo-v1
+emp-0070,SE-IC-2,Software Engineer II,FR,eng_ic,male,52500,EUR,2025-12-31,active,demo-v1
+emp-0104,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,63000,EUR,2025-12-31,active,demo-v1
+emp-0340,SALES-1,Account Executive,FR,sales_gtm,male,50000,EUR,2025-12-31,active,demo-v1
+emp-0120,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,65000,EUR,2025-12-31,active,demo-v1
+emp-0032,SE-IC-2,Software Engineer II,FR,eng_ic,female,45500,EUR,2025-12-31,active,demo-v1
+emp-0332,SALES-1,Account Executive,FR,sales_gtm,female,46000,EUR,2025-12-31,active,demo-v1
+emp-0327,FIN-1,Financial Analyst,FR,finance_legal,male,62500,EUR,2025-12-31,active,demo-v1
+emp-0210,SE-SR-2,Principal Engineer,FR,eng_senior,male,90000,EUR,2025-12-31,active,demo-v1
+emp-0187,SE-SR-2,Principal Engineer,FR,eng_senior,female,81000,EUR,2025-12-31,active,demo-v1
+emp-0311,FIN-1,Financial Analyst,FR,finance_legal,female,44500,EUR,2025-12-31,active,demo-v1
+emp-0043,SE-IC-3,Senior Software Engineer,FR,eng_ic,female,58000,EUR,2025-12-31,active,demo-v1
+emp-0291,HR-2,Senior HR Business Partner,FR,hr_generalist,female,42500,EUR,2025-12-31,active,demo-v1
+emp-0178,SE-IC-1,Software Engineer,FR,eng_ic,male,57500,EUR,2025-12-31,active,demo-v1
+emp-0037,SE-IC-1,Software Engineer,FR,eng_ic,female,45000,EUR,2025-12-31,active,demo-v1
+emp-0069,SE-IC-1,Software Engineer,FR,eng_ic,male,66000,EUR,2025-12-31,active,demo-v1
+emp-0234,SE-SR-2,Principal Engineer,FR,eng_senior,male,81000,EUR,2025-12-31,active,demo-v1
+emp-0344,SALES-1,Account Executive,FR,sales_gtm,male,57500,EUR,2025-12-31,active,demo-v1
+emp-0220,SE-SR-1,Staff Engineer,FR,eng_senior,male,76000,EUR,2025-12-31,active,demo-v1
+emp-0140,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,52500,EUR,2025-12-31,active,demo-v1
+emp-0245,SE-SR-2,Principal Engineer,FR,eng_senior,male,86500,EUR,2025-12-31,active,demo-v1
+emp-0328,FIN-1,Financial Analyst,FR,finance_legal,male,54000,EUR,2025-12-31,active,demo-v1
+emp-0051,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,57500,EUR,2025-12-31,active,demo-v1
+emp-0219,SE-SR-1,Staff Engineer,FR,eng_senior,male,85000,EUR,2025-12-31,active,demo-v1
+emp-0213,SE-SR-2,Principal Engineer,FR,eng_senior,male,70500,EUR,2025-12-31,active,demo-v1
+emp-0202,SE-SR-1,Staff Engineer,FR,eng_senior,male,82000,EUR,2025-12-31,active,demo-v1
+emp-0200,SE-SR-1,Staff Engineer,FR,eng_senior,male,92500,EUR,2025-12-31,active,demo-v1
+emp-0183,SE-SR-2,Principal Engineer,FR,eng_senior,female,64500,EUR,2025-12-31,active,demo-v1
+emp-0237,SE-SR-1,Staff Engineer,FR,eng_senior,male,78000,EUR,2025-12-31,active,demo-v1
+emp-0240,SE-SR-1,Staff Engineer,FR,eng_senior,male,81500,EUR,2025-12-31,active,demo-v1
+emp-0271,PD-1,Product Manager,FR,product_design,male,66500,EUR,2025-12-31,active,demo-v1
+emp-0073,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,63000,EUR,2025-12-31,active,demo-v1
+emp-0337,SALES-1,Account Executive,FR,sales_gtm,female,42500,EUR,2025-12-31,active,demo-v1
+emp-0074,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,51500,EUR,2025-12-31,active,demo-v1
+emp-0060,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,59500,EUR,2025-12-31,active,demo-v1
+emp-0308,HR-2,Senior HR Business Partner,FR,hr_generalist,male,43000,EUR,2025-12-31,active,demo-v1
+emp-0075,SE-IC-2,Software Engineer II,FR,eng_ic,male,62000,EUR,2025-12-31,active,demo-v1
+emp-0121,SE-IC-1,Software Engineer,FR,eng_ic,male,53500,EUR,2025-12-31,active,demo-v1
+emp-0223,SE-SR-1,Staff Engineer,FR,eng_senior,male,70500,EUR,2025-12-31,active,demo-v1
+emp-0296,HR-1,HR Generalist,FR,hr_generalist,female,48000,EUR,2025-12-31,active,demo-v1
+emp-0216,SE-SR-1,Staff Engineer,FR,eng_senior,male,78500,EUR,2025-12-31,active,demo-v1
+emp-0105,SE-IC-1,Software Engineer,FR,eng_ic,male,56000,EUR,2025-12-31,active,demo-v1
+emp-0001,SE-IC-3,Senior Software Engineer,FR,eng_ic,female,46000,EUR,2025-12-31,active,demo-v1
+emp-0197,SE-SR-2,Principal Engineer,FR,eng_senior,male,88000,EUR,2025-12-31,active,demo-v1
+emp-0020,SE-IC-1,Software Engineer,FR,eng_ic,female,55500,EUR,2025-12-31,active,demo-v1
+emp-0277,PD-2,Senior Product Manager,FR,product_design,male,64000,EUR,2025-12-31,active,demo-v1
+emp-0342,SALES-1,Account Executive,FR,sales_gtm,male,45500,EUR,2025-12-31,active,demo-v1
+emp-0283,PD-1,Product Manager,FR,product_design,male,58500,EUR,2025-12-31,active,demo-v1
+emp-0041,SE-IC-1,Software Engineer,FR,eng_ic,female,50500,EUR,2025-12-31,active,demo-v1
+emp-0021,SE-IC-2,Software Engineer II,FR,eng_ic,female,50000,EUR,2025-12-31,active,demo-v1
+emp-0293,HR-2,Senior HR Business Partner,FR,hr_generalist,female,42500,EUR,2025-12-31,active,demo-v1
+emp-0068,SE-IC-2,Software Engineer II,FR,eng_ic,male,56500,EUR,2025-12-31,active,demo-v1
+emp-0055,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,60000,EUR,2025-12-31,active,demo-v1
+emp-0161,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,57000,EUR,2025-12-31,active,demo-v1
+emp-0054,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,56500,EUR,2025-12-31,active,demo-v1
+emp-0226,SE-SR-1,Staff Engineer,FR,eng_senior,male,79000,EUR,2025-12-31,active,demo-v1
+emp-0026,SE-IC-1,Software Engineer,FR,eng_ic,female,50000,EUR,2025-12-31,active,demo-v1
+emp-0190,SE-SR-2,Principal Engineer,FR,eng_senior,female,78000,EUR,2025-12-31,active,demo-v1
+emp-0289,HR-1,HR Generalist,FR,hr_generalist,female,47500,EUR,2025-12-31,active,demo-v1
+emp-0016,SE-IC-2,Software Engineer II,FR,eng_ic,female,48000,EUR,2025-12-31,active,demo-v1
+emp-0247,PD-2,Senior Product Manager,FR,product_design,female,60000,EUR,2025-12-31,active,demo-v1
+emp-0257,PD-2,Senior Product Manager,FR,product_design,female,52500,EUR,2025-12-31,active,demo-v1
+emp-0079,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,53000,EUR,2025-12-31,active,demo-v1
+emp-0110,SE-IC-1,Software Engineer,FR,eng_ic,male,56500,EUR,2025-12-31,active,demo-v1
+emp-0323,FIN-1,Financial Analyst,FR,finance_legal,male,48000,EUR,2025-12-31,active,demo-v1
+emp-0077,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,57500,EUR,2025-12-31,active,demo-v1
+emp-0305,HR-2,Senior HR Business Partner,FR,hr_generalist,female,46500,EUR,2025-12-31,active,demo-v1
+emp-0116,SE-IC-1,Software Engineer,FR,eng_ic,male,51500,EUR,2025-12-31,active,demo-v1
+emp-0318,FIN-1,Financial Analyst,FR,finance_legal,female,46500,EUR,2025-12-31,active,demo-v1
+emp-0134,SE-IC-1,Software Engineer,FR,eng_ic,male,55500,EUR,2025-12-31,active,demo-v1
+emp-0199,SE-SR-1,Staff Engineer,FR,eng_senior,male,73500,EUR,2025-12-31,active,demo-v1
+emp-0058,SE-IC-2,Software Engineer II,FR,eng_ic,male,58000,EUR,2025-12-31,active,demo-v1
+emp-0159,SE-IC-1,Software Engineer,FR,eng_ic,male,55500,EUR,2025-12-31,active,demo-v1
+emp-0203,SE-SR-1,Staff Engineer,FR,eng_senior,male,84000,EUR,2025-12-31,active,demo-v1
+emp-0153,SE-IC-1,Software Engineer,FR,eng_ic,male,51500,EUR,2025-12-31,active,demo-v1
+emp-0156,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,65000,EUR,2025-12-31,active,demo-v1
+emp-0107,SE-IC-2,Software Engineer II,FR,eng_ic,male,61500,EUR,2025-12-31,active,demo-v1
+emp-0196,SE-SR-2,Principal Engineer,FR,eng_senior,female,66500,EUR,2025-12-31,active,demo-v1
+emp-0341,SALES-1,Account Executive,FR,sales_gtm,male,55000,EUR,2025-12-31,active,demo-v1
+emp-0031,SE-IC-1,Software Engineer,FR,eng_ic,female,59500,EUR,2025-12-31,active,demo-v1
+emp-0064,SE-IC-1,Software Engineer,FR,eng_ic,male,57500,EUR,2025-12-31,active,demo-v1
+emp-0022,SE-IC-2,Software Engineer II,FR,eng_ic,female,46500,EUR,2025-12-31,active,demo-v1
+emp-0078,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,49500,EUR,2025-12-31,active,demo-v1
+emp-0294,HR-1,HR Generalist,FR,hr_generalist,female,39000,EUR,2025-12-31,active,demo-v1
+emp-0346,SALES-1,Account Executive,FR,sales_gtm,male,50000,EUR,2025-12-31,active,demo-v1
+emp-0235,SE-SR-2,Principal Engineer,FR,eng_senior,male,84000,EUR,2025-12-31,active,demo-v1
+emp-0039,SE-IC-2,Software Engineer II,FR,eng_ic,female,45500,EUR,2025-12-31,active,demo-v1
+emp-0329,FIN-1,Financial Analyst,FR,finance_legal,male,55000,EUR,2025-12-31,active,demo-v1
+emp-0176,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,58000,EUR,2025-12-31,active,demo-v1
+emp-0301,HR-1,HR Generalist,FR,hr_generalist,female,43500,EUR,2025-12-31,active,demo-v1
+emp-0148,SE-IC-2,Software Engineer II,FR,eng_ic,male,58000,EUR,2025-12-31,active,demo-v1
+emp-0019,SE-IC-1,Software Engineer,FR,eng_ic,female,56500,EUR,2025-12-31,active,demo-v1
+emp-0343,SALES-1,Account Executive,FR,sales_gtm,male,44500,EUR,2025-12-31,active,demo-v1
+emp-0103,SE-IC-2,Software Engineer II,FR,eng_ic,male,66500,EUR,2025-12-31,active,demo-v1
+emp-0017,SE-IC-2,Software Engineer II,FR,eng_ic,female,54000,EUR,2025-12-31,active,demo-v1
+emp-0211,SE-SR-1,Staff Engineer,FR,eng_senior,male,77500,EUR,2025-12-31,active,demo-v1
+emp-0030,SE-IC-2,Software Engineer II,FR,eng_ic,female,53000,EUR,2025-12-31,active,demo-v1
+emp-0255,PD-2,Senior Product Manager,FR,product_design,female,61000,EUR,2025-12-31,active,demo-v1
+emp-0221,SE-SR-2,Principal Engineer,FR,eng_senior,male,81000,EUR,2025-12-31,active,demo-v1
+emp-0256,PD-2,Senior Product Manager,FR,product_design,female,54000,EUR,2025-12-31,active,demo-v1
+emp-0261,PD-1,Product Manager,FR,product_design,female,53500,EUR,2025-12-31,active,demo-v1
+emp-0014,SE-IC-3,Senior Software Engineer,FR,eng_ic,female,55000,EUR,2025-12-31,active,demo-v1
+emp-0278,PD-1,Product Manager,FR,product_design,male,65000,EUR,2025-12-31,active,demo-v1
+emp-0307,HR-1,HR Generalist,FR,hr_generalist,male,54500,EUR,2025-12-31,active,demo-v1
+emp-0088,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,59000,EUR,2025-12-31,active,demo-v1
+emp-0113,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,56500,EUR,2025-12-31,active,demo-v1
+emp-0123,SE-IC-1,Software Engineer,FR,eng_ic,male,65000,EUR,2025-12-31,active,demo-v1
+emp-0241,SE-SR-2,Principal Engineer,FR,eng_senior,male,72000,EUR,2025-12-31,active,demo-v1
+emp-0146,SE-IC-1,Software Engineer,FR,eng_ic,male,54500,EUR,2025-12-31,active,demo-v1
+emp-0007,SE-IC-3,Senior Software Engineer,FR,eng_ic,female,45500,EUR,2025-12-31,active,demo-v1
+emp-0053,SE-IC-2,Software Engineer II,FR,eng_ic,male,58000,EUR,2025-12-31,active,demo-v1
+emp-0310,HR-1,HR Generalist,FR,hr_generalist,male,42000,EUR,2025-12-31,active,demo-v1
+emp-0266,PD-1,Product Manager,FR,product_design,female,59500,EUR,2025-12-31,active,demo-v1
+emp-0150,SE-IC-2,Software Engineer II,FR,eng_ic,male,65000,EUR,2025-12-31,active,demo-v1
+emp-0028,SE-IC-2,Software Engineer II,FR,eng_ic,female,57500,EUR,2025-12-31,active,demo-v1
+emp-0024,SE-IC-2,Software Engineer II,FR,eng_ic,female,46000,EUR,2025-12-31,active,demo-v1
+emp-0141,SE-IC-1,Software Engineer,FR,eng_ic,male,50000,EUR,2025-12-31,active,demo-v1
+emp-0065,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,58000,EUR,2025-12-31,active,demo-v1
+emp-0008,SE-IC-3,Senior Software Engineer,FR,eng_ic,female,51000,EUR,2025-12-31,active,demo-v1
+emp-0155,SE-IC-1,Software Engineer,FR,eng_ic,male,51000,EUR,2025-12-31,active,demo-v1
+emp-0092,SE-IC-1,Software Engineer,FR,eng_ic,male,66500,EUR,2025-12-31,active,demo-v1
+emp-0185,SE-SR-1,Staff Engineer,FR,eng_senior,female,64500,EUR,2025-12-31,active,demo-v1
+emp-0117,SE-IC-1,Software Engineer,FR,eng_ic,male,60000,EUR,2025-12-31,active,demo-v1
+emp-0152,SE-IC-2,Software Engineer II,FR,eng_ic,male,56500,EUR,2025-12-31,active,demo-v1
+emp-0100,SE-IC-1,Software Engineer,FR,eng_ic,male,53500,EUR,2025-12-31,active,demo-v1
+emp-0052,SE-IC-1,Software Engineer,FR,eng_ic,male,64500,EUR,2025-12-31,active,demo-v1
+emp-0145,SE-IC-1,Software Engineer,FR,eng_ic,male,62500,EUR,2025-12-31,active,demo-v1
+emp-0269,PD-1,Product Manager,FR,product_design,male,53000,EUR,2025-12-31,active,demo-v1
+emp-0322,FIN-1,Financial Analyst,FR,finance_legal,female,53000,EUR,2025-12-31,active,demo-v1
+emp-0349,SALES-1,Account Executive,FR,sales_gtm,male,56000,EUR,2025-12-31,active,demo-v1
+emp-0111,SE-IC-1,Software Engineer,FR,eng_ic,male,60500,EUR,2025-12-31,active,demo-v1
+emp-0336,SALES-1,Account Executive,FR,sales_gtm,female,42000,EUR,2025-12-31,active,demo-v1
+emp-0095,SE-IC-1,Software Engineer,FR,eng_ic,male,61000,EUR,2025-12-31,active,demo-v1
+emp-0275,PD-2,Senior Product Manager,FR,product_design,male,59500,EUR,2025-12-31,active,demo-v1
+emp-0286,HR-1,HR Generalist,FR,hr_generalist,female,38000,EUR,2025-12-31,active,demo-v1
+emp-0162,SE-IC-2,Software Engineer II,FR,eng_ic,male,53000,EUR,2025-12-31,active,demo-v1
+emp-0099,SE-IC-1,Software Engineer,FR,eng_ic,male,65000,EUR,2025-12-31,active,demo-v1
+emp-0062,SE-IC-2,Software Engineer II,FR,eng_ic,male,64500,EUR,2025-12-31,active,demo-v1
+emp-0119,SE-IC-1,Software Engineer,FR,eng_ic,male,58500,EUR,2025-12-31,active,demo-v1
+emp-0129,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,51000,EUR,2025-12-31,active,demo-v1
+emp-0302,HR-1,HR Generalist,FR,hr_generalist,female,40000,EUR,2025-12-31,active,demo-v1
+emp-0139,SE-IC-1,Software Engineer,FR,eng_ic,male,64000,EUR,2025-12-31,active,demo-v1
+emp-0233,SE-SR-1,Staff Engineer,FR,eng_senior,male,89000,EUR,2025-12-31,active,demo-v1
+emp-0181,SE-SR-2,Principal Engineer,FR,eng_senior,female,81000,EUR,2025-12-31,active,demo-v1
+emp-0170,SE-IC-2,Software Engineer II,FR,eng_ic,male,53500,EUR,2025-12-31,active,demo-v1
+emp-0282,PD-2,Senior Product Manager,FR,product_design,male,63500,EUR,2025-12-31,active,demo-v1
+emp-0218,SE-SR-1,Staff Engineer,FR,eng_senior,male,82000,EUR,2025-12-31,active,demo-v1
+emp-0177,SE-IC-1,Software Engineer,FR,eng_ic,male,60500,EUR,2025-12-31,active,demo-v1
+emp-0272,PD-2,Senior Product Manager,FR,product_design,male,51000,EUR,2025-12-31,active,demo-v1
+emp-0284,PD-1,Product Manager,FR,product_design,male,58000,EUR,2025-12-31,active,demo-v1
+emp-0243,SE-SR-2,Principal Engineer,FR,eng_senior,male,91500,EUR,2025-12-31,active,demo-v1
+emp-0189,SE-SR-1,Staff Engineer,FR,eng_senior,female,82000,EUR,2025-12-31,active,demo-v1
+emp-0298,HR-1,HR Generalist,FR,hr_generalist,female,41500,EUR,2025-12-31,active,demo-v1
+emp-0157,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,54500,EUR,2025-12-31,active,demo-v1
+emp-0339,SALES-1,Account Executive,FR,sales_gtm,female,54000,EUR,2025-12-31,active,demo-v1
+emp-0208,SE-SR-1,Staff Engineer,FR,eng_senior,male,91500,EUR,2025-12-31,active,demo-v1
+emp-0114,SE-IC-1,Software Engineer,FR,eng_ic,male,51500,EUR,2025-12-31,active,demo-v1
+emp-0151,SE-IC-1,Software Engineer,FR,eng_ic,male,55500,EUR,2025-12-31,active,demo-v1
+emp-0048,SE-IC-3,Senior Software Engineer,FR,eng_ic,female,55000,EUR,2025-12-31,active,demo-v1
+emp-0009,SE-IC-1,Software Engineer,FR,eng_ic,female,44500,EUR,2025-12-31,active,demo-v1
+emp-0230,SE-SR-1,Staff Engineer,FR,eng_senior,male,78500,EUR,2025-12-31,active,demo-v1
+emp-0252,PD-1,Product Manager,FR,product_design,female,56500,EUR,2025-12-31,active,demo-v1
+emp-0244,SE-SR-1,Staff Engineer,FR,eng_senior,male,93500,EUR,2025-12-31,active,demo-v1
+emp-0316,FIN-1,Financial Analyst,FR,finance_legal,female,48000,EUR,2025-12-31,active,demo-v1
+emp-0321,FIN-1,Financial Analyst,FR,finance_legal,female,48000,EUR,2025-12-31,active,demo-v1
+emp-0251,PD-2,Senior Product Manager,FR,product_design,female,60000,EUR,2025-12-31,active,demo-v1
+emp-0209,SE-SR-1,Staff Engineer,FR,eng_senior,male,81500,EUR,2025-12-31,active,demo-v1
+emp-0124,SE-IC-2,Software Engineer II,FR,eng_ic,male,55500,EUR,2025-12-31,active,demo-v1
+emp-0044,SE-IC-2,Software Engineer II,FR,eng_ic,female,47000,EUR,2025-12-31,active,demo-v1
+emp-0098,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,52000,EUR,2025-12-31,active,demo-v1
+emp-0265,PD-2,Senior Product Manager,FR,product_design,female,60500,EUR,2025-12-31,active,demo-v1
+emp-0006,SE-IC-3,Senior Software Engineer,FR,eng_ic,female,56500,EUR,2025-12-31,active,demo-v1
+emp-0285,PD-2,Senior Product Manager,FR,product_design,male,60000,EUR,2025-12-31,active,demo-v1
+emp-0142,SE-IC-1,Software Engineer,FR,eng_ic,male,57000,EUR,2025-12-31,active,demo-v1
+emp-0306,HR-2,Senior HR Business Partner,FR,hr_generalist,male,52500,EUR,2025-12-31,active,demo-v1
+emp-0144,SE-IC-2,Software Engineer II,FR,eng_ic,male,65000,EUR,2025-12-31,active,demo-v1
+emp-0175,SE-IC-1,Software Engineer,FR,eng_ic,male,56500,EUR,2025-12-31,active,demo-v1
+emp-0133,SE-IC-1,Software Engineer,FR,eng_ic,male,57500,EUR,2025-12-31,active,demo-v1
+emp-0182,SE-SR-1,Staff Engineer,FR,eng_senior,female,79500,EUR,2025-12-31,active,demo-v1
+emp-0109,SE-IC-2,Software Engineer II,FR,eng_ic,male,53500,EUR,2025-12-31,active,demo-v1
+emp-0250,PD-2,Senior Product Manager,FR,product_design,female,52500,EUR,2025-12-31,active,demo-v1
+emp-0094,SE-IC-2,Software Engineer II,FR,eng_ic,male,50000,EUR,2025-12-31,active,demo-v1
+emp-0167,SE-IC-2,Software Engineer II,FR,eng_ic,male,58000,EUR,2025-12-31,active,demo-v1
+emp-0254,PD-2,Senior Product Manager,FR,product_design,female,57500,EUR,2025-12-31,active,demo-v1
+emp-0015,SE-IC-3,Senior Software Engineer,FR,eng_ic,female,53000,EUR,2025-12-31,active,demo-v1
+emp-0173,SE-IC-1,Software Engineer,FR,eng_ic,male,49500,EUR,2025-12-31,active,demo-v1
+emp-0195,SE-SR-2,Principal Engineer,FR,eng_senior,female,65500,EUR,2025-12-31,active,demo-v1
+emp-0313,FIN-1,Financial Analyst,FR,finance_legal,female,47000,EUR,2025-12-31,active,demo-v1
+emp-0292,HR-2,Senior HR Business Partner,FR,hr_generalist,female,44500,EUR,2025-12-31,active,demo-v1
+emp-0238,SE-SR-1,Staff Engineer,FR,eng_senior,male,93000,EUR,2025-12-31,active,demo-v1
+emp-0125,SE-IC-1,Software Engineer,FR,eng_ic,male,52500,EUR,2025-12-31,active,demo-v1
+emp-0231,SE-SR-1,Staff Engineer,FR,eng_senior,male,88500,EUR,2025-12-31,active,demo-v1
+emp-0143,SE-IC-1,Software Engineer,FR,eng_ic,male,62500,EUR,2025-12-31,active,demo-v1
+emp-0045,SE-IC-2,Software Engineer II,FR,eng_ic,female,50000,EUR,2025-12-31,active,demo-v1
+emp-0126,SE-IC-3,Senior Software Engineer,FR,eng_ic,male,63500,EUR,2025-12-31,active,demo-v1
+emp-0166,SE-IC-2,Software Engineer II,FR,eng_ic,male,66500,EUR,2025-12-31,active,demo-v1
+emp-0138,SE-IC-2,Software Engineer II,FR,eng_ic,male,57500,EUR,2025-12-31,active,demo-v1
+emp-0304,HR-1,HR Generalist,FR,hr_generalist,female,42000,EUR,2025-12-31,active,demo-v1
+emp-0224,SE-SR-1,Staff Engineer,FR,eng_senior,male,83000,EUR,2025-12-31,active,demo-v1
+emp-0239,SE-SR-2,Principal Engineer,FR,eng_senior,male,70000,EUR,2025-12-31,active,demo-v1
+emp-0248,PD-2,Senior Product Manager,FR,product_design,female,51000,EUR,2025-12-31,active,demo-v1
+emp-0276,PD-2,Senior Product Manager,FR,product_design,male,66000,EUR,2025-12-31,active,demo-v1

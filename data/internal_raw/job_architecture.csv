@@ -1,0 +1,12 @@
+job_code,job_family,job_level,worker_category_id,worker_category_label,nace_code,esco_uri,version
+SE-IC-1,Engineering,IC2,eng_ic,Engineering Individual Contributor,J62,urn:esco:occupation:2512,demo-v1
+SE-IC-2,Engineering,IC3,eng_ic,Engineering Individual Contributor,J62,urn:esco:occupation:2512,demo-v1
+SE-IC-3,Engineering,IC4,eng_ic,Engineering Individual Contributor,J62,urn:esco:occupation:2512,demo-v1
+SE-SR-1,Engineering,IC5,eng_senior,Senior Engineer,J62,urn:esco:occupation:2512,demo-v1
+SE-SR-2,Engineering,IC6,eng_senior,Senior Engineer,J62,urn:esco:occupation:2512,demo-v1
+PD-1,Product,P2,product_design,Product & Design,J62,urn:esco:occupation:2166,demo-v1
+PD-2,Product,P3,product_design,Product & Design,J62,urn:esco:occupation:2166,demo-v1
+HR-1,People,P2,hr_generalist,HR Generalist,N78,urn:esco:occupation:2423,demo-v1
+HR-2,People,P3,hr_generalist,HR Generalist,N78,urn:esco:occupation:2423,demo-v1
+FIN-1,Finance,P2,finance_legal,Finance & Legal,K64,urn:esco:occupation:2411,demo-v1
+SALES-1,Sales,P2,sales_gtm,Sales & GTM,J62,urn:esco:occupation:3322,demo-v1
