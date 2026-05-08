@@ -1,9 +1,12 @@
+import io
 import os
+import subprocess
+import tempfile
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -249,6 +252,40 @@ def get_egapro_benchmark(
 ):
     filters, _ = guarded(repository.resolve_filters, country, "EU27_AVG", sector, "latest")
     return guarded(repository._build_egapro_peer_benchmark, filters)
+
+
+@app.post("/api/upload/payroll")
+async def upload_payroll(file: UploadFile = File(...)):
+    if file.content_type not in ("text/csv", "application/csv", "text/plain"):
+        raise HTTPException(
+            status_code=400,
+            detail="Only CSV files are accepted. Please upload a .csv file.",
+        )
+
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(
+            status_code=413,
+            detail="File too large. Maximum upload size is 10MB.",
+        )
+
+    result = guarded(repository.ingest_uploaded_payroll, content)
+
+    # Trigger dbt rebuild of internal models in the background
+    analytics_dir = Path(__file__).resolve().parents[2] / "analytics"
+    if analytics_dir.exists():
+        try:
+            subprocess.Popen(
+                ["dbt", "run", "--select", "tag:internal"],
+                cwd=str(analytics_dir),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            result["dbt_run"] = "triggered"
+        except FileNotFoundError:
+            result["dbt_run"] = "dbt not found in PATH — run manually"
+
+    return result
 
 
 if __name__ == "__main__":

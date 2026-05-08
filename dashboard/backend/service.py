@@ -3952,6 +3952,134 @@ class AnalyticsRepository:
             "governance": self.build_governance_payload(),
         }
 
+    def ingest_uploaded_payroll(
+        self,
+        csv_bytes: bytes,
+    ) -> Dict[str, Any]:
+        """
+        Validates a payroll CSV upload, converts to parquet, updates the manifest.
+        Returns a summary dict. Raises ValueError for validation failures.
+        """
+        import io
+        import json
+        from datetime import datetime, timezone
+
+        import pandas as pd
+
+        REQUIRED_COLUMNS = {
+            "employee_id", "job_code", "country_code",
+            "worker_category_id", "gender", "base_salary",
+            "currency", "snapshot_date",
+        }
+        VALID_GENDERS = {"female", "male", "non_binary"}
+
+        try:
+            df = pd.read_csv(io.BytesIO(csv_bytes))
+        except Exception as e:
+            raise ValueError(f"Could not parse CSV: {e}") from e
+
+        missing = REQUIRED_COLUMNS - set(df.columns.str.lower())
+        if missing:
+            raise ValueError(f"Missing required columns: {', '.join(sorted(missing))}")
+
+        # Normalise column names to lowercase
+        df.columns = df.columns.str.lower()
+
+        if len(df) < 10:
+            raise ValueError(f"Upload must contain at least 10 employees. Got {len(df)}.")
+
+        # Validate gender
+        invalid_genders = set(df["gender"].str.lower().unique()) - VALID_GENDERS
+        if invalid_genders:
+            raise ValueError(
+                f"Invalid gender values: {invalid_genders}. Must be: female, male, non_binary"
+            )
+
+        # Validate salary
+        df["base_salary"] = pd.to_numeric(df["base_salary"], errors="coerce")
+        if df["base_salary"].isna().any() or (df["base_salary"] <= 0).any():
+            raise ValueError("base_salary must be a positive number for all rows.")
+
+        # Validate snapshot_date
+        try:
+            df["snapshot_date"] = pd.to_datetime(df["snapshot_date"]).dt.date
+        except Exception as e:
+            raise ValueError(f"snapshot_date could not be parsed as a date: {e}") from e
+
+        if (pd.to_datetime(df["snapshot_date"]) > pd.Timestamp.now()).any():
+            raise ValueError("snapshot_date cannot be in the future.")
+
+        # Validate country_code
+        if not df["country_code"].str.len().eq(2).all():
+            raise ValueError("country_code must be a 2-letter ISO code for all rows.")
+
+        # Rename base_salary → base_pay_amount to match existing pipeline
+        df = df.rename(columns={"base_salary": "base_pay_amount", "currency": "pay_currency"})
+
+        # Add pipeline-required columns with defaults
+        if "employment_status" not in df.columns:
+            df["employment_status"] = "active"
+        if "version" not in df.columns:
+            df["version"] = "uploaded-v1"
+        if "job_title" not in df.columns:
+            df["job_title"] = df["job_code"]
+
+        # Warnings
+        warnings = []
+        job_arch_path = self.internal_data_dir / "job_architecture.parquet"
+        if job_arch_path.exists():
+            import pyarrow.parquet as pq
+            arch_df = pq.read_table(job_arch_path).to_pandas()
+            known_codes = set(arch_df["job_code"])
+            unknown_codes = set(df["job_code"]) - known_codes
+            if unknown_codes:
+                warnings.append(
+                    f"{len(unknown_codes)} job_codes not in job architecture — "
+                    f"those rows will have no NACE/ESCO mapping: {sorted(unknown_codes)[:5]}"
+                )
+
+        # Write parquet
+        out_path = self.internal_data_dir / "payroll_snapshot.parquet"
+        df.to_parquet(out_path, index=False)
+
+        # Update manifest
+        manifest_path = self._internal_manifest_path()
+        manifest_path.parent.mkdir(parents=True, exist_ok=True)
+        manifest = {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "assets": [
+                {
+                    "asset_type": "internal_payroll_snapshot",
+                    "version": "uploaded-v1",
+                    "record_count": len(df),
+                    "output": str(out_path),
+                    "trusted_for_company_claims": True,
+                },
+            ],
+        }
+        # Preserve other assets if manifest already exists
+        existing = self._internal_manifest_assets()
+        for asset_type, asset in existing.items():
+            if asset_type != "internal_payroll_snapshot":
+                manifest["assets"].append(asset)
+
+        with manifest_path.open("w", encoding="utf-8") as f:
+            json.dump(manifest, f, indent=2)
+
+        snapshot_date = str(df["snapshot_date"].max())
+        record_count = len(df)
+
+        return {
+            "status": "accepted",
+            "record_count": record_count,
+            "snapshot_date": snapshot_date,
+            "validation": {
+                "passed": True,
+                "warnings": warnings,
+            },
+            "dbt_run": "pending",
+        }
+
     def _build_egapro_peer_benchmark(
         self,
         filters: FilterState,
