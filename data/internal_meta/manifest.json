@@ -1,0 +1,35 @@
+{
+  "generated_at": "2026-05-08T11:48:51.388116+00:00",
+  "assets": [
+    {
+      "asset_type": "internal_payroll_snapshot",
+      "version": "demo-v1",
+      "record_count": 350,
+      "output": "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/internal/payroll_snapshot.parquet",
+      "trusted_for_company_claims": true
+    },
+    {
+      "asset_type": "internal_job_architecture",
+      "version": "demo-v1",
+      "record_count": 11,
+      "output": "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/internal/job_architecture.parquet",
+      "trusted_for_company_claims": true
+    },
+    {
+      "asset_type": "internal_hris_workforce_snapshot",
+      "version": "local",
+      "record_count": 0,
+      "output": "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/internal/hris_workforce_snapshot.parquet",
+      "trusted_for_company_claims": false,
+      "placeholder": true
+    },
+    {
+      "asset_type": "internal_ats_requisition_snapshot",
+      "version": "local",
+      "record_count": 0,
+      "output": "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/internal/ats_requisition_snapshot.parquet",
+      "trusted_for_company_claims": false,
+      "placeholder": true
+    }
+  ]
+}

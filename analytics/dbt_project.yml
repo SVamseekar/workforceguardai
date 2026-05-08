@@ -18,9 +18,9 @@ clean-targets:
   - dbt_packages
 
 vars:
-  eu_raw_path: "data/eu_raw"
-  internal_path: "data/internal"
-  reference_path: "data/reference"
+  eu_raw_path: "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/eu_raw"
+  internal_path: "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/internal"
+  reference_path: "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/reference"
   metric_registry_seed_version: "2026.03"
 
 models:

@@ -3,5 +3,5 @@ workforceguard_analytics:
   outputs:
     dev:
       type: duckdb
-      path: data/workforceguard_analytics.duckdb
+      path: /Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/workforceguard_analytics.duckdb
       threads: 4
