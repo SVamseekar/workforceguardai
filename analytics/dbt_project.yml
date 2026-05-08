@@ -21,6 +21,7 @@ vars:
   eu_raw_path: "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/eu_raw"
   internal_path: "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/internal"
   reference_path: "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/reference"
+  public_company_path: "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/public_company"
   metric_registry_seed_version: "2026.03"
 
 models:
