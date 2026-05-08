@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import math
+import sqlite3
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -157,6 +159,7 @@ class AnalyticsRepository:
         self,
         root_dir: Path,
         governance_events_path: Optional[Path] = None,
+        automation_schedules_path: Optional[Path] = None,
         internal_data_dir: Optional[Path] = None,
         analytics_db_path: Optional[Path] = None,
     ):
@@ -177,7 +180,12 @@ class AnalyticsRepository:
         self.governance_events_path = (
             governance_events_path.resolve()
             if governance_events_path is not None
-            else (root_dir / "data" / "governance_events.json").resolve()
+            else (root_dir / "data" / "governance_events.sqlite").resolve()
+        )
+        self.automation_schedules_path = (
+            automation_schedules_path.resolve()
+            if automation_schedules_path is not None
+            else (root_dir / "data" / "automation_schedules.json").resolve()
         )
         self.metric_registry = {
             row["metric_id"]: row
@@ -195,6 +203,7 @@ class AnalyticsRepository:
             for row in self._read_seed_csv(self.seed_dir / "governance" / "ref_governance_actions.csv")
         }
         self.governance_events: List[Dict[str, Any]] = self._load_governance_events()
+        self.automation_schedules: List[Dict[str, Any]] = self._load_automation_schedules()
 
     def _read_seed_csv(self, path: Path) -> List[Dict[str, str]]:
         if not path.exists():
@@ -204,6 +213,12 @@ class AnalyticsRepository:
             return list(csv.DictReader(handle))
 
     def _load_governance_events(self) -> List[Dict[str, Any]]:
+        if self.governance_events_path.suffix == ".json":
+            return self._load_json_governance_events()
+
+        return self._load_sqlite_governance_events()
+
+    def _load_json_governance_events(self) -> List[Dict[str, Any]]:
         if not self.governance_events_path.exists():
             return []
 
@@ -218,10 +233,222 @@ class AnalyticsRepository:
 
         return [event for event in payload if isinstance(event, dict)][:50]
 
+    def _connect_governance_store(self) -> sqlite3.Connection:
+        self.governance_events_path.parent.mkdir(parents=True, exist_ok=True)
+        connection = sqlite3.connect(str(self.governance_events_path))
+        connection.execute(
+            """
+            create table if not exists governance_events (
+                event_sequence integer primary key,
+                event_id text not null unique,
+                action_code text not null,
+                target_type text not null,
+                target_id text not null,
+                actor text not null,
+                created_at text not null,
+                previous_hash text not null,
+                event_hash text not null,
+                event_json text not null
+            )
+            """
+        )
+        connection.execute(
+            """
+            create index if not exists idx_governance_events_target
+            on governance_events(target_type, target_id)
+            """
+        )
+        return connection
+
+    def _load_sqlite_governance_events(self) -> List[Dict[str, Any]]:
+        if not self.governance_events_path.exists():
+            return []
+
+        try:
+            with self._connect_governance_store() as connection:
+                rows = connection.execute(
+                    """
+                    select event_json
+                    from governance_events
+                    order by event_sequence desc
+                    limit 50
+                    """
+                ).fetchall()
+        except sqlite3.Error:
+            return []
+
+        events = []
+        for row in rows:
+            try:
+                event = json.loads(row[0])
+            except (TypeError, json.JSONDecodeError):
+                continue
+            if isinstance(event, dict):
+                events.append(event)
+        return events
+
     def _persist_governance_events(self) -> None:
+        if self.governance_events_path.suffix == ".json":
+            self._persist_json_governance_events()
+            return
+
+        self._persist_sqlite_governance_events()
+
+    def _persist_json_governance_events(self) -> None:
         self.governance_events_path.parent.mkdir(parents=True, exist_ok=True)
         with self.governance_events_path.open("w", encoding="utf-8") as handle:
             json.dump(self.governance_events[:50], handle, indent=2)
+
+    def _persist_sqlite_governance_events(self) -> None:
+        with self._connect_governance_store() as connection:
+            for event in self.governance_events[:50]:
+                connection.execute(
+                    """
+                    insert or replace into governance_events (
+                        event_sequence,
+                        event_id,
+                        action_code,
+                        target_type,
+                        target_id,
+                        actor,
+                        created_at,
+                        previous_hash,
+                        event_hash,
+                        event_json
+                    ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        int(event["event_sequence"]),
+                        event["event_id"],
+                        event["action_code"],
+                        event["target_type"],
+                        event["target_id"],
+                        event.get("actor") or "system",
+                        event["created_at"],
+                        event["previous_hash"],
+                        event["event_hash"],
+                        json.dumps(event, sort_keys=True),
+                    ),
+                )
+
+    def _load_automation_schedules(self) -> List[Dict[str, Any]]:
+        if not self.automation_schedules_path.exists():
+            return []
+
+        try:
+            with self.automation_schedules_path.open("r", encoding="utf-8") as handle:
+                payload = json.load(handle)
+        except (json.JSONDecodeError, OSError):
+            return []
+
+        if not isinstance(payload, list):
+            return []
+
+        return [item for item in payload if isinstance(item, dict)][:50]
+
+    def _persist_automation_schedules(self) -> None:
+        self.automation_schedules_path.parent.mkdir(parents=True, exist_ok=True)
+        with self.automation_schedules_path.open("w", encoding="utf-8") as handle:
+            json.dump(self.automation_schedules[:50], handle, indent=2, sort_keys=True)
+
+    def _schedule_id(self, template_id: str, filters: Dict[str, Any]) -> str:
+        scope = "::".join(
+            [
+                str(filters.get("country") or "ALL"),
+                str(filters.get("geography") or "EU27_AVG"),
+                str(filters.get("sector") or "ALL"),
+                str(filters.get("period") or "latest"),
+            ]
+        )
+        return f"{template_id}::{scope}"
+
+    def _governance_event_hash(self, event: Dict[str, Any]) -> str:
+        hash_payload = {
+            key: value
+            for key, value in event.items()
+            if key != "event_hash"
+        }
+        encoded = json.dumps(hash_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        return hashlib.sha256(encoded).hexdigest()
+
+    def _next_governance_sequence(self) -> int:
+        sequences = [
+            int(event["event_sequence"])
+            for event in self.governance_events
+            if str(event.get("event_sequence", "")).isdigit()
+        ]
+        return (max(sequences) + 1) if sequences else (len(self.governance_events) + 1)
+
+    def _latest_governance_hash(self) -> str:
+        sequenced_events = [
+            event
+            for event in self.governance_events
+            if str(event.get("event_sequence", "")).isdigit() and event.get("event_hash")
+        ]
+        if not sequenced_events:
+            return "GENESIS"
+        latest = max(sequenced_events, key=lambda event: int(event["event_sequence"]))
+        return str(latest["event_hash"])
+
+    def _governance_integrity(self) -> Dict[str, Any]:
+        sequenced_events = sorted(
+            [
+                event
+                for event in self.governance_events
+                if str(event.get("event_sequence", "")).isdigit()
+            ],
+            key=lambda event: int(event["event_sequence"]),
+        )
+        previous_hash = "GENESIS"
+        verified = True
+        break_event_id = None
+        for event in sequenced_events:
+            expected_hash = self._governance_event_hash(event)
+            if event.get("previous_hash") != previous_hash or event.get("event_hash") != expected_hash:
+                verified = False
+                break_event_id = event.get("event_id")
+                break
+            previous_hash = str(event.get("event_hash"))
+
+        return {
+            "verified": verified,
+            "event_count": len(self.governance_events),
+            "latest_hash": self._latest_governance_hash(),
+            "break_event_id": break_event_id,
+            "storage_path": str(self.governance_events_path),
+        }
+
+    def _governance_state_for_target(self, target_type: str, target_id: str) -> Dict[str, Any]:
+        matching_events = [
+            event
+            for event in self.governance_events
+            if event.get("target_type") == target_type and event.get("target_id") == target_id
+        ]
+        if not matching_events:
+            return {
+                "state": "pending_review",
+                "latest_event": None,
+                "event_count": 0,
+                "requires_reason_to_change": True,
+            }
+
+        latest_event = max(
+            matching_events,
+            key=lambda event: int(event.get("event_sequence") or 0),
+        )
+        state_by_action = {
+            "review_required": "pending_review",
+            "approved": "approved",
+            "overridden": "overridden",
+            "reversed": "reversed",
+            "exported": "exported",
+        }
+        return {
+            "state": state_by_action.get(latest_event.get("action_code"), "pending_review"),
+            "latest_event": latest_event,
+            "event_count": len(matching_events),
+            "requires_reason_to_change": latest_event.get("action_code") in {"overridden", "reversed"},
+        }
 
     def _connect(self) -> duckdb.DuckDBPyConnection:
         if self._modeled_database_ready():
@@ -1144,6 +1371,7 @@ class AnalyticsRepository:
 
             review_items.append(
                 {
+                    "id": f"pay_transparency_category_review:{row['worker_category_id']}",
                     "worker_category": {
                         "id": row["worker_category_id"],
                         "label": row["worker_category_label"],
@@ -1163,7 +1391,18 @@ class AnalyticsRepository:
                     "priority": priority,
                     "rationale": rationale,
                     "evidence_basis": "blended" if row["market_benchmark_available"] else "internal",
+                    "governance_target": {
+                        "target_type": "pay_transparency_category",
+                        "target_id": f"pay_transparency_category_review:{row['worker_category_id']}",
+                    },
                 }
+            )
+
+        for item in review_items:
+            target = item["governance_target"]
+            item["human_review"] = self._governance_state_for_target(
+                target["target_type"],
+                target["target_id"],
             )
 
         summary = {
@@ -1174,9 +1413,19 @@ class AnalyticsRepository:
                 1 for item in review_items if item["review_state"] == "unresolved_review_item"
             ),
             "max_internal_gap": max(abs(item["internal_gap"]) for item in review_items),
+            "approved_count": sum(1 for item in review_items if item["human_review"]["state"] == "approved"),
+            "overridden_count": sum(1 for item in review_items if item["human_review"]["state"] == "overridden"),
+            "reversed_count": sum(1 for item in review_items if item["human_review"]["state"] == "reversed"),
         }
+        summary["pending_review_count"] = max(
+            0,
+            summary["unresolved_review_item_count"]
+            - summary["approved_count"]
+            - summary["overridden_count"],
+        )
         evidence_basis = "blended" if any(item["evidence_basis"] == "blended" for item in review_items) else "internal"
-        coverage_status = "review_required" if summary["unresolved_review_item_count"] else "monitored"
+        coverage_status = "review_required" if summary["pending_review_count"] else "monitored"
+        workflow_state = "requires_human_review" if summary["pending_review_count"] else "reviewed_or_monitored"
         provenance = [
             self._build_provenance("internal_payroll_snapshot", "internal_pay_gap", "internal-v1", True),
             self._build_provenance("internal_job_architecture", "worker_category_mapping", "internal-v1", False),
@@ -1199,7 +1448,24 @@ class AnalyticsRepository:
             "thresholds": thresholds,
             "summary": summary,
             "review_items": review_items,
-            "top_review_items": review_items[:3],
+            "top_review_items": sorted(
+                review_items,
+                key=lambda item: (
+                    item["human_review"]["state"] != "pending_review",
+                    {"high": 0, "medium": 1, "low": 2}.get(item["priority"], 3),
+                    -abs(item["internal_gap"]),
+                ),
+            )[:3],
+            "workflow": {
+                "state": workflow_state,
+                "human_oversight_required": bool(summary["pending_review_count"]),
+                "allowed_actions": list(self.governance_actions.values()),
+                "reason_required_actions": [
+                    action["action_code"]
+                    for action in self.governance_actions.values()
+                    if action["requires_reason"]
+                ],
+            },
             "governance_target": {
                 "target_type": "compliance_simulation",
                 "target_id": "pay_transparency_category_review",
@@ -3274,6 +3540,482 @@ class AnalyticsRepository:
 
         return citation
 
+    def _build_copilot_contract(self, overview: Dict[str, Any]) -> Dict[str, Any]:
+        provenance_items = [
+            item.get("provenance")
+            for item in [*overview.get("metrics", []), *overview.get("semantic_metrics", [])]
+            if item.get("provenance")
+        ]
+        source_ids = sorted(
+            {
+                provenance.get("source_id")
+                for provenance in provenance_items
+                if provenance.get("source_id")
+            }
+        )
+        review_metric_ids = sorted(
+            {
+                provenance.get("metric_id")
+                for provenance in provenance_items
+                if provenance.get("human_review_required")
+            }
+        )
+        benchmark = self._comparison_basis_context(overview.get("comparisons", {}))
+
+        return {
+            "status": "live",
+            "contract_version": "phase-5-grounded-copilot-v1",
+            "mode": "retrieval_bounded",
+            "approved_retrieval_boundaries": [
+                "observed_metrics",
+                "semantic_metrics",
+                "comparisons",
+                "intelligence",
+                "internal_data_status",
+                "company_benchmark",
+                "pay_transparency",
+                "governance_events",
+            ],
+            "blocked_behaviors": [
+                "No unsupported formulas in prompts.",
+                "No autonomous employment decisions.",
+                "No company-specific claims unless trusted internal marts are active.",
+                "No sensitive workflow action without a governance event and human approval.",
+            ],
+            "answer_requirements": [
+                "evidence",
+                "provenance",
+                "confidence",
+                "review_context",
+                "coverage_limits",
+            ],
+            "semantic_sources": source_ids,
+            "active_benchmark_basis": benchmark,
+            "review_context": {
+                "human_review_metric_ids": review_metric_ids,
+                "governance_integrity": overview["governance"]["integrity"],
+                "recent_event_count": len(overview["governance"].get("recent_events", [])),
+            },
+        }
+
+    def _build_executive_brief(self, overview: Dict[str, Any]) -> Dict[str, Any]:
+        filters = overview["filters"]["applied"]
+        prior_context = self._comparison_basis_context(overview.get("comparisons", {}), "prior_period")
+        prior_changes = []
+        for metric in overview.get("metrics", []):
+            comparison = metric.get("comparisons", {}).get("prior_period", {})
+            if not comparison.get("available"):
+                continue
+            prior_changes.append(
+                {
+                    "metric_id": metric["id"],
+                    "title": metric["title"],
+                    "current_value": metric.get("value"),
+                    "unit": metric.get("unit"),
+                    "delta": comparison.get("delta"),
+                    "delta_label": format_signed_delta(comparison.get("delta"), metric.get("unit", "%")),
+                    "benchmark_period": comparison.get("benchmark_period"),
+                    "tone": comparison.get("tone", "neutral"),
+                    "provenance": metric.get("provenance"),
+                }
+            )
+        prior_changes.sort(key=lambda item: abs(float(item["delta"] or 0)), reverse=True)
+
+        top_recommendations = overview.get("intelligence", {}).get("recommendations", [])[:3]
+        evidence = [
+            {"label": metric["title"], "value": f"{metric['value']:.1f}{metric['unit']}"}
+            for metric in overview.get("metrics", [])
+            if metric.get("value") is not None
+        ][:4]
+        provenance = [
+            metric["provenance"]
+            for metric in overview.get("metrics", [])[:3]
+            if metric.get("provenance")
+        ]
+
+        return {
+            "status": "ready",
+            "brief_type": "executive_workforce_brief",
+            "brief_version": "phase-5-brief-v1",
+            "title": f"{filters['geography_label']} workforce brief",
+            "cadence_options": [
+                {
+                    "id": "weekly_executive_update",
+                    "label": "Weekly executive update",
+                    "schedule_hint": "Monday 09:00 local time",
+                    "requires_approval": False,
+                },
+                {
+                    "id": "monthly_compliance_pack",
+                    "label": "Monthly compliance evidence pack",
+                    "schedule_hint": "First business day 09:00 local time",
+                    "requires_approval": True,
+                },
+            ],
+            "summary": {
+                "headline": overview["intelligence"]["headline"],
+                "body": overview["intelligence"]["summary"],
+                "confidence": overview.get("comparisons", {}).get("confidence", "medium"),
+            },
+            "what_changed": {
+                "basis": prior_context,
+                "items": prior_changes[:4],
+            },
+            "why_it_matters": [
+                {
+                    "title": recommendation["title"],
+                    "priority": recommendation["priority"],
+                    "detail": recommendation["detail"],
+                    "review_required": recommendation.get("review_required", False),
+                }
+                for recommendation in top_recommendations
+            ],
+            "evidence": evidence,
+            "provenance": provenance,
+            "governance_target": {
+                "target_type": "brief",
+                "target_id": f"executive_brief::{filters['geography']}::{filters['sector']}::{filters['period']}",
+            },
+        }
+
+    def _build_workflow_automation(self, overview: Dict[str, Any]) -> Dict[str, Any]:
+        semantic_by_id = {metric["id"]: metric for metric in overview.get("semantic_metrics", [])}
+        filters = overview["filters"]["applied"]
+        alerts: List[Dict[str, Any]] = []
+
+        def semantic_score(metric_id: str) -> Optional[float]:
+            value = semantic_by_id.get(metric_id, {}).get("value")
+            return float(value) if value is not None else None
+
+        hiring_pressure = semantic_score("hiring_pressure_index")
+        equity_risk = semantic_score("equity_risk_score")
+        labour_resilience = semantic_score("labour_resilience")
+
+        if hiring_pressure is not None and hiring_pressure >= 70:
+            alerts.append(
+                {
+                    "id": "alert_hiring_pressure",
+                    "title": "Hiring pressure threshold crossed",
+                    "severity": "high",
+                    "threshold": "hiring_pressure_index >= 70",
+                    "current_value": round(hiring_pressure),
+                    "recommended_handoff": "Open a recruiter-capacity and channel-mix review.",
+                    "requires_approval": True,
+                    "evidence_bundle": semantic_by_id["hiring_pressure_index"].get("evidence_bundle"),
+                    "governance_target": {"target_type": "workflow_alert", "target_id": "alert_hiring_pressure"},
+                }
+            )
+        if equity_risk is not None and equity_risk >= 70:
+            alerts.append(
+                {
+                    "id": "alert_equity_risk",
+                    "title": "Pay-equity risk threshold crossed",
+                    "severity": "high",
+                    "threshold": "equity_risk_score >= 70",
+                    "current_value": round(equity_risk),
+                    "recommended_handoff": "Prepare a pay-equity evidence pack for human review.",
+                    "requires_approval": True,
+                    "evidence_bundle": semantic_by_id["equity_risk_score"].get("evidence_bundle"),
+                    "governance_target": {"target_type": "workflow_alert", "target_id": "alert_equity_risk"},
+                }
+            )
+        if labour_resilience is not None and labour_resilience < 55:
+            alerts.append(
+                {
+                    "id": "alert_labour_resilience",
+                    "title": "Labour resilience watch threshold crossed",
+                    "severity": "medium",
+                    "threshold": "labour_resilience < 55",
+                    "current_value": round(labour_resilience),
+                    "recommended_handoff": "Attach the labour-resilience brief to workforce planning review.",
+                    "requires_approval": False,
+                    "evidence_bundle": semantic_by_id["labour_resilience"].get("evidence_bundle"),
+                    "governance_target": {"target_type": "workflow_alert", "target_id": "alert_labour_resilience"},
+                }
+            )
+
+        pay_transparency = overview.get("pay_transparency", {})
+        if pay_transparency.get("available") and pay_transparency.get("summary", {}).get("unresolved_review_item_count", 0) > 0:
+            alerts.append(
+                {
+                    "id": "alert_pay_transparency_review",
+                    "title": "Pay-transparency review items need approval",
+                    "severity": "high",
+                    "threshold": "unresolved_review_item_count > 0",
+                    "current_value": pay_transparency["summary"]["unresolved_review_item_count"],
+                    "recommended_handoff": "Route unresolved category review items to compliance/legal review.",
+                    "requires_approval": True,
+                    "evidence_bundle": {
+                        "title": pay_transparency["title"],
+                        "summary": pay_transparency["note"],
+                        "evidence": [
+                            {
+                                "label": "Unresolved review items",
+                                "value": str(pay_transparency["summary"]["unresolved_review_item_count"]),
+                            },
+                            {"label": "Formula version", "value": pay_transparency["formula_version"]},
+                        ],
+                        "provenance": pay_transparency.get("provenance", []),
+                        "governance_target": pay_transparency.get("governance_target"),
+                    },
+                    "governance_target": pay_transparency.get("governance_target"),
+                }
+            )
+
+        handoffs = [
+            {
+                "id": "handoff_executive_brief",
+                "title": "Generate executive brief",
+                "status": "ready",
+                "approval_checkpoint": "Analyst reviews generated brief before distribution.",
+                "target_audience": "executive_leadership",
+                "governance_target": {
+                    "target_type": "workflow_handoff",
+                    "target_id": f"executive_brief::{filters['geography']}::{filters['sector']}",
+                },
+            },
+            {
+                "id": "handoff_evidence_pack",
+                "title": "Export evidence pack",
+                "status": "ready",
+                "approval_checkpoint": "Export is logged to the governance hash chain.",
+                "target_audience": "people_analytics_compliance",
+                "governance_target": {
+                    "target_type": "workflow_handoff",
+                    "target_id": f"evidence_pack::{filters['geography']}::{filters['sector']}",
+                },
+            },
+            {
+                "id": "handoff_compliance_review",
+                "title": "Route sensitive review items",
+                "status": "ready" if pay_transparency.get("available") else "blocked",
+                "approval_checkpoint": "Compliance/legal reviewer must approve, override, or reverse each sensitive item.",
+                "target_audience": "legal_compliance_review",
+                "blocked_reason": None if pay_transparency.get("available") else pay_transparency.get("note"),
+                "governance_target": {
+                    "target_type": "workflow_handoff",
+                    "target_id": f"compliance_review::{filters['geography']}::{filters['sector']}",
+                },
+            },
+        ]
+
+        scheduled_briefs = [
+            {
+                "id": "weekly_executive_update",
+                "label": "Weekly executive update",
+                "status": "configured_template",
+                "cadence": "weekly",
+                "output": "executive_workforce_brief",
+                "approval_required": False,
+                "default_rrule": "FREQ=WEEKLY;BYDAY=MO;BYHOUR=9;BYMINUTE=0",
+            },
+            {
+                "id": "monthly_compliance_evidence_pack",
+                "label": "Monthly compliance evidence pack",
+                "status": "configured_template",
+                "cadence": "monthly",
+                "output": "compliance_evidence_pack",
+                "approval_required": True,
+                "default_rrule": "FREQ=MONTHLY;BYMONTHDAY=1;BYHOUR=9;BYMINUTE=0",
+            },
+        ]
+        active_scope = {
+            "country": filters["country"],
+            "geography": filters["geography"],
+            "sector": filters["sector"],
+            "period": filters["period"],
+        }
+        configured_schedules = [
+            schedule
+            for schedule in self.automation_schedules
+            if schedule.get("filters") == active_scope
+        ]
+
+        return {
+            "status": "live",
+            "automation_version": "phase-5-workflow-v1",
+            "policy": {
+                "autonomous_decisions_allowed": False,
+                "sensitive_actions_require_human_approval": True,
+                "governance_events_required": True,
+            },
+            "alerts": alerts,
+            "scheduled_briefs": scheduled_briefs,
+            "configured_schedules": configured_schedules,
+            "handoffs": handoffs,
+        }
+
+    def configure_automation_schedule(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        template_id = str(payload.get("template_id") or "").strip()
+        if template_id not in {"weekly_executive_update", "monthly_compliance_evidence_pack"}:
+            raise ValueError(f"Unsupported schedule template: {template_id}")
+
+        request_filters = {
+            "country": payload.get("country") or "ALL",
+            "geography": payload.get("geography") or "EU27_AVG",
+            "sector": payload.get("sector") or "ALL",
+            "period": payload.get("period") or "latest",
+        }
+        overview = self.build_overview(**request_filters)
+        filters = {
+            key: overview["filters"]["applied"][key]
+            for key in ["country", "geography", "sector", "period"]
+        }
+        template = next(
+            item for item in overview["automation"]["scheduled_briefs"] if item["id"] == template_id
+        )
+        approved = bool(payload.get("approved"))
+        if template.get("approval_required") and not approved:
+            raise ValueError(f"Schedule template {template_id} requires human approval.")
+
+        schedule = {
+            "schedule_id": self._schedule_id(template_id, filters),
+            "template_id": template_id,
+            "label": template["label"],
+            "status": "active",
+            "cadence": template["cadence"],
+            "rrule": payload.get("rrule") or template["default_rrule"],
+            "output": template["output"],
+            "approval_required": template["approval_required"],
+            "approved": approved or not template["approval_required"],
+            "filters": filters,
+            "created_by": (payload.get("actor") or "dashboard_user").strip() or "dashboard_user",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "last_generated_at": None,
+            "governance_target": {
+                "target_type": "automation_schedule",
+                "target_id": self._schedule_id(template_id, filters),
+            },
+        }
+        remaining = [
+            item
+            for item in self.automation_schedules
+            if item.get("schedule_id") != schedule["schedule_id"]
+        ]
+        self.automation_schedules = [schedule, *remaining][:50]
+        self._persist_automation_schedules()
+        self.record_governance_event(
+            {
+                "action_code": "approved",
+                "target_type": "automation_schedule",
+                "target_id": schedule["schedule_id"],
+                "actor": schedule["created_by"],
+                "context": {
+                    "template_id": template_id,
+                    "rrule": schedule["rrule"],
+                    "filters": filters,
+                },
+            }
+        )
+        return schedule
+
+    def build_scheduled_output(self, schedule_id: str) -> Dict[str, Any]:
+        schedule = next(
+            (item for item in self.automation_schedules if item.get("schedule_id") == schedule_id),
+            None,
+        )
+        if not schedule:
+            raise ValueError(f"Unknown automation schedule: {schedule_id}")
+        if schedule.get("status") != "active":
+            raise ValueError(f"Automation schedule is not active: {schedule_id}")
+
+        filters = schedule["filters"]
+        if schedule["output"] == "executive_workforce_brief":
+            output = self.build_overview(**filters)["brief"]
+            output_type = "brief"
+        elif schedule["output"] == "compliance_evidence_pack":
+            output = self.build_evidence_pack(**filters)
+            output_type = "evidence_pack"
+        else:
+            raise ValueError(f"Unsupported scheduled output: {schedule['output']}")
+
+        generated_at = datetime.now(timezone.utc).isoformat()
+        schedule["last_generated_at"] = generated_at
+        self._persist_automation_schedules()
+        self.record_governance_event(
+            {
+                "action_code": "exported",
+                "target_type": "scheduled_output",
+                "target_id": schedule_id,
+                "actor": "automation_runner",
+                "context": {
+                    "output_type": output_type,
+                    "filters": filters,
+                },
+            }
+        )
+        return {
+            "generated_at": generated_at,
+            "schedule": schedule,
+            "output_type": output_type,
+            "output": output,
+            "governance": self.build_governance_payload(),
+        }
+
+    def _build_egapro_peer_benchmark(
+        self,
+        filters: FilterState,
+    ) -> Dict[str, Any]:
+        """Returns Égapro sector peer benchmark when country=FR and mart available."""
+        def unavailable(reason: str) -> Dict[str, Any]:
+            return {"available": False, "note": reason}
+
+        if filters.country != "FR":
+            return unavailable("Égapro peer benchmark is only available for France.")
+
+        if "mart_egapro_sector_benchmark" not in self._available_tables():
+            return unavailable("Égapro benchmark mart not yet built. Run dbt to generate it.")
+
+        # Map sector filter to NACE section
+        nace_section = filters.sector[:1] if filters.sector and filters.sector != "ALL" else "J"
+
+        rows = self._query(
+            """
+            select
+                year,
+                nace_section,
+                size_band,
+                company_count,
+                round(p25_score) as p25_score,
+                round(p50_score) as p50_score,
+                round(p75_score) as p75_score,
+                round(mean_score, 1) as mean_score,
+                round(p50_pay_gap_score) as p50_pay_gap_score
+            from mart_egapro_sector_benchmark
+            where nace_section = ?
+              and year = (select max(year) from mart_egapro_sector_benchmark where nace_section = ?)
+            order by size_band
+            limit 10
+            """,
+            [nace_section, nace_section],
+        )
+
+        if not rows:
+            return unavailable(
+                f"No Égapro benchmark data available for NACE section {nace_section}."
+            )
+
+        # Return the largest available size band or the first row
+        row = rows[0]
+
+        return {
+            "available": True,
+            "year": int(row["year"]),
+            "nace_section": row["nace_section"],
+            "size_band": row["size_band"],
+            "company_count": int(row["company_count"]),
+            "p25_score": int(row["p25_score"]),
+            "p50_score": int(row["p50_score"]),
+            "p75_score": int(row["p75_score"]),
+            "mean_score": float(row["mean_score"]),
+            "note": (
+                f"Based on {int(row['company_count'])} French companies in NACE section "
+                f"{row['nace_section']} ({row['size_band']} employees), {int(row['year'])} Égapro data."
+            ),
+            "source_id": "egapro",
+            "all_size_bands": rows,
+        }
+
     def build_overview(
         self,
         country: str = "ALL",
@@ -3339,7 +4081,7 @@ class AnalyticsRepository:
         else:
             append_note_once(pay_transparency["note"])
 
-        return {
+        overview = {
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "filters": {
                 "applied": {
@@ -3363,6 +4105,11 @@ class AnalyticsRepository:
             "pay_transparency": pay_transparency,
             "governance": self.build_governance_payload(),
         }
+        overview["egapro_peer_benchmark"] = self._build_egapro_peer_benchmark(filters)
+        overview["copilot"] = self._build_copilot_contract(overview)
+        overview["brief"] = self._build_executive_brief(overview)
+        overview["automation"] = self._build_workflow_automation(overview)
+        return overview
 
     def answer_question(
         self,
@@ -3490,6 +4237,64 @@ class AnalyticsRepository:
             return max(
                 comparable,
                 key=lambda metric: abs(float(metric["comparisons"][benchmark_id]["delta"] or 0)),
+            )
+
+        if any(
+            keyword in normalized
+            for keyword in [
+                "scheduled brief",
+                "schedule brief",
+                "recurring brief",
+                "executive update",
+                "workflow",
+                "handoff",
+                "automation",
+                "alerts",
+                "alert",
+            ]
+        ):
+            automation = overview["automation"]
+            brief = overview["brief"]
+            alert_count = len(automation.get("alerts", []))
+            handoff_ready_count = len(
+                [handoff for handoff in automation.get("handoffs", []) if handoff.get("status") == "ready"]
+            )
+            top_alert = automation["alerts"][0] if automation.get("alerts") else None
+            return response(
+                "automation",
+                brief["summary"]["confidence"],
+                (
+                    f"Phase 5 automation is live in human-approved mode with {alert_count} active alerts, "
+                    f"{len(automation['scheduled_briefs'])} scheduled-brief templates, and "
+                    f"{handoff_ready_count} ready workflow handoffs. "
+                    f"{top_alert['title'] + ' is the first alert to review.' if top_alert else 'No threshold alert is currently active.'}"
+                ),
+                [
+                    {"label": "Active alerts", "value": str(alert_count)},
+                    {"label": "Scheduled brief templates", "value": str(len(automation["scheduled_briefs"]))},
+                    {"label": "Ready handoffs", "value": str(handoff_ready_count)},
+                    {
+                        "label": "Sensitive approval policy",
+                        "value": "Human approval required",
+                    },
+                ],
+                brief["provenance"],
+                [
+                    "Generate the executive summary.",
+                    "What alerts are active?",
+                    "What should HR leaders do next?",
+                ],
+                limitations=[
+                    "Automation prepares briefs, alerts, and handoffs only; it does not execute employment decisions.",
+                    "Sensitive workflow steps must be approved and logged through governance events.",
+                ],
+                include_benchmark_citation=False,
+                coverage_override={
+                    "status": "full",
+                    "summary": "Workflow automation is bounded by the current evidence and governance contracts.",
+                    "applicable_metric_count": len(overview["metrics"]),
+                    "total_metric_count": len(overview["metrics"]),
+                },
             )
 
         if any(
@@ -4395,7 +5200,14 @@ class AnalyticsRepository:
                 "required_fields": ["action_code", "target_type", "target_id"],
                 "optional_fields": ["reason", "context"],
             },
+            "integrity": self._governance_integrity(),
+            "export": {
+                "format": "json",
+                "event_count": len(self.governance_events),
+                "includes_hash_chain": True,
+            },
             "recent_events": self.governance_events[:10],
+            "events": self.governance_events[:50],
         }
 
     def record_governance_event(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -4408,16 +5220,21 @@ class AnalyticsRepository:
         if action["requires_reason"] and not reason:
             raise ValueError(f"Action {action_code} requires a reason.")
 
+        sequence = self._next_governance_sequence()
         event = {
-            "event_id": f"evt_{len(self.governance_events) + 1:04d}",
+            "event_id": f"evt_{sequence:04d}",
+            "event_sequence": sequence,
             "action_code": action_code,
             "action_name": action["action_name"],
             "target_type": payload["target_type"],
             "target_id": payload["target_id"],
+            "actor": (payload.get("actor") or "local_user").strip() or "local_user",
             "reason": reason or None,
             "context": payload.get("context") or {},
             "created_at": datetime.now(timezone.utc).isoformat(),
+            "previous_hash": self._latest_governance_hash(),
         }
+        event["event_hash"] = self._governance_event_hash(event)
         self.governance_events.insert(0, event)
         self.governance_events = self.governance_events[:50]
         self._persist_governance_events()
@@ -4442,6 +5259,8 @@ class AnalyticsRepository:
         )
         return {
             "generated_at": overview["generated_at"],
+            "pack_type": "workforceguard_compliance_evidence_pack",
+            "pack_version": "phase-4-v1",
             "filters": overview["filters"]["applied"],
             "summary": {
                 "headline": overview["intelligence"]["headline"],
@@ -4453,6 +5272,23 @@ class AnalyticsRepository:
             "internal_data": overview["internal_data"],
             "company_benchmark": overview["company_benchmark"],
             "pay_transparency": overview["pay_transparency"],
+            "copilot": overview["copilot"],
+            "brief": overview["brief"],
+            "automation": overview["automation"],
+            "compliance_review": {
+                "status": overview["pay_transparency"].get("workflow", {}).get("state", "unavailable"),
+                "human_oversight_required": overview["pay_transparency"]
+                .get("workflow", {})
+                .get("human_oversight_required", False),
+                "review_items": overview["pay_transparency"].get("review_items", []),
+                "governance_integrity": overview["governance"]["integrity"],
+                "export_contract": {
+                    "audience": "legal_compliance_works_council_review",
+                    "contains_person_level_data": False,
+                    "contains_category_level_internal_pay_data": bool(overview["pay_transparency"].get("available")),
+                    "requires_human_interpretation": True,
+                },
+            },
             "recommendations": overview["intelligence"]["recommendations"],
             "governance": overview["governance"],
         }

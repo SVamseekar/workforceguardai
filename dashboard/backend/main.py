@@ -24,8 +24,20 @@ class GovernanceEventRequest(BaseModel):
     action_code: str
     target_type: str
     target_id: str
+    actor: Optional[str] = None
     reason: Optional[str] = None
     context: Optional[Dict[str, Any]] = None
+
+
+class AutomationScheduleRequest(BaseModel):
+    template_id: str
+    country: str = "ALL"
+    geography: str = "EU27_AVG"
+    sector: str = "ALL"
+    period: str = "latest"
+    rrule: Optional[str] = None
+    approved: bool = False
+    actor: Optional[str] = None
 
 
 root_dir = Path(__file__).resolve().parents[2]
@@ -128,6 +140,58 @@ def get_evidence_pack(
     )
 
 
+@app.get("/api/brief")
+def get_executive_brief(
+    country: str = "ALL",
+    geography: str = "EU27_AVG",
+    sector: str = "ALL",
+    period: str = "latest",
+    benchmark_geography: Optional[str] = None,
+    benchmark_sector: Optional[str] = None,
+):
+    overview = guarded(
+        repository.build_overview,
+        country=country,
+        geography=geography,
+        sector=sector,
+        period=period,
+        benchmark_geography=benchmark_geography,
+        benchmark_sector=benchmark_sector,
+    )
+    return overview["brief"]
+
+
+@app.get("/api/automation")
+def get_automation_center(
+    country: str = "ALL",
+    geography: str = "EU27_AVG",
+    sector: str = "ALL",
+    period: str = "latest",
+    benchmark_geography: Optional[str] = None,
+    benchmark_sector: Optional[str] = None,
+):
+    overview = guarded(
+        repository.build_overview,
+        country=country,
+        geography=geography,
+        sector=sector,
+        period=period,
+        benchmark_geography=benchmark_geography,
+        benchmark_sector=benchmark_sector,
+    )
+    return overview["automation"]
+
+
+@app.post("/api/automation/schedules")
+def create_automation_schedule(request: AutomationScheduleRequest):
+    return guarded(repository.configure_automation_schedule, request.model_dump())
+
+
+@app.get("/api/automation/schedules/{schedule_id}/run")
+def get_scheduled_output(schedule_id: str):
+    return guarded(repository.build_scheduled_output, schedule_id)
+
+
 @app.post("/api/governance-events")
 def create_governance_event(request: GovernanceEventRequest):
     return guarded(repository.record_governance_event, request.model_dump())
@@ -174,6 +238,17 @@ def get_gender_pay_gap(
 ):
     overview = guarded(repository.build_overview, geography=geography, sector=sector, period=period)
     return overview["charts"]["pay_gap_by_sector"]["series"]
+
+
+@app.get("/api/egapro-benchmark")
+def get_egapro_benchmark(
+    country: str = "FR",
+    sector: str = "J",
+    size_band: Optional[str] = None,
+    year: Optional[int] = None,
+):
+    filters, _ = guarded(repository.resolve_filters, country, "EU27_AVG", sector, "latest")
+    return guarded(repository._build_egapro_peer_benchmark, filters)
 
 
 if __name__ == "__main__":
