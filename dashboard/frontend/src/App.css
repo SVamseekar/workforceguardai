@@ -1,5 +1,123 @@
 .app-shell {
+  display: grid;
+  grid-template-rows: 56px 1fr;
   min-height: 100vh;
+}
+
+.app-body {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.app-main {
+  overflow-y: auto;
+  padding: 32px clamp(20px, 3vw, 40px);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 24px;
+  border-bottom: 1px solid rgba(159, 185, 214, 0.12);
+  background: rgba(7, 17, 31, 0.92);
+  backdrop-filter: blur(20px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.topbar__logo {
+  height: 28px;
+  width: auto;
+}
+
+.topbar__company {
+  flex: 1;
+}
+
+.topbar__company-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-strong);
+}
+
+.topbar__context {
+  margin-left: auto;
+}
+
+.topbar__context-label {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(159, 185, 214, 0.1);
+  background: rgba(7, 17, 31, 0.6);
+  padding: 20px 12px;
+  overflow-y: auto;
+}
+
+.sidebar__nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.sidebar__link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-strong);
+}
+
+.sidebar__link--active {
+  background: rgba(127, 244, 234, 0.1);
+  color: var(--accent-teal);
+}
+
+.sidebar__footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid rgba(159, 185, 214, 0.1);
+}
+
+.sidebar__copilot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(159, 185, 214, 0.16);
+  border-radius: 12px;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  background: transparent;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.sidebar__copilot:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-strong);
 }
 
 .dashboard {
@@ -1474,6 +1592,158 @@
   text-align: center;
 }
 
+.phase5-section {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+  margin: 0 auto 18px;
+  max-width: 1320px;
+}
+
+.phase5-brief,
+.phase5-workflows {
+  min-height: auto;
+}
+
+.phase5-brief__body,
+.phase5-card,
+.phase5-alert,
+.phase5-handoff {
+  border: 1px solid rgba(159, 185, 214, 0.14);
+  border-radius: 18px;
+  background: rgba(7, 17, 31, 0.48);
+}
+
+.phase5-brief__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(220px, 0.8fr);
+  gap: 18px;
+  padding: 16px;
+}
+
+.phase5-brief__label {
+  margin: 0 0 8px;
+  color: var(--accent-teal);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.phase5-brief h3,
+.phase5-alert h3 {
+  margin: 0;
+  font-size: 1.08rem;
+  letter-spacing: -0.02em;
+}
+
+.phase5-brief p,
+.phase5-card p,
+.phase5-alert p,
+.phase5-handoff p,
+.phase5-handoff small {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.phase5-contract {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-content: flex-start;
+}
+
+.phase5-grid,
+.phase5-alert-list,
+.phase5-handoff-list,
+.phase5-configured {
+  display: grid;
+  gap: 12px;
+}
+
+.phase5-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 14px;
+}
+
+.phase5-card,
+.phase5-alert,
+.phase5-handoff {
+  padding: 14px;
+}
+
+.phase5-card__top,
+.phase5-alert__top,
+.phase5-handoff {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.phase5-card__top {
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.phase5-card__actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.phase5-alert__top {
+  margin-bottom: 10px;
+}
+
+.phase5-alert__top div {
+  display: grid;
+  gap: 8px;
+}
+
+.phase5-alert__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.phase5-alert--empty {
+  border-color: rgba(141, 245, 196, 0.2);
+}
+
+.phase5-handoff-list {
+  margin-top: 14px;
+}
+
+.phase5-handoff .governance-button {
+  flex: 0 0 auto;
+}
+
+.phase5-configured {
+  margin-top: 14px;
+}
+
+.phase5-configured__item {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid rgba(141, 245, 196, 0.18);
+  border-radius: 14px;
+  background: rgba(18, 44, 37, 0.32);
+}
+
+.phase5-configured__item span {
+  color: var(--text-muted);
+  font-size: 0.84rem;
+}
+
 .loading-panel,
 .error-panel {
   max-width: 480px;
@@ -1525,7 +1795,9 @@
   .dashboard-grid,
   .intelligence-grid,
   .briefing-board__grid,
-  .comparison-overview__meta {
+  .comparison-overview__meta,
+  .phase5-section,
+  .phase5-brief__body {
     grid-template-columns: 1fr;
   }
 
@@ -1586,7 +1858,11 @@
   .analyst-console__response-top,
   .analyst-console__basis-top,
   .comparison-focus__top,
-  .intelligence-benchmark__top {
+  .intelligence-benchmark__top,
+  .phase5-card__top,
+  .phase5-card__actions,
+  .phase5-alert__top,
+  .phase5-handoff {
     flex-direction: column;
   }
 
