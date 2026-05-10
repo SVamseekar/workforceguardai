@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useOverviewData } from '../../hooks/useOverviewData'
 import { ToneChip } from '../primitives/ToneChip'
-import { StatusBadge } from '../primitives/StatusBadge'
 import { EvidenceDrawer } from '../shared/EvidenceDrawer'
 
 const REVIEW_STATE_LABELS = {
