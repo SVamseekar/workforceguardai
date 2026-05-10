@@ -5242,7 +5242,7 @@ class AnalyticsRepository:
                     )
                 ),
                 [
-                    {"label": "Equity risk score", "value": f"{int(semantic['equity_risk_score']['value'])}/100"},
+                    {"label": "Equity risk score", "value": f"{int((semantic.get('equity_risk_score') or {}).get('value') or 0)}/100"},
                     {"label": "Observed pay gap", "value": observed_display("gender_pay_gap")},
                 ],
                 [
