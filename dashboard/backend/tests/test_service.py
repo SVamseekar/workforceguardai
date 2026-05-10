@@ -586,12 +586,21 @@ class AnalyticsRepositoryTests(unittest.TestCase):
             self.assertIn("unresolved review items", compliance_answer["answer"])
 
     def test_local_sample_internal_rows_do_not_activate_company_claims_without_trust_manifest(self):
-        overview = self.repo.build_overview(country="DE", geography="DE")
+        # Uses an isolated repo pointing at the real analytics DB (which has mart rows)
+        # but with a manifest explicitly marked untrusted, so the shared class-level
+        # repo (which has a trusted demo manifest) is not affected.
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            self._write_internal_manifest(temp_dir, trusted=False)
+            db_path = self._copy_analytics_db(temp_dir)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir, analytics_db_path=db_path)
+            overview = repo.build_overview(country="FR", geography="FR")
 
-        self.assertFalse(overview["internal_data"]["available"])
-        self.assertFalse(overview["company_benchmark"]["available"])
-        self.assertFalse(overview["pay_transparency"]["available"])
-        self.assertIn("untrusted internal rows", overview["internal_data"]["note"])
+            self.assertFalse(overview["internal_data"]["available"])
+            self.assertFalse(overview["company_benchmark"]["available"])
+            self.assertFalse(overview["pay_transparency"]["available"])
+            self.assertIn("untrusted internal rows", overview["internal_data"]["note"])
 
     def test_real_internal_files_do_not_activate_company_benchmark_without_modeled_rows(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -854,6 +863,284 @@ class AnalyticsRepositoryTests(unittest.TestCase):
         self.assertIn("export_contract", evidence_pack["compliance_review"])
         self.assertFalse(evidence_pack["compliance_review"]["export_contract"]["contains_person_level_data"])
         self.assertIn("governance_integrity", evidence_pack["compliance_review"])
+
+
+class EgaproPeerBenchmarkTests(unittest.TestCase):
+    """Tests for _build_egapro_peer_benchmark."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.repo = AnalyticsRepository(ROOT_DIR)
+
+    def _fr_filters(self, sector: str = "J"):
+        filters, _ = self.repo.resolve_filters(country="FR", geography="FR", sector=sector, period="latest")
+        return filters
+
+    def _non_fr_filters(self):
+        filters, _ = self.repo.resolve_filters(country="DE", geography="DE", sector="ALL", period="latest")
+        return filters
+
+    def test_returns_available_for_france_with_mart_present(self):
+        result = self.repo._build_egapro_peer_benchmark(self._fr_filters(sector="J"))
+
+        self.assertTrue(result["available"])
+        self.assertEqual(result["nace_section"], "J")
+        self.assertIn("year", result)
+        self.assertIn("p25_score", result)
+        self.assertIn("p50_score", result)
+        self.assertIn("p75_score", result)
+        self.assertIn("company_count", result)
+        self.assertGreater(result["company_count"], 5)
+        self.assertGreaterEqual(result["p50_score"], 70)
+        self.assertLessEqual(result["p50_score"], 100)
+        self.assertEqual(result["source_id"], "egapro")
+
+    def test_returns_all_size_bands(self):
+        result = self.repo._build_egapro_peer_benchmark(self._fr_filters(sector="J"))
+
+        self.assertIn("all_size_bands", result)
+        self.assertGreater(len(result["all_size_bands"]), 1)
+        size_bands = {row["size_band"] for row in result["all_size_bands"]}
+        self.assertTrue(size_bands.issubset({"50-250", "251-999", "1000+"}))
+
+    def test_note_describes_source(self):
+        result = self.repo._build_egapro_peer_benchmark(self._fr_filters(sector="J"))
+
+        self.assertIn("French companies", result["note"])
+        self.assertIn("Égapro", result["note"])
+
+    def test_unavailable_for_non_france_country(self):
+        result = self.repo._build_egapro_peer_benchmark(self._non_fr_filters())
+
+        self.assertFalse(result["available"])
+        self.assertIn("note", result)
+        self.assertIn("France", result["note"])
+
+    def test_nace_section_derived_from_sector_filter(self):
+        result_j = self.repo._build_egapro_peer_benchmark(self._fr_filters(sector="J"))
+        result_c = self.repo._build_egapro_peer_benchmark(self._fr_filters(sector="C"))
+
+        self.assertTrue(result_j["available"])
+        self.assertEqual(result_j["nace_section"], "J")
+        self.assertTrue(result_c["available"])
+        self.assertEqual(result_c["nace_section"], "C")
+
+    def test_egapro_benchmark_present_in_overview_for_france(self):
+        overview = self.repo.build_overview(country="FR", geography="FR", sector="J", period="latest")
+
+        self.assertIn("egapro_peer_benchmark", overview)
+        self.assertTrue(overview["egapro_peer_benchmark"]["available"])
+
+    def test_egapro_benchmark_unavailable_in_overview_for_non_france(self):
+        overview = self.repo.build_overview(country="DE", geography="DE", sector="J", period="latest")
+
+        self.assertIn("egapro_peer_benchmark", overview)
+        self.assertFalse(overview["egapro_peer_benchmark"]["available"])
+
+    def test_unavailable_when_mart_missing(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            db_path = self._copy_analytics_db_without_egapro_mart(temp_dir)
+            repo = AnalyticsRepository(ROOT_DIR, analytics_db_path=db_path)
+            filters, _ = repo.resolve_filters(country="FR", geography="FR", sector="J", period="latest")
+            result = repo._build_egapro_peer_benchmark(filters)
+
+            self.assertFalse(result["available"])
+            self.assertIn("mart not yet built", result["note"])
+
+    def _copy_analytics_db_without_egapro_mart(self, temp_dir: str) -> Path:
+        db_path = Path(temp_dir) / "workforceguard_analytics.duckdb"
+        shutil.copyfile(ANALYTICS_DB_PATH, db_path)
+        with duckdb.connect(str(db_path)) as con:
+            con.execute("drop table if exists mart_egapro_sector_benchmark")
+        return db_path
+
+
+class IngestUploadedPayrollTests(unittest.TestCase):
+    """Tests for ingest_uploaded_payroll."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.repo = AnalyticsRepository(ROOT_DIR)
+
+    def _make_csv(self, rows: list[dict]) -> bytes:
+        import csv, io
+        if not rows:
+            return b""
+        buf = io.StringIO()
+        writer = csv.DictWriter(buf, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
+        return buf.getvalue().encode()
+
+    def _valid_rows(self, n: int = 15, country: str = "FR") -> list[dict]:
+        return [
+            {
+                "employee_id": f"emp-{i:03d}",
+                "job_code": "SE-IC-1",
+                "country_code": country,
+                "worker_category_id": "eng_ic",
+                "gender": "female",
+                "base_salary": 55000 + i * 100,
+                "currency": "EUR",
+                "snapshot_date": "2025-12-31",
+            }
+            for i in range(n)
+        ]
+
+    def test_valid_upload_returns_accepted(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+
+            result = repo.ingest_uploaded_payroll(self._make_csv(self._valid_rows(15)))
+
+            self.assertEqual(result["status"], "accepted")
+            self.assertEqual(result["record_count"], 15)
+            self.assertEqual(result["snapshot_date"], "2025-12-31")
+            self.assertTrue(result["validation"]["passed"])
+            self.assertEqual(result["validation"]["warnings"], [])
+
+    def test_output_parquet_written_to_internal_dir(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+
+            repo.ingest_uploaded_payroll(self._make_csv(self._valid_rows(10)))
+
+            self.assertTrue((internal_dir / "payroll_snapshot.parquet").exists())
+            df = pd.read_parquet(internal_dir / "payroll_snapshot.parquet")
+            self.assertEqual(len(df), 10)
+            self.assertIn("base_pay_amount", df.columns)
+
+    def test_manifest_updated_with_trusted_flag(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+
+            repo.ingest_uploaded_payroll(self._make_csv(self._valid_rows(10)))
+
+            manifest_path = internal_dir.parent / "internal_meta" / "manifest.json"
+            self.assertTrue(manifest_path.exists())
+            manifest = json.loads(manifest_path.read_text())
+            payroll_asset = next(
+                a for a in manifest["assets"] if a["asset_type"] == "internal_payroll_snapshot"
+            )
+            self.assertTrue(payroll_asset["trusted_for_company_claims"])
+            self.assertEqual(payroll_asset["record_count"], 10)
+
+    def test_rejects_upload_with_fewer_than_10_rows(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+
+            with self.assertRaises(ValueError) as ctx:
+                repo.ingest_uploaded_payroll(self._make_csv(self._valid_rows(9)))
+            self.assertIn("10 employees", str(ctx.exception))
+
+    def test_rejects_missing_required_columns(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+            bad_csv = b"employee_id,name\nemp-001,Alice\n"
+
+            with self.assertRaises(ValueError) as ctx:
+                repo.ingest_uploaded_payroll(bad_csv)
+            self.assertIn("Missing required columns", str(ctx.exception))
+
+    def test_rejects_invalid_gender_values(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+            rows = self._valid_rows(10)
+            rows[0]["gender"] = "unknown"
+
+            with self.assertRaises(ValueError) as ctx:
+                repo.ingest_uploaded_payroll(self._make_csv(rows))
+            self.assertIn("gender", str(ctx.exception).lower())
+
+    def test_rejects_zero_and_negative_salary(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+            rows = self._valid_rows(10)
+            rows[0]["base_salary"] = 0
+
+            with self.assertRaises(ValueError) as ctx:
+                repo.ingest_uploaded_payroll(self._make_csv(rows))
+            self.assertIn("base_salary", str(ctx.exception))
+
+    def test_rejects_future_snapshot_date(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+            rows = self._valid_rows(10)
+            for row in rows:
+                row["snapshot_date"] = "2099-01-01"
+
+            with self.assertRaises(ValueError) as ctx:
+                repo.ingest_uploaded_payroll(self._make_csv(rows))
+            self.assertIn("future", str(ctx.exception))
+
+    def test_rejects_invalid_country_code(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+            rows = self._valid_rows(10, country="FRANCE")
+
+            with self.assertRaises(ValueError) as ctx:
+                repo.ingest_uploaded_payroll(self._make_csv(rows))
+            self.assertIn("country_code", str(ctx.exception))
+
+    def test_warns_on_unknown_job_codes(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            # Copy job architecture so the warning check has something to compare against
+            shutil.copyfile(
+                ROOT_DIR / "data" / "internal" / "job_architecture.parquet",
+                internal_dir / "job_architecture.parquet",
+            )
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+            rows = self._valid_rows(10)
+            for row in rows:
+                row["job_code"] = "UNKNOWN-XYZ"
+
+            result = repo.ingest_uploaded_payroll(self._make_csv(rows))
+
+            self.assertEqual(result["status"], "accepted")
+            self.assertTrue(result["validation"]["passed"])
+            self.assertTrue(len(result["validation"]["warnings"]) > 0)
+            self.assertIn("job_codes not in job architecture", result["validation"]["warnings"][0])
+
+    def test_accepts_non_binary_gender(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+            rows = self._valid_rows(10)
+            rows[0]["gender"] = "non_binary"
+
+            result = repo.ingest_uploaded_payroll(self._make_csv(rows))
+            self.assertEqual(result["status"], "accepted")
+
+    def test_rejects_invalid_csv_content(self):
+        # A file with no recognisable columns raises a validation error.
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+
+            with self.assertRaises(ValueError):
+                repo.ingest_uploaded_payroll(b"not,a,payroll,file\n1,2,3,4\n")
 
 
 @unittest.skipIf(main is None, f"FastAPI app unavailable in test env: {MAIN_IMPORT_ERROR}")
