@@ -4,7 +4,7 @@ steps:
     args:
       - '-c'
       - |
-        apt-get install -y git-lfs && git lfs pull
+        apt-get update -qq && apt-get install -y git-lfs && git lfs pull
 
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 'gcr.io/$PROJECT_ID/workforceguard-api', '-f', 'dashboard/backend/Dockerfile', '.']
