@@ -26,8 +26,8 @@ The long-term product outcome is:
 - Phase 1: complete and stabilized
 - Phase 2: complete
 - Phase 3: implemented for the first production company-aware slice
-- Phase 4: started with the first pay-transparency simulation and governance-review slice
-- Phase 5: planned
+- Phase 4: complete for the first production compliance/governance slice
+- Phase 5: complete
 
 ## Planning Principles
 

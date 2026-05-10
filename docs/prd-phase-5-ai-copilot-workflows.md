@@ -6,7 +6,15 @@ Add a grounded AI copilot and selected workflow automation on top of a trustwort
 
 ## Status
 
-Planned.
+Complete.
+
+Delivered capabilities:
+- retrieval-bounded copilot contract exposed in the API and dashboard
+- evidence-backed executive brief payloads
+- recurring brief templates and persistent schedule configuration for weekly executive updates and monthly compliance packs
+- scheduled-run generation for executive briefs and compliance evidence packs
+- threshold alerts over approved semantic and compliance signals
+- human-approved workflow handoffs with governance targets
 
 ## Problem Statement
 
@@ -92,3 +100,7 @@ After Phase 5, a user should be able to:
 - users can generate and schedule trustworthy summaries
 - automation only occurs within approved governance boundaries
 - auditability remains intact despite AI assistance
+
+## Implementation Notes
+
+Phase 5 is implemented without unrestricted autonomous decisioning. The current implementation uses deterministic grounded retrieval and narrative composition over approved metrics, semantic metrics, comparison metadata, internal-data trust gates, pay-transparency simulation results, and governance events. Recurring schedules persist locally, require approval for compliance outputs, and generate the same governed brief/evidence-pack contracts used by the dashboard. Future LLM integration must keep the same contract: prompts may summarize and route evidence, but formulas and decision rules remain in the semantic/service layer.
