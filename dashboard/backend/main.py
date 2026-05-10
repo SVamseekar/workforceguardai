@@ -44,7 +44,7 @@ class AutomationScheduleRequest(BaseModel):
 
 
 _here = Path(__file__).resolve().parent
-root_dir = _here.parents[1] if len(_here.parents) > 1 else _here
+root_dir = Path(os.environ.get("WORKFORCEGUARD_ROOT", str(_here.parents[1] if len(_here.parents) > 1 else _here)))
 repository = AnalyticsRepository(root_dir)
 
 app = FastAPI(title="WorkforceGuard Analytics API")
