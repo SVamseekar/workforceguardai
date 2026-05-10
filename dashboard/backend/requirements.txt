@@ -3,3 +3,4 @@ uvicorn
 duckdb
 pandas
 pyarrow
+python-multipart
