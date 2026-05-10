@@ -2851,9 +2851,9 @@ class AnalyticsRepository:
         def format_percentage(value: Optional[float]) -> str:
             return f"{value:.1f}%" if value is not None else "Unavailable"
 
-        hiring_pressure = int(semantic_metrics["hiring_pressure_index"]["value"] or 0)
-        labour_resilience = int(semantic_metrics["labour_resilience"]["value"] or 0)
-        equity_risk = int(semantic_metrics["equity_risk_score"]["value"] or 0)
+        hiring_pressure = int((semantic_metrics.get("hiring_pressure_index") or {}).get("value") or 0)
+        labour_resilience = int((semantic_metrics.get("labour_resilience") or {}).get("value") or 0)
+        equity_risk = int((semantic_metrics.get("equity_risk_score") or {}).get("value") or 0)
 
         vacancy_rate = metric_value("vacancy_rate")
         employment_rate = metric_value("employment_rate")
@@ -2957,7 +2957,7 @@ class AnalyticsRepository:
                         {"label": "Leading vacancy hotspot", "value": top_vacancy["sector_label"] if top_vacancy else "Unavailable"},
                     ],
                     [
-                        semantic_metrics["hiring_pressure_index"]["provenance"],
+                        (semantic_metrics.get("\1") or {}).get("provenance", {}),
                         metric_provenance("vacancy_rate", "eurostat_jvs", "observed-v1", False),
                     ],
                     "signal_hiring_pressure",
@@ -2977,7 +2977,7 @@ class AnalyticsRepository:
                         {"label": "Unemployment", "value": format_percentage(unemployment_rate)},
                     ],
                     [
-                        semantic_metrics["labour_resilience"]["provenance"],
+                        (semantic_metrics.get("\1") or {}).get("provenance", {}),
                         metric_provenance("employment_rate", "eurostat_lfs", "observed-v1", False),
                         metric_provenance("unemployment_rate", "eurostat_lfs", "observed-v1", False),
                     ],
@@ -3006,7 +3006,7 @@ class AnalyticsRepository:
                         {"label": "Leading pay-gap hotspot", "value": top_gap["sector_label"] if top_gap else "Unavailable"},
                     ],
                     [
-                        semantic_metrics["equity_risk_score"]["provenance"],
+                        (semantic_metrics.get("\1") or {}).get("provenance", {}),
                         metric_provenance("gender_pay_gap", "eurostat_lfs", "observed-v1", True),
                     ],
                     "signal_equity_risk",
@@ -3101,7 +3101,7 @@ class AnalyticsRepository:
                             {"label": "Selected geography", "value": filters.geography_label},
                         ],
                         [
-                            semantic_metrics["hiring_pressure_index"]["provenance"],
+                            (semantic_metrics.get("\1") or {}).get("provenance", {}),
                             charts["vacancy_by_sector"]["provenance"],
                         ],
                         "recommendation_hiring_focus",
@@ -3155,7 +3155,7 @@ class AnalyticsRepository:
                             {"label": "Selected geography", "value": filters.geography_label},
                         ],
                         [
-                            semantic_metrics["equity_risk_score"]["provenance"],
+                            (semantic_metrics.get("\1") or {}).get("provenance", {}),
                             charts["pay_gap_by_sector"]["provenance"],
                         ],
                         "recommendation_equity_review",
@@ -3715,7 +3715,7 @@ class AnalyticsRepository:
                     "current_value": round(equity_risk),
                     "recommended_handoff": "Prepare a pay-equity evidence pack for human review.",
                     "requires_approval": True,
-                    "evidence_bundle": semantic_by_id["equity_risk_score"].get("evidence_bundle"),
+                    "evidence_bundle": (semantic_by_id.get("equity_risk_score") or {}).get("evidence_bundle"),
                     "governance_target": {"target_type": "workflow_alert", "target_id": "alert_equity_risk"},
                 }
             )
@@ -5246,7 +5246,7 @@ class AnalyticsRepository:
                     {"label": "Observed pay gap", "value": observed_display("gender_pay_gap")},
                 ],
                 [
-                    semantic["equity_risk_score"]["provenance"],
+                    (semantic.get("equity_risk_score") or {}).get("provenance", {}),
                     observed_provenance("gender_pay_gap", "eurostat_lfs", "observed-v1", True),
                 ],
                 [
