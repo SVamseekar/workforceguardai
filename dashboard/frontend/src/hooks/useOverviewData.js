@@ -194,6 +194,27 @@ export function useOverviewData() {
     }
   }
 
+  async function uploadPayroll(file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    setLoading(true)
+    try {
+      const response = await axios.post(`${API_BASE}/upload/payroll`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      setNotice({ type: 'success', message: `Upload accepted — ${response.data.record_count} employees loaded.` })
+      const overviewResponse = await axios.get(`${API_BASE}/overview`, {
+        params: buildQueryParams(requestFilters),
+      })
+      startTransition(() => setOverview(overviewResponse.data))
+    } catch (uploadError) {
+      const detail = uploadError.response?.data?.detail ?? 'Upload failed. Check the file format and try again.'
+      setNotice({ type: 'error', message: detail })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return {
     filters,
     setFilters,
@@ -208,5 +229,6 @@ export function useOverviewData() {
     exportEvidencePack,
     recordGovernanceAction,
     scheduleBrief,
+    uploadPayroll,
   }
 }

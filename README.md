@@ -12,6 +12,7 @@ The product goal is to help HR, strategy, and compliance teams:
 - Phase 1 is complete: external data foundation, modeled metrics, evidence, and the dashboard are implemented.
 - Phase 2 is functionally complete and in closure/hardening: comparative intelligence, benchmark-aware analyst responses, evidence packs, and coverage-aware UI flows are live.
 - Phase 3 is implemented for the first production slice: real internal employer data contracts, worker categories, and blended internal-vs-market decision support.
+- Phase 4 is complete: pay-transparency category review, human oversight state, SQLite-backed hash-chained governance events, export logging, and compliance evidence-pack metadata are implemented.
 
 If you want the full architecture and execution plan, start here:
 - [Solution Architecture](./docs/solution-architecture.md)

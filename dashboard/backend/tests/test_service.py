@@ -189,6 +189,9 @@ class AnalyticsRepositoryTests(unittest.TestCase):
         self.assertIn("semantic_metrics", overview)
         self.assertIn("intelligence", overview)
         self.assertIn("governance", overview)
+        self.assertIn("copilot", overview)
+        self.assertIn("brief", overview)
+        self.assertIn("automation", overview)
         self.assertIn("coverage", overview["charts"]["unemployment_trend"])
         self.assertGreaterEqual(len(overview["metrics"]), 4)
         self.assertGreaterEqual(len(overview["semantic_metrics"]), 4)
@@ -305,6 +308,81 @@ class AnalyticsRepositoryTests(unittest.TestCase):
         self.assertIn("internal_data", evidence_pack)
         self.assertIn("company_benchmark", evidence_pack)
         self.assertIn("pay_transparency", evidence_pack)
+        self.assertIn("copilot", evidence_pack)
+        self.assertIn("brief", evidence_pack)
+        self.assertIn("automation", evidence_pack)
+
+    def test_phase5_copilot_briefs_and_workflows_are_governed(self):
+        overview = self.repo.build_overview(geography="DE")
+
+        self.assertEqual(overview["copilot"]["status"], "live")
+        self.assertEqual(overview["copilot"]["mode"], "retrieval_bounded")
+        self.assertIn("evidence", overview["copilot"]["answer_requirements"])
+        self.assertFalse(overview["automation"]["policy"]["autonomous_decisions_allowed"])
+        self.assertTrue(overview["automation"]["policy"]["sensitive_actions_require_human_approval"])
+        self.assertGreaterEqual(len(overview["brief"]["cadence_options"]), 2)
+        self.assertTrue(overview["brief"]["evidence"])
+        self.assertTrue(overview["automation"]["scheduled_briefs"])
+        self.assertTrue(overview["automation"]["handoffs"])
+
+        response = self.repo.answer_question("What alerts and workflow handoffs are active?", geography="DE")
+
+        self.assertEqual(response["category"], "automation")
+        self.assertIn("human-approved mode", response["answer"])
+        self.assertTrue(response["evidence"])
+
+    def test_phase5_automation_schedule_persists_and_generates_output(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            schedules_path = Path(temp_dir) / "automation_schedules.json"
+            events_path = Path(temp_dir) / "governance_events.json"
+            repo = AnalyticsRepository(
+                ROOT_DIR,
+                governance_events_path=events_path,
+                automation_schedules_path=schedules_path,
+            )
+
+            schedule = repo.configure_automation_schedule(
+                {
+                    "template_id": "weekly_executive_update",
+                    "geography": "DE",
+                    "approved": True,
+                    "actor": "people_analytics_lead",
+                }
+            )
+
+            self.assertTrue(schedules_path.exists())
+            self.assertEqual(schedule["status"], "active")
+            self.assertEqual(schedule["filters"]["geography"], "DE")
+
+            reloaded = AnalyticsRepository(
+                ROOT_DIR,
+                governance_events_path=events_path,
+                automation_schedules_path=schedules_path,
+            )
+            overview = reloaded.build_overview(geography="DE")
+            self.assertEqual(len(overview["automation"]["configured_schedules"]), 1)
+
+            scheduled_output = reloaded.build_scheduled_output(schedule["schedule_id"])
+            self.assertEqual(scheduled_output["output_type"], "brief")
+            self.assertIn("summary", scheduled_output["output"])
+            self.assertTrue(scheduled_output["governance"]["integrity"]["verified"])
+
+    def test_phase5_compliance_schedule_requires_approval(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo = AnalyticsRepository(
+                ROOT_DIR,
+                governance_events_path=Path(temp_dir) / "governance_events.json",
+                automation_schedules_path=Path(temp_dir) / "automation_schedules.json",
+            )
+
+            with self.assertRaises(ValueError):
+                repo.configure_automation_schedule(
+                    {
+                        "template_id": "monthly_compliance_evidence_pack",
+                        "geography": "DE",
+                        "approved": False,
+                    }
+                )
 
     def test_build_overview_reports_internal_data_as_unavailable_by_default(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -340,6 +418,32 @@ class AnalyticsRepositoryTests(unittest.TestCase):
             self.assertEqual(payload["recent_events"][0]["event_id"], created["event_id"])
             self.assertEqual(payload["recent_events"][0]["action_code"], "overridden")
             self.assertEqual(payload["recent_events"][0]["target_id"], "recommendation_benchmark")
+
+    def test_record_governance_event_persists_to_sqlite_store(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            events_path = Path(temp_dir) / "governance_events.sqlite"
+            repo = AnalyticsRepository(ROOT_DIR, governance_events_path=events_path)
+
+            created = repo.record_governance_event(
+                {
+                    "action_code": "exported",
+                    "target_type": "evidence_pack",
+                    "target_id": "phase4_pack",
+                    "actor": "compliance_lead",
+                    "context": {"scope": "DE"},
+                }
+            )
+
+            self.assertTrue(events_path.exists())
+            self.assertEqual(created["actor"], "compliance_lead")
+
+            reloaded = AnalyticsRepository(ROOT_DIR, governance_events_path=events_path)
+            payload = reloaded.build_governance_payload()
+
+            self.assertTrue(payload["integrity"]["verified"])
+            self.assertTrue(payload["export"]["includes_hash_chain"])
+            self.assertEqual(payload["events"][0]["target_id"], "phase4_pack")
+            self.assertEqual(payload["events"][0]["actor"], "compliance_lead")
 
     def test_build_overview_supports_company_benchmark_when_internal_benchmark_mart_has_rows(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -422,7 +526,13 @@ class AnalyticsRepositoryTests(unittest.TestCase):
             internal_dir = Path(temp_dir) / "internal"
             internal_dir.mkdir(parents=True, exist_ok=True)
             self._write_internal_manifest(temp_dir, trusted=True)
-            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir, analytics_db_path=db_path)
+            events_path = Path(temp_dir) / "governance_events.json"
+            repo = AnalyticsRepository(
+                ROOT_DIR,
+                governance_events_path=events_path,
+                internal_data_dir=internal_dir,
+                analytics_db_path=db_path,
+            )
             overview = repo.build_overview(geography="DE")
 
             self.assertTrue(overview["internal_data"]["available"], overview["internal_data"])
@@ -442,6 +552,27 @@ class AnalyticsRepositoryTests(unittest.TestCase):
             self.assertEqual(
                 overview["pay_transparency"]["governance_target"]["target_type"],
                 "compliance_simulation",
+            )
+            category_target = overview["pay_transparency"]["review_items"][0]["governance_target"]
+            self.assertEqual(category_target["target_type"], "pay_transparency_category")
+            self.assertEqual(
+                overview["pay_transparency"]["review_items"][0]["human_review"]["state"],
+                "pending_review",
+            )
+
+            repo.record_governance_event(
+                {
+                    "action_code": "approved",
+                    "target_type": category_target["target_type"],
+                    "target_id": category_target["target_id"],
+                }
+            )
+            reviewed_overview = repo.build_overview(geography="DE")
+            self.assertEqual(reviewed_overview["pay_transparency"]["summary"]["approved_count"], 1)
+            self.assertEqual(reviewed_overview["pay_transparency"]["summary"]["pending_review_count"], 0)
+            self.assertEqual(
+                reviewed_overview["pay_transparency"]["review_items"][0]["human_review"]["state"],
+                "approved",
             )
 
             answer = repo.answer_question("How does our pay compare with the market?", geography="DE")
@@ -677,23 +808,52 @@ class AnalyticsRepositoryTests(unittest.TestCase):
         self.assertTrue(eu_metric["comparisons"]["prior_period"]["available"])
 
     def test_governance_actions_enforce_reason_rules(self):
-        with self.assertRaises(ValueError):
-            self.repo.record_governance_event(
+        with tempfile.TemporaryDirectory() as temp_dir:
+            events_path = Path(temp_dir) / "events.json"
+            repo = AnalyticsRepository(ROOT_DIR, governance_events_path=events_path)
+
+            with self.assertRaises(ValueError):
+                repo.record_governance_event(
+                    {
+                        "action_code": "overridden",
+                        "target_type": "recommendation",
+                        "target_id": "rec_001",
+                    }
+                )
+
+            event = repo.record_governance_event(
                 {
-                    "action_code": "overridden",
+                    "action_code": "approved",
                     "target_type": "recommendation",
                     "target_id": "rec_001",
                 }
             )
+            self.assertEqual(event["action_code"], "approved")
+            self.assertEqual(event["previous_hash"], "GENESIS")
+            self.assertIn("event_hash", event)
 
-        event = self.repo.record_governance_event(
-            {
-                "action_code": "approved",
-                "target_type": "recommendation",
-                "target_id": "rec_001",
-            }
-        )
-        self.assertEqual(event["action_code"], "approved")
+            second_event = repo.record_governance_event(
+                {
+                    "action_code": "overridden",
+                    "target_type": "recommendation",
+                    "target_id": "rec_001",
+                    "reason": "Documented legal exception.",
+                }
+            )
+            self.assertEqual(second_event["previous_hash"], event["event_hash"])
+            payload = repo.build_governance_payload()
+            self.assertTrue(payload["integrity"]["verified"])
+            self.assertEqual(payload["integrity"]["event_count"], 2)
+
+    def test_evidence_pack_exposes_phase4_compliance_export_contract(self):
+        evidence_pack = self.repo.build_evidence_pack()
+
+        self.assertEqual(evidence_pack["pack_type"], "workforceguard_compliance_evidence_pack")
+        self.assertEqual(evidence_pack["pack_version"], "phase-4-v1")
+        self.assertIn("compliance_review", evidence_pack)
+        self.assertIn("export_contract", evidence_pack["compliance_review"])
+        self.assertFalse(evidence_pack["compliance_review"]["export_contract"]["contains_person_level_data"])
+        self.assertIn("governance_integrity", evidence_pack["compliance_review"])
 
 
 @unittest.skipIf(main is None, f"FastAPI app unavailable in test env: {MAIN_IMPORT_ERROR}")

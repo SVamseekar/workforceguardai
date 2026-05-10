@@ -6,12 +6,14 @@ Turn WorkforceGuard into a compliance-ready HR RegTech product by building forma
 
 ## Status
 
-Started for the first production slice.
+Complete for the first production slice.
 
-The live Phase 4 path now supports a pay-transparency category-review simulation on top of the modeled internal
-pay benchmark mart. The API classifies trusted internal worker-category pay gaps into observed gaps, monitored
-low-risk differences, and unresolved review items, while the dashboard exposes the result with evidence-basis
-labels and governance actions. This remains a human-review workflow, not an automated HR decision.
+The live Phase 4 path supports a pay-transparency category-review workflow on top of the modeled internal pay
+benchmark mart. The API classifies trusted internal worker-category pay gaps into observed gaps, monitored
+low-risk differences, and unresolved review items; tracks per-category human review state; records approve,
+override, reverse, review-required, and export events in a durable SQLite-backed, hash-chained governance log;
+and includes compliance review metadata in the evidence pack. This remains a human-review workflow, not an
+automated HR decision.
 
 ## Problem Statement
 
@@ -92,11 +94,11 @@ After Phase 4, a user should be able to:
 
 ## Delivery Plan
 
-1. Finalize worker-category and pay-review models.
-2. Build compliance simulation marts and rules. Started with `mart_pay_transparency_category_review` and API-level review rules.
-3. Add governance console and approval flows. Started through reusable evidence-drawer governance events.
-4. Add exportable legal/compliance evidence packs. Started by including the pay-transparency simulation in evidence-pack output.
-5. Add policy and access-control hardening.
+1. Finalize worker-category and pay-review models. Complete for the first category-level pay review slice.
+2. Build compliance simulation marts and rules. Complete for `mart_pay_transparency_category_review` and API-level review rules.
+3. Add governance console and approval flows. Complete for local approve, override, reverse, review-required, and export event capture with actor metadata.
+4. Add exportable legal/compliance evidence packs. Complete for JSON evidence packs with compliance-review metadata and governance integrity.
+5. Add policy and access-control hardening. Deferred to production launch hardening.
 
 ## Exit Criteria
 
@@ -105,3 +107,8 @@ After Phase 4, a user should be able to:
 - export packs support compliance review
 - human oversight is explicit in the product flow
 - the app can support legal/compliance walkthroughs without manual reconstruction
+
+## Remaining Production Hardening
+
+- Wire actor identity to OIDC claims once the deployment baseline is active; local/dashboard events already carry the actor field.
+- Add role-based access controls before expanding beyond the first customer/design-partner environment.
