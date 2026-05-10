@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-05-08T12:24:39.152010+00:00",
+  "generated_at": "2026-05-10T13:03:36.820030+00:00",
   "assets": [
     {
       "asset_type": "internal_payroll_snapshot",
-      "version": "demo-v1",
-      "record_count": 350,
+      "version": "uploaded-v1",
+      "record_count": 15,
       "output": "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/internal/payroll_snapshot.parquet",
       "trusted_for_company_claims": true
     },
