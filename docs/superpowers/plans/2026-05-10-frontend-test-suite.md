@@ -1094,7 +1094,561 @@ git commit -m "test: add copy-standards guard — backend terms must not appear 
 
 ---
 
-## Task 10: Full suite run and verification
+## Task 10: Test primitives — ToneChip, MetricCard, ProvenanceBadge, StatusBadge
+
+**Files:**
+- Create: `src/__tests__/primitives/primitives.test.jsx`
+
+All four primitives are pure presentational components with no side effects. One file covers all of them.
+
+- [ ] **Step 1: Create src/__tests__/primitives/primitives.test.jsx**
+
+```jsx
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { describe, it, expect, vi } from 'vitest'
+import { ToneChip } from '../../components/primitives/ToneChip.jsx'
+import { MetricCard } from '../../components/primitives/MetricCard.jsx'
+import { ProvenanceBadge } from '../../components/primitives/ProvenanceBadge.jsx'
+import { StatusBadge } from '../../components/primitives/StatusBadge.jsx'
+
+describe('ToneChip', () => {
+  it('renders children text', () => {
+    render(<ToneChip tone="good">Good</ToneChip>)
+    expect(screen.getByText('Good')).toBeInTheDocument()
+  })
+
+  it('applies good CSS modifier for tone=good', () => {
+    const { container } = render(<ToneChip tone="good">Good</ToneChip>)
+    expect(container.firstChild).toHaveClass('tone-chip--good')
+  })
+
+  it('applies watch CSS modifier for tone=watch', () => {
+    const { container } = render(<ToneChip tone="watch">Watch</ToneChip>)
+    expect(container.firstChild).toHaveClass('tone-chip--watch')
+  })
+
+  it('falls back to neutral CSS modifier for unknown tone', () => {
+    const { container } = render(<ToneChip tone="unknown">Neutral</ToneChip>)
+    expect(container.firstChild).toHaveClass('tone-chip--neutral')
+  })
+})
+
+describe('MetricCard', () => {
+  const metric = {
+    id: 'unemployment',
+    title: 'Unemployment rate',
+    value: 6.2,
+    delta: -0.4,
+    unit: '%',
+    tone: 'good',
+    period: 'Q4 2024',
+  }
+
+  it('renders title, formatted value, and period', () => {
+    render(<MetricCard metric={metric} />)
+    expect(screen.getByText('Unemployment rate')).toBeInTheDocument()
+    expect(screen.getByText('6.2%')).toBeInTheDocument()
+    expect(screen.getByText('Q4 2024')).toBeInTheDocument()
+  })
+
+  it('renders formatted negative delta with pts vs prior period', () => {
+    render(<MetricCard metric={metric} />)
+    expect(screen.getByText('-0.4 pts vs prior period')).toBeInTheDocument()
+  })
+
+  it('renders "Planned" when value is null', () => {
+    render(<MetricCard metric={{ ...metric, value: null }} />)
+    expect(screen.getByText('Planned')).toBeInTheDocument()
+  })
+
+  it('renders "No prior period" when delta is null', () => {
+    render(<MetricCard metric={{ ...metric, delta: null }} />)
+    expect(screen.getByText('No prior period')).toBeInTheDocument()
+  })
+
+  it('formats score unit as X/100', () => {
+    render(<MetricCard metric={{ ...metric, value: 78, unit: 'score' }} />)
+    expect(screen.getByText('78/100')).toBeInTheDocument()
+  })
+
+  it('calls onClick when card is clicked', async () => {
+    const user = userEvent.setup()
+    const onClick = vi.fn()
+    render(<MetricCard metric={metric} onClick={onClick} />)
+    await user.click(screen.getByRole('article'))
+    expect(onClick).toHaveBeenCalledOnce()
+  })
+
+  it('renders View evidence button when onOpenEvidence provided', async () => {
+    const user = userEvent.setup()
+    const onOpenEvidence = vi.fn()
+    render(<MetricCard metric={metric} onOpenEvidence={onOpenEvidence} />)
+    await user.click(screen.getByRole('button', { name: 'View evidence' }))
+    expect(onOpenEvidence).toHaveBeenCalledWith(metric)
+  })
+
+  it('renders provenance badge with translated source label', () => {
+    render(
+      <MetricCard
+        metric={{ ...metric, provenance: [{ source_id: 'eurostat_lfs' }] }}
+      />,
+    )
+    expect(screen.getByText('Eurostat Labour Force Survey')).toBeInTheDocument()
+    expect(screen.queryByText('eurostat_lfs')).not.toBeInTheDocument()
+  })
+})
+
+describe('ProvenanceBadge', () => {
+  it('renders nothing when provenance is empty', () => {
+    const { container } = render(<ProvenanceBadge provenance={[]} />)
+    expect(container.firstChild).toBeNull()
+  })
+
+  it('translates eurostat_lfs to full label', () => {
+    render(<ProvenanceBadge provenance={[{ source_id: 'eurostat_lfs' }]} />)
+    expect(screen.getByText('Eurostat Labour Force Survey')).toBeInTheDocument()
+    expect(screen.queryByText('eurostat_lfs')).not.toBeInTheDocument()
+  })
+
+  it('translates internal_payroll to Company payroll data', () => {
+    render(<ProvenanceBadge provenance={[{ source_id: 'internal_payroll' }]} />)
+    expect(screen.getByText('Company payroll data')).toBeInTheDocument()
+  })
+
+  it('falls back to raw source_id when unknown', () => {
+    render(<ProvenanceBadge provenance={[{ source_id: 'custom_source' }]} />)
+    expect(screen.getByText('custom_source')).toBeInTheDocument()
+  })
+})
+
+describe('StatusBadge', () => {
+  it('translates observed_gap to "Pay gap identified"', () => {
+    render(<StatusBadge status="observed_gap" />)
+    expect(screen.getByText('Pay gap identified')).toBeInTheDocument()
+    expect(screen.queryByText('observed_gap')).not.toBeInTheDocument()
+  })
+
+  it('translates unresolved_review_item to "Needs review"', () => {
+    render(<StatusBadge status="unresolved_review_item" />)
+    expect(screen.getByText('Needs review')).toBeInTheDocument()
+  })
+
+  it('translates justified_difference to "Documented difference"', () => {
+    render(<StatusBadge status="justified_difference" />)
+    expect(screen.getByText('Documented difference')).toBeInTheDocument()
+  })
+
+  it('translates blended to "Evidence source: Combined"', () => {
+    render(<StatusBadge status="blended" />)
+    expect(screen.getByText('Evidence source: Combined')).toBeInTheDocument()
+  })
+
+  it('translates low to "Limited data — treat with caution"', () => {
+    render(<StatusBadge status="low" />)
+    expect(screen.getByText('Limited data — treat with caution')).toBeInTheDocument()
+  })
+
+  it('renders unknown status as-is', () => {
+    render(<StatusBadge status="some_unknown_status" />)
+    expect(screen.getByText('some_unknown_status')).toBeInTheDocument()
+  })
+})
+```
+
+- [ ] **Step 2: Run the primitive tests**
+
+```bash
+cd dashboard/frontend && npm test src/__tests__/primitives/primitives.test.jsx
+```
+
+Expected: `22 passed`.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add src/__tests__/primitives/primitives.test.jsx
+git commit -m "test: add ToneChip, MetricCard, ProvenanceBadge, StatusBadge primitive tests"
+```
+
+---
+
+## Task 11: Test shared components — EvidenceDrawer and ChartPanel
+
+**Files:**
+- Create: `src/__tests__/shared/EvidenceDrawer.test.jsx`
+- Create: `src/__tests__/shared/ChartPanel.test.jsx`
+
+- [ ] **Step 1: Create src/__tests__/shared/EvidenceDrawer.test.jsx**
+
+```jsx
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { describe, it, expect, vi } from 'vitest'
+import { EvidenceDrawer } from '../../components/shared/EvidenceDrawer.jsx'
+
+describe('EvidenceDrawer', () => {
+  it('renders nothing when evidence is null', () => {
+    const { container } = render(<EvidenceDrawer evidence={null} onClose={vi.fn()} />)
+    expect(container.firstChild).toBeNull()
+  })
+
+  it('renders title and summary when evidence provided', () => {
+    render(
+      <EvidenceDrawer
+        evidence={{ title: 'Vacancy signal', summary: 'Vacancies up 0.4 pts.' }}
+        onClose={vi.fn()}
+      />,
+    )
+    expect(screen.getByText('Vacancy signal')).toBeInTheDocument()
+    expect(screen.getByText('Vacancies up 0.4 pts.')).toBeInTheDocument()
+    expect(screen.getByText('Evidence')).toBeInTheDocument()
+  })
+
+  it('calls onClose when close button clicked', async () => {
+    const user = userEvent.setup()
+    const onClose = vi.fn()
+    render(
+      <EvidenceDrawer
+        evidence={{ title: 'Test', summary: 'Summary.' }}
+        onClose={onClose}
+      />,
+    )
+    await user.click(screen.getByRole('button', { name: 'Close' }))
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it('calls onClose when backdrop clicked', async () => {
+    const user = userEvent.setup()
+    const onClose = vi.fn()
+    render(
+      <EvidenceDrawer
+        evidence={{ title: 'Test', summary: 'Summary.' }}
+        onClose={onClose}
+      />,
+    )
+    await user.click(screen.getByRole('button', { name: 'Close evidence panel' }))
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it('renders supporting data items', () => {
+    render(
+      <EvidenceDrawer
+        evidence={{
+          title: 'Test',
+          items: [{ label: 'Rate', value: '6.2%' }, { label: 'Period', value: 'Q4 2024' }],
+        }}
+        onClose={vi.fn()}
+      />,
+    )
+    expect(screen.getByText('Supporting data')).toBeInTheDocument()
+    expect(screen.getByText('Rate')).toBeInTheDocument()
+    expect(screen.getByText('6.2%')).toBeInTheDocument()
+  })
+
+  it('renders translated provenance sources', () => {
+    render(
+      <EvidenceDrawer
+        evidence={{
+          title: 'Test',
+          provenance: [{ source_id: 'eurostat_lfs' }],
+        }}
+        onClose={vi.fn()}
+      />,
+    )
+    expect(screen.getByText('Sources')).toBeInTheDocument()
+    expect(screen.getByText('Eurostat Labour Force Survey')).toBeInTheDocument()
+    expect(screen.queryByText('eurostat_lfs')).not.toBeInTheDocument()
+  })
+
+  it('renders action buttons and calls onAction when clicked', async () => {
+    const user = userEvent.setup()
+    const onAction = vi.fn()
+    render(
+      <EvidenceDrawer
+        evidence={{
+          title: 'Test',
+          actions: [{ code: 'approved', label: 'Approve', onAction }],
+        }}
+        onClose={vi.fn()}
+      />,
+    )
+    await user.click(screen.getByRole('button', { name: 'Approve' }))
+    expect(onAction).toHaveBeenCalledWith('approved')
+  })
+})
+```
+
+- [ ] **Step 2: Create src/__tests__/shared/ChartPanel.test.jsx**
+
+```jsx
+import { render, screen } from '@testing-library/react'
+import { describe, it, expect } from 'vitest'
+import { ChartPanel } from '../../components/shared/ChartPanel.jsx'
+
+describe('ChartPanel', () => {
+  it('renders title', () => {
+    render(<ChartPanel title="Unemployment trend" sourceId="eurostat_lfs"><div /></ChartPanel>)
+    expect(screen.getByText('Unemployment trend')).toBeInTheDocument()
+  })
+
+  it('translates eurostat_lfs sourceId to "Eurostat LFS"', () => {
+    render(<ChartPanel title="Test" sourceId="eurostat_lfs"><div /></ChartPanel>)
+    expect(screen.getByText('Eurostat LFS')).toBeInTheDocument()
+    expect(screen.queryByText('eurostat_lfs')).not.toBeInTheDocument()
+  })
+
+  it('translates eurostat_jvs to "Eurostat JVS"', () => {
+    render(<ChartPanel title="Test" sourceId="eurostat_jvs"><div /></ChartPanel>)
+    expect(screen.getByText('Eurostat JVS')).toBeInTheDocument()
+  })
+
+  it('shows "Market data" when sourceId is not provided', () => {
+    render(<ChartPanel title="Test"><div /></ChartPanel>)
+    expect(screen.getByText('Market data')).toBeInTheDocument()
+  })
+
+  it('renders children', () => {
+    render(<ChartPanel title="Test" sourceId="eurostat_lfs"><span>chart here</span></ChartPanel>)
+    expect(screen.getByText('chart here')).toBeInTheDocument()
+  })
+})
+```
+
+- [ ] **Step 3: Run the shared component tests**
+
+```bash
+cd dashboard/frontend && npm test src/__tests__/shared/EvidenceDrawer.test.jsx src/__tests__/shared/ChartPanel.test.jsx
+```
+
+Expected: `14 passed`.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add src/__tests__/shared/EvidenceDrawer.test.jsx src/__tests__/shared/ChartPanel.test.jsx
+git commit -m "test: add EvidenceDrawer and ChartPanel shared component tests"
+```
+
+---
+
+## Task 12: Test layout components — Sidebar, TopBar, CopilotPanel
+
+**Files:**
+- Create: `src/__tests__/layout/Sidebar.test.jsx`
+- Create: `src/__tests__/layout/TopBar.test.jsx`
+- Create: `src/__tests__/layout/CopilotPanel.test.jsx`
+
+- [ ] **Step 1: Create src/__tests__/layout/Sidebar.test.jsx**
+
+```jsx
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
+import { describe, it, expect, vi } from 'vitest'
+import { Sidebar } from '../../components/layout/Sidebar.jsx'
+
+const renderSidebar = (initialPath = '/', onCopilotOpen = vi.fn()) =>
+  render(
+    <MemoryRouter initialEntries={[initialPath]}>
+      <Sidebar onCopilotOpen={onCopilotOpen} />
+    </MemoryRouter>,
+  )
+
+describe('Sidebar', () => {
+  it('renders all 4 nav links', () => {
+    renderSidebar()
+    expect(screen.getByRole('link', { name: /Home/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Market Intelligence/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Pay Analysis/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Govern & Export/i })).toBeInTheDocument()
+  })
+
+  it('renders AI Analyst button', () => {
+    renderSidebar()
+    expect(screen.getByRole('button', { name: /AI Analyst/i })).toBeInTheDocument()
+  })
+
+  it('calls onCopilotOpen when AI Analyst button clicked', async () => {
+    const user = userEvent.setup()
+    const onCopilotOpen = vi.fn()
+    renderSidebar('/', onCopilotOpen)
+    await user.click(screen.getByRole('button', { name: /AI Analyst/i }))
+    expect(onCopilotOpen).toHaveBeenCalledOnce()
+  })
+
+  it('marks Home link as active when on / route', () => {
+    renderSidebar('/')
+    const homeLink = screen.getByRole('link', { name: /Home/i })
+    expect(homeLink).toHaveClass('sidebar__link--active')
+  })
+
+  it('marks Market Intelligence link as active when on /market route', () => {
+    renderSidebar('/market')
+    const marketLink = screen.getByRole('link', { name: /Market Intelligence/i })
+    expect(marketLink).toHaveClass('sidebar__link--active')
+  })
+
+  it('does not mark Home as active when on /market route', () => {
+    renderSidebar('/market')
+    const homeLink = screen.getByRole('link', { name: /Home/i })
+    expect(homeLink).not.toHaveClass('sidebar__link--active')
+  })
+})
+```
+
+- [ ] **Step 2: Create src/__tests__/layout/TopBar.test.jsx**
+
+```jsx
+import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
+import { describe, it, expect } from 'vitest'
+import { TopBar } from '../../components/layout/TopBar.jsx'
+
+describe('TopBar', () => {
+  it('renders WorkforceGuard logo image', () => {
+    render(<MemoryRouter><TopBar /></MemoryRouter>)
+    expect(screen.getByAltText('WorkforceGuard')).toBeInTheDocument()
+  })
+
+  it('renders company name AeroTech Europe SAS', () => {
+    render(<MemoryRouter><TopBar /></MemoryRouter>)
+    expect(screen.getByText('AeroTech Europe SAS')).toBeInTheDocument()
+  })
+
+  it('shows default context when no URL params set', () => {
+    render(<MemoryRouter initialEntries={['/']}><TopBar /></MemoryRouter>)
+    expect(screen.getByText('All countries · All sectors · Latest')).toBeInTheDocument()
+  })
+
+  it('shows context from URL query params when present', () => {
+    render(
+      <MemoryRouter initialEntries={['/?country=FR&sector=C&period=2023']}>
+        <TopBar />
+      </MemoryRouter>,
+    )
+    expect(screen.getByText('FR · C · 2023')).toBeInTheDocument()
+  })
+})
+```
+
+- [ ] **Step 3: Create src/__tests__/layout/CopilotPanel.test.jsx**
+
+```jsx
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
+import { describe, it, expect, vi } from 'vitest'
+import { CopilotPanel } from '../../components/layout/CopilotPanel.jsx'
+
+const renderPanel = (onClose = vi.fn()) =>
+  render(
+    <MemoryRouter>
+      <CopilotPanel onClose={onClose} />
+    </MemoryRouter>,
+  )
+
+describe('CopilotPanel', () => {
+  it('renders AI Analyst heading', () => {
+    renderPanel()
+    expect(screen.getByText('AI Analyst')).toBeInTheDocument()
+    expect(screen.getByText('Ask about this view')).toBeInTheDocument()
+  })
+
+  it('renders all 6 suggested questions', () => {
+    renderPanel()
+    expect(screen.getByText('How does this market compare to the EU average?')).toBeInTheDocument()
+    expect(screen.getByText('Which peer countries look most similar?')).toBeInTheDocument()
+    expect(screen.getByText('What changed versus the prior period?')).toBeInTheDocument()
+    expect(screen.getByText('Which signal is worsening fastest?')).toBeInTheDocument()
+    expect(screen.getByText('How confident is this benchmark?')).toBeInTheDocument()
+    expect(screen.getByText('What limits this comparison?')).toBeInTheDocument()
+  })
+
+  it('calls onClose when close button clicked', async () => {
+    const user = userEvent.setup()
+    const onClose = vi.fn()
+    renderPanel(onClose)
+    await user.click(screen.getByRole('button', { name: /Close/i }))
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it('calls onClose when backdrop clicked', async () => {
+    const user = userEvent.setup()
+    const onClose = vi.fn()
+    renderPanel(onClose)
+    await user.click(screen.getByRole('button', { name: /Close AI Analyst/i }))
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it('submits typed question and shows API response', async () => {
+    const user = userEvent.setup()
+    renderPanel()
+
+    const input = screen.getByPlaceholderText('Ask a question about the current data…')
+    await user.type(input, 'What is the unemployment rate?')
+    await user.keyboard('{Enter}')
+
+    await waitFor(() =>
+      expect(screen.getByText('Unemployment is 6.2%.')).toBeInTheDocument(),
+    )
+    expect(screen.getByText('Response')).toBeInTheDocument()
+  })
+
+  it('hides suggested questions after response received', async () => {
+    const user = userEvent.setup()
+    renderPanel()
+
+    const input = screen.getByPlaceholderText('Ask a question about the current data…')
+    await user.type(input, 'test question')
+    await user.keyboard('{Enter}')
+
+    await waitFor(() => expect(screen.getByText('Response')).toBeInTheDocument())
+    expect(screen.queryByText('How does this market compare to the EU average?')).not.toBeInTheDocument()
+  })
+
+  it('shows follow-up question buttons from API response', async () => {
+    const user = userEvent.setup()
+    renderPanel()
+
+    const input = screen.getByPlaceholderText('Ask a question about the current data…')
+    await user.type(input, 'test')
+    await user.keyboard('{Enter}')
+
+    await waitFor(() => expect(screen.getByText('What changed?')).toBeInTheDocument())
+  })
+
+  it('submits question when suggested question chip clicked', async () => {
+    const user = userEvent.setup()
+    renderPanel()
+
+    await user.click(screen.getByText('Which peer countries look most similar?'))
+
+    await waitFor(() =>
+      expect(screen.getByText('Unemployment is 6.2%.')).toBeInTheDocument(),
+    )
+  })
+})
+```
+
+- [ ] **Step 4: Run the layout tests**
+
+```bash
+cd dashboard/frontend && npm test src/__tests__/layout/
+```
+
+Expected: `18 passed`.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/__tests__/layout/
+git commit -m "test: add Sidebar, TopBar, CopilotPanel layout component tests"
+```
+
+---
+
+## Task 13: Full suite run and verification
 
 - [ ] **Step 1: Run full test suite**
 
@@ -1103,15 +1657,21 @@ cd dashboard/frontend && npm test
 ```
 
 Expected output: all tests pass, no failures. Count should be approximately:
-- `useOverviewData.test.js` — 7 tests
-- `HomeSection.test.jsx` — 6 tests
-- `MarketSection.test.jsx` — 7 tests
-- `PayAnalysisSection.test.jsx` — 5 tests
-- `GovernSection.test.jsx` — 5 tests
-- `FilterBar.test.jsx` — 5 tests
+- `hooks/useOverviewData.test.js` — 7 tests
+- `sections/HomeSection.test.jsx` — 6 tests
+- `sections/MarketSection.test.jsx` — 7 tests
+- `sections/PayAnalysisSection.test.jsx` — 5 tests
+- `sections/GovernSection.test.jsx` — 5 tests
+- `shared/FilterBar.test.jsx` — 5 tests
+- `shared/EvidenceDrawer.test.jsx` — 7 tests
+- `shared/ChartPanel.test.jsx` — 5 tests
+- `primitives/primitives.test.jsx` — 22 tests
+- `layout/Sidebar.test.jsx` — 6 tests
+- `layout/TopBar.test.jsx` — 4 tests
+- `layout/CopilotPanel.test.jsx` — 8 tests
 - `copy-standards.test.jsx` — 4 tests
 
-**Total: ~39 tests, 0 failed.**
+**Total: ~91 tests, 0 failed.**
 
 - [ ] **Step 2: Verify build still passes**
 
@@ -1125,7 +1685,7 @@ Expected: `✓ built in N seconds`, no errors.
 
 ```bash
 git add -A
-git commit -m "test: frontend test suite complete — 39 tests, 0 failed"
+git commit -m "test: frontend test suite complete — 91 tests, 0 failed"
 ```
 
 ---
@@ -1137,17 +1697,26 @@ git commit -m "test: frontend test suite complete — 39 tests, 0 failed"
 | Requirement | Task |
 |---|---|
 | Vitest + RTL + MSW installed | Task 1 |
-| Fully offline — no backend needed | MSW intercepts all requests in Tasks 2–9 |
+| Fully offline — no backend needed | MSW intercepts all requests in Tasks 2–13 |
 | `useOverviewData` hook tested | Task 3 — 7 tests covering fetch, errors, uploadPayroll, exportEvidencePack, recordGovernanceAction, scheduleBrief |
 | Section smoke tests (all 4) | Tasks 4–7 |
 | `FilterBar` labels and interactions | Task 8 |
 | Copy standards guard | Task 9 |
+| `ToneChip` CSS modifiers and children | Task 10 |
+| `MetricCard` formatting, interactions, provenance | Task 10 |
+| `ProvenanceBadge` source translation | Task 10 |
+| `StatusBadge` backend term translation | Task 10 |
+| `EvidenceDrawer` open/close/items/provenance/actions | Task 11 |
+| `ChartPanel` title, sourceId translation, children | Task 11 |
+| `Sidebar` nav links, active state, copilot button | Task 12 |
+| `TopBar` logo, company name, URL param context | Task 12 |
+| `CopilotPanel` suggestions, submission, response, follow-ups | Task 12 |
 | "Reviewed by" not "Actor" | Task 7, test 2 |
 | "Needs review" not "unresolved_review_item" | Task 9 (copy guard) + Task 6 (compliance table) |
 | "Compare against" not "benchmark_geography" | Task 8, test 3 |
-| Build still passes after adding tests | Task 10 |
+| Build still passes after adding tests | Task 13 |
 
-All requirements covered.
+All 16 source files covered.
 
 ### Placeholder scan
 No TBD, TODO, or vague steps. All test code is complete and runnable.
