@@ -1881,3 +1881,29 @@
     width: auto;
   }
 }
+
+.copilot-panel {
+  position: fixed;
+  top: 56px;
+  right: 0;
+  z-index: 20;
+  width: min(420px, calc(100vw - 24px));
+  height: calc(100vh - 56px);
+  padding: 24px;
+  overflow-y: auto;
+  border-left: 1px solid rgba(159, 185, 214, 0.14);
+  background:
+    linear-gradient(180deg, rgba(17, 34, 64, 0.97), rgba(10, 18, 38, 0.99));
+  backdrop-filter: blur(24px);
+}
+
+.copilot-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.copilot-panel__form {
+  margin-bottom: 16px;
+}
