@@ -1,9 +1,4 @@
-# Keep large research/data artifacts out of normal Git object storage.
-data/**/*.duckdb filter=lfs diff=lfs merge=lfs -text
-data/**/*.parquet filter=lfs diff=lfs merge=lfs -text
 data/**/*.xlsx filter=lfs diff=lfs merge=lfs -text
 projects/**/*.docx filter=lfs diff=lfs merge=lfs -text
 projects/**/*.xlsx filter=lfs diff=lfs merge=lfs -text
 projects/**/data/**/*.csv filter=lfs diff=lfs merge=lfs -text
-data/**/*.parquet !text !filter !merge !diff
-data/**/*.duckdb !text !filter !merge !diff
