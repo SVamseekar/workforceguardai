@@ -2,7 +2,7 @@ import { renderHook, waitFor, act } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
-import { server, MOCK_OVERVIEW } from '../handlers.js'
+import { server } from '../handlers.js'
 import { useOverviewData } from '../../hooks/useOverviewData.js'
 
 const wrapper = ({ children }) => <MemoryRouter>{children}</MemoryRouter>
