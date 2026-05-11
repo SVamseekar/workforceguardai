@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useOverviewData } from '../../hooks/useOverviewData'
 import { MetricCard } from '../primitives/MetricCard'
 import { FreshnessPill } from '../primitives/FreshnessPill'
+import { DataState } from '../shared/DataState'
 import { AlertTriangle, CheckCircle } from 'lucide-react'
 
 type AnyObj = Record<string, unknown>
@@ -10,30 +11,7 @@ export function HomeSection() {
   const { overview, loading, error } = useOverviewData()
   const navigate = useNavigate()
 
-  if (loading) {
-    return (
-      <div className="dashboard--loading">
-        <div className="loading-panel">
-          <h2>Loading…</h2>
-          <p>Fetching latest workforce intelligence.</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="dashboard--error">
-        <div className="error-panel">
-          <h2>Could not load data</h2>
-          <p>{error}</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!overview) return null
-  const ov = overview as AnyObj
+  const ov = (overview ?? {}) as AnyObj
 
   const intelligence = (ov.intelligence as AnyObj | undefined) ?? {}
   const signals = (intelligence.signals as AnyObj[]) ?? []
@@ -71,51 +49,52 @@ export function HomeSection() {
       <div className="dashboard__halo dashboard__halo--one" />
       <div className="dashboard__halo dashboard__halo--two" />
       <FreshnessPill />
-
-      <section className="metric-section" style={{ marginBottom: 28 }}>
-        <p className="hero__eyebrow">Command Centre</p>
-        <div className="metric-grid">
-          {metrics.map((metric) => (
-            <MetricCard
-              key={metric.id as string}
-              metric={metric}
-              onClick={() => navigate('/market')}
-            />
-          ))}
-        </div>
-      </section>
-
-      {attentionItems.length > 0 && (
+      <DataState loading={loading} error={error} empty={!loading && !error && !overview}>
         <section className="metric-section" style={{ marginBottom: 28 }}>
-          <p className="panel__eyebrow" style={{ marginBottom: 12 }}>Needs Attention</p>
-          <div className="product-notes">
-            {attentionItems.map((item, i) => (
-              <button
-                key={i}
-                className={`product-note inline-notice inline-notice--${item.type === 'watch' ? 'watch' : 'good'}`}
-                onClick={() => navigate(item.route)}
-                style={{ textAlign: 'left', cursor: 'pointer' }}
-              >
-                {item.type === 'watch'
-                  ? <AlertTriangle size={16} style={{ flexShrink: 0 }} />
-                  : <CheckCircle size={16} style={{ flexShrink: 0 }} />
-                }
-                <span>{item.text}</span>
-              </button>
+          <p className="hero__eyebrow">Command Centre</p>
+          <div className="metric-grid">
+            {metrics.map((metric) => (
+              <MetricCard
+                key={metric.id as string}
+                metric={metric}
+                onClick={() => navigate('/market')}
+              />
             ))}
           </div>
         </section>
-      )}
 
-      {brief && (
-        <section className="intelligence-section">
-          <div className="intelligence-brief">
-            <p className="panel__eyebrow">Executive Brief</p>
-            <h2 style={{ margin: '8px 0 14px', fontSize: '1.15rem' }}>{brief.headline as string}</h2>
-            <p className="intelligence-brief__summary">{brief.summary as string}</p>
-          </div>
-        </section>
-      )}
+        {attentionItems.length > 0 && (
+          <section className="metric-section" style={{ marginBottom: 28 }}>
+            <p className="panel__eyebrow" style={{ marginBottom: 12 }}>Needs Attention</p>
+            <div className="product-notes">
+              {attentionItems.map((item, i) => (
+                <button
+                  key={i}
+                  className={`product-note inline-notice inline-notice--${item.type === 'watch' ? 'watch' : 'good'}`}
+                  onClick={() => navigate(item.route)}
+                  style={{ textAlign: 'left', cursor: 'pointer' }}
+                >
+                  {item.type === 'watch'
+                    ? <AlertTriangle size={16} style={{ flexShrink: 0 }} />
+                    : <CheckCircle size={16} style={{ flexShrink: 0 }} />
+                  }
+                  <span>{item.text}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {brief && (
+          <section className="intelligence-section">
+            <div className="intelligence-brief">
+              <p className="panel__eyebrow">Executive Brief</p>
+              <h2 style={{ margin: '8px 0 14px', fontSize: '1.15rem' }}>{brief.headline as string}</h2>
+              <p className="intelligence-brief__summary">{brief.summary as string}</p>
+            </div>
+          </section>
+        )}
+      </DataState>
     </div>
   )
 }

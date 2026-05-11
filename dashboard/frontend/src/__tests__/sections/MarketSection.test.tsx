@@ -6,7 +6,7 @@ import { renderInRouter } from '../test-utils'
 describe('MarketSection', () => {
   it('shows loading state initially', () => {
     renderInRouter(<MarketSection />)
-    expect(screen.getByText('Loading…')).toBeInTheDocument()
+    expect(screen.getByRole('status', { name: 'Loading data' })).toBeInTheDocument()
   })
 
   it('renders Market Intelligence heading after data loads', async () => {

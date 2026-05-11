@@ -9,6 +9,7 @@ import { FilterBar } from '../shared/FilterBar'
 import { ChartPanel } from '../shared/ChartPanel'
 import { EvidenceDrawer } from '../shared/EvidenceDrawer'
 import { ToneChip } from '../primitives/ToneChip'
+import { DataState } from '../shared/DataState'
 
 type AnyObj = Record<string, unknown>
 
@@ -35,24 +36,7 @@ export function MarketSection() {
   const { filters, setFilters, overview, loading, error } = useOverviewData()
   const [selectedEvidence, setSelectedEvidence] = useState<unknown>(null)
 
-  if (loading) {
-    return (
-      <div className="dashboard--loading">
-        <div className="loading-panel"><h2>Loading…</h2></div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="dashboard--error">
-        <div className="error-panel"><h2>Could not load data</h2><p>{error}</p></div>
-      </div>
-    )
-  }
-
-  if (!overview) return null
-  const ov = overview as AnyObj
+  const ov = (overview ?? {}) as AnyObj
 
   const charts = (ov.charts as AnyObj) ?? {}
   const intelligence = (ov.intelligence as AnyObj) ?? {}
@@ -69,6 +53,7 @@ export function MarketSection() {
       <div className="dashboard__halo dashboard__halo--one" />
       <FreshnessPill />
 
+      <DataState loading={loading} error={error} empty={!loading && !error && !overview}>
       <p className="hero__eyebrow" style={{ marginBottom: 8 }}>Market Intelligence</p>
 
       <FilterBar
@@ -200,6 +185,7 @@ export function MarketSection() {
         evidence={selectedEvidence}
         onClose={() => setSelectedEvidence(null)}
       />
+      </DataState>
     </div>
   )
 }
