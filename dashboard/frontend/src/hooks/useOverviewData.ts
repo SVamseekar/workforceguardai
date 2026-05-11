@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
+import { normalizeOverview } from '../lib/normalizeOverview'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
 
@@ -34,7 +35,7 @@ async function fetchOverview(filters: Filters): Promise<unknown> {
   const response = await axios.get(`${API_BASE}/overview`, {
     params: buildQueryParams(filters),
   })
-  return response.data
+  return normalizeOverview(response.data)
 }
 
 export function useOverviewData() {
