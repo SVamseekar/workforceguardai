@@ -8,7 +8,7 @@ const NAV_ITEMS = [
   { to: '/govern', label: 'Govern & Export', Icon: ShieldCheck },
 ]
 
-export function Sidebar({ onCopilotOpen }) {
+export function Sidebar({ onCopilotOpen }: { onCopilotOpen: () => void }) {
   return (
     <nav className="sidebar">
       <ul className="sidebar__nav">

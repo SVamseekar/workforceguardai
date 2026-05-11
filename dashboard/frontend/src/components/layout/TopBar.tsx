@@ -16,7 +16,7 @@ export function TopBar() {
         <img src={logo} alt="WorkforceGuard" className="topbar__logo" />
       </div>
       <div className="topbar__company">
-        <span className="topbar__company-name">AeroTech Europe SAS</span>
+        <span className="topbar__company-name">WorkforceGuard AI</span>
       </div>
       <div className="topbar__context">
         <span className="topbar__context-label">{context}</span>

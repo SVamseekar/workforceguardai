@@ -21,7 +21,10 @@
     "noFallthroughCasesInSwitch": true,
 
     /* Allow implicit any on function parameters to avoid rewrites */
-    "noImplicitAny": false
+    "noImplicitAny": false,
+
+    /* Allow .js files in src (e.g. test handlers) */
+    "allowJs": true
   },
   "include": ["src"]
 }

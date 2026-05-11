@@ -1,11 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { screen, waitFor } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server, MOCK_OVERVIEW } from '../handlers.js'
 import { GovernSection } from '../../components/sections/GovernSection.jsx'
-
-const renderInRouter = (ui) => render(<MemoryRouter>{ui}</MemoryRouter>)
+import { renderInRouter } from '../test-utils'
 
 describe('GovernSection', () => {
   it('renders Govern & Export heading after data loads', async () => {

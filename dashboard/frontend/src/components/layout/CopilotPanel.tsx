@@ -14,10 +14,15 @@ const SUGGESTED_QUESTIONS = [
   'What limits this comparison?',
 ]
 
-export function CopilotPanel({ onClose }) {
+interface CopilotResponse {
+  answer: string
+  follow_ups?: string[]
+}
+
+export function CopilotPanel({ onClose }: { onClose: () => void }) {
   const [searchParams] = useSearchParams()
   const [question, setQuestion] = useState('')
-  const [response, setResponse] = useState(null)
+  const [response, setResponse] = useState<CopilotResponse | null>(null)
   const [asking, setAsking] = useState(false)
 
   const filterContext = {
@@ -29,13 +34,13 @@ export function CopilotPanel({ onClose }) {
     benchmark_sector: searchParams.get('benchmark_sector') ?? null,
   }
 
-  async function submitQuestion(q) {
+  async function submitQuestion(q: string) {
     const prompt = q.trim()
     if (!prompt || asking) return
     setAsking(true)
     try {
       const result = await axios.post(`${API_BASE}/ask`, { question: prompt, ...filterContext })
-      setResponse(result.data)
+      setResponse(result.data as CopilotResponse)
     } catch {
       setResponse({ answer: 'Could not get a response. Please try again.' })
     } finally {
@@ -43,7 +48,7 @@ export function CopilotPanel({ onClose }) {
     }
   }
 
-  function handleSubmit(e) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     submitQuestion(question)
   }
@@ -101,7 +106,7 @@ export function CopilotPanel({ onClose }) {
           <div className="analyst-console__response">
             <p className="analyst-console__question">Response</p>
             <h3 className="analyst-console__response-top">{response.answer}</h3>
-            {response.follow_ups?.length > 0 && (
+            {response.follow_ups && response.follow_ups.length > 0 && (
               <div className="analyst-console__follow-ups">
                 {response.follow_ups.slice(0, 3).map((fq) => (
                   <button

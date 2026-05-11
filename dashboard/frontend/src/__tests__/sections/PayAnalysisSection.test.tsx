@@ -1,11 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { screen, waitFor } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server, MOCK_OVERVIEW } from '../handlers.js'
 import { PayAnalysisSection } from '../../components/sections/PayAnalysisSection.jsx'
-
-const renderInRouter = (ui) => render(<MemoryRouter>{ui}</MemoryRouter>)
+import { renderInRouter } from '../test-utils'
 
 describe('PayAnalysisSection', () => {
   it('renders Pay Analysis heading after data loads', async () => {

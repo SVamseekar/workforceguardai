@@ -1,11 +1,16 @@
-function SelectField({ label, value, options, onChange }) {
+import type { ReactNode } from 'react'
+import type { Filters } from '../../hooks/useOverviewData'
+
+type SelectOption = { id?: string; label?: string } | string
+
+function SelectField({ label, value, options, onChange }: { label: string; value: string; options: SelectOption[]; onChange: (v: string) => void }) {
   return (
     <div className="control-field">
       <span>{label}</span>
       <select value={value} onChange={(e) => onChange(e.target.value)}>
         {options.map((opt) => (
-          <option key={opt.id ?? opt} value={opt.id ?? opt}>
-            {opt.label ?? opt}
+          <option key={typeof opt === 'string' ? opt : (opt.id ?? '')} value={typeof opt === 'string' ? opt : (opt.id ?? '')}>
+            {typeof opt === 'string' ? opt : (opt.label ?? opt.id ?? '')}
           </option>
         ))}
       </select>
@@ -13,11 +18,11 @@ function SelectField({ label, value, options, onChange }) {
   )
 }
 
-export function FilterBar({ filters, options, onFilterChange, onAnalyse, children }) {
-  const countryOptions = [{ id: 'ALL', label: 'All countries' }, ...(options?.countries ?? [])]
-  const sectorOptions = [{ id: 'ALL', label: 'All sectors' }, ...(options?.sectors ?? [])]
-  const periodOptions = options?.periods ?? []
-  const benchmarkOptions = options?.benchmark_geographies ?? []
+export function FilterBar({ filters, options, onFilterChange, onAnalyse, children }: { filters: Filters; options: Record<string, unknown>; onFilterChange: (f: Filters) => void; onAnalyse?: () => void; children?: ReactNode }) {
+  const countryOptions = [{ id: 'ALL', label: 'All countries' }, ...((options?.countries as SelectOption[]) ?? [])]
+  const sectorOptions = [{ id: 'ALL', label: 'All sectors' }, ...((options?.sectors as SelectOption[]) ?? [])]
+  const periodOptions = (options?.periods as SelectOption[]) ?? []
+  const benchmarkOptions = (options?.benchmark_geographies as SelectOption[]) ?? []
 
   return (
     <div className="filter-bar">
