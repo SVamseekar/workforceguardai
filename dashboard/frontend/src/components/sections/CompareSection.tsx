@@ -5,6 +5,7 @@ import axios from 'axios'
 import { FreshnessPill } from '../primitives/FreshnessPill'
 import { DataState } from '../shared/DataState'
 import { ToneChip } from '../primitives/ToneChip'
+import { normalizeOverview } from '../../lib/normalizeOverview'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
 
@@ -36,7 +37,7 @@ const DEFAULT_FILTERS: PanelFilters = {
 
 async function fetchOverview(filters: PanelFilters): Promise<unknown> {
   const r = await axios.get(`${API_BASE}/overview`, { params: filters })
-  return r.data
+  return normalizeOverview(r.data)
 }
 
 function SelectField({
