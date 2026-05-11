@@ -25,14 +25,19 @@ function formatValue(value: unknown, unit = '%') {
 
 interface PanelFilters {
   country: string
+  geography: string
   sector: string
   period: string
 }
 
-const DEFAULT_FILTERS: PanelFilters = {
-  country: 'ALL',
-  sector: 'ALL',
-  period: 'latest',
+function makeFilters(country: string, sector = 'ALL', period = 'latest'): PanelFilters {
+  return {
+    country,
+    // geography must match country to get country-level data; ALL → EU27_AVG
+    geography: country === 'ALL' ? 'EU27_AVG' : country,
+    sector,
+    period,
+  }
 }
 
 async function fetchOverview(filters: PanelFilters): Promise<unknown> {
@@ -51,10 +56,11 @@ function SelectField({
   options: { id: string; label: string }[]
   onChange: (v: string) => void
 }) {
+  const id = `compare-filter-${label.toLowerCase().replace(/\s+/g, '-')}`
   return (
     <div className="control-field">
-      <span>{label}</span>
-      <select value={value} onChange={(e) => onChange(e.target.value)}>
+      <label htmlFor={id}>{label}</label>
+      <select id={id} value={value} onChange={(e) => onChange(e.target.value)}>
         {options.map((o) => (
           <option key={o.id} value={o.id}>{o.label}</option>
         ))}
@@ -74,12 +80,20 @@ function MetricRow({ label, leftValue, rightValue, leftTone, rightTone }: {
     <div className="compare-row">
       <div className="compare-row__left">
         <span className="compare-row__value">{leftValue}</span>
-        {leftTone && <ToneChip tone={leftTone}>{leftTone === 'good' ? 'Good' : leftTone === 'watch' ? 'Watch' : 'Neutral'}</ToneChip>}
+        {leftTone && (
+          <ToneChip tone={leftTone}>
+            {leftTone === 'good' ? 'Good' : leftTone === 'watch' ? 'Watch' : 'Neutral'}
+          </ToneChip>
+        )}
       </div>
       <div className="compare-row__label">{label}</div>
       <div className="compare-row__right">
         <span className="compare-row__value">{rightValue}</span>
-        {rightTone && <ToneChip tone={rightTone}>{rightTone === 'good' ? 'Good' : rightTone === 'watch' ? 'Watch' : 'Neutral'}</ToneChip>}
+        {rightTone && (
+          <ToneChip tone={rightTone}>
+            {rightTone === 'good' ? 'Good' : rightTone === 'watch' ? 'Watch' : 'Neutral'}
+          </ToneChip>
+        )}
       </div>
     </div>
   )
@@ -106,29 +120,26 @@ function ComparePanel({
 
   const ov = (overview ?? {}) as AnyObj
   const metrics = (ov.metrics as AnyObj[]) ?? []
-  const countryOptions = [{ id: 'ALL', label: 'All countries' }, ...((options.countries as { id: string; label: string }[]) ?? [])]
-  const sectorOptions = [{ id: 'ALL', label: 'All sectors' }, ...((options.sectors as { id: string; label: string }[]) ?? [])]
+  const countryOptions = [
+    { id: 'ALL', label: 'EU27 average' },
+    ...((options.countries as { id: string; label: string }[]) ?? []).filter(c => c.id !== 'ALL'),
+  ]
+  const sectorOptions = [{ id: 'ALL', label: 'All sectors' }, ...((options.sectors as { id: string; label: string }[]) ?? []).filter(s => s.id !== 'ALL')]
   const periodOptions = (options.periods as { id: string; label: string }[]) ?? [{ id: 'latest', label: 'Latest' }]
 
-  const errorMsg = (() => {
-    if (!error) return ''
-    if (axios.isAxiosError(error)) return 'Could not load data for this panel.'
-    return 'Could not load data.'
-  })()
+  const errorMsg = error
+    ? (axios.isAxiosError(error) ? 'Could not load data for this panel.' : 'Could not load data.')
+    : ''
 
-  // Derive a readable panel heading from the applied filters in the response
   const appliedFilters = ((ov.filters as AnyObj)?.applied as AnyObj) ?? {}
-  const panelHeading = [
-    (appliedFilters.geography_label as string) || (filters.country === 'ALL' ? 'EU27 Average' : filters.country),
-    filters.sector !== 'ALL' ? (appliedFilters.sector_label as string) || filters.sector : null,
-    filters.period !== 'latest' ? filters.period : null,
-  ].filter(Boolean).join(' · ')
+  const panelHeading = (appliedFilters.geography_label as string)
+    || (filters.country === 'ALL' ? 'EU27 Average' : filters.country)
 
   return (
     <div className="compare-panel">
       <p className="panel__eyebrow">{title}</p>
       <h3 style={{ margin: '4px 0 14px', fontSize: '1rem', color: 'var(--text-strong)', fontWeight: 600 }}>
-        {panelHeading || 'Select a scope'}
+        {panelHeading}
       </h3>
       <div className="filter-bar" style={{ marginBottom: 16 }}>
         <div className="filter-grid">
@@ -136,7 +147,7 @@ function ComparePanel({
             label="Country"
             value={filters.country}
             options={countryOptions}
-            onChange={(v) => onFiltersChange({ ...filters, country: v })}
+            onChange={(v) => onFiltersChange(makeFilters(v, filters.sector, filters.period))}
           />
           <SelectField
             label="Sector"
@@ -158,7 +169,11 @@ function ComparePanel({
             <div key={m.id as string} className="compare-metric-item">
               <p className="metric-card__eyebrow">{m.title as string}</p>
               <p className="compare-metric-item__value">{formatValue(m.value, m.unit as string)}</p>
-              {Boolean(m.tone) && <ToneChip tone={m.tone as string}>{m.tone === 'good' ? 'Good' : m.tone === 'watch' ? 'Watch' : 'Neutral'}</ToneChip>}
+              {Boolean(m.tone) && (
+                <ToneChip tone={m.tone as string}>
+                  {m.tone === 'good' ? 'Good' : m.tone === 'watch' ? 'Watch' : 'Neutral'}
+                </ToneChip>
+              )}
             </div>
           ))}
         </div>
@@ -170,35 +185,30 @@ function ComparePanel({
 export function CompareSection() {
   const [searchParams] = useSearchParams()
 
-  const [leftFilters, setLeftFilters] = useState<PanelFilters>({
-    country: searchParams.get('country') ?? 'ALL',
-    sector: searchParams.get('sector') ?? 'ALL',
-    period: searchParams.get('period') ?? 'latest',
-  })
+  const [leftFilters, setLeftFilters] = useState<PanelFilters>(
+    makeFilters(searchParams.get('country') ?? 'ALL', searchParams.get('sector') ?? 'ALL', searchParams.get('period') ?? 'latest'),
+  )
 
-  const [rightFilters, setRightFilters] = useState<PanelFilters>({
-    country: 'FR',
-    sector: 'ALL',
-    period: 'latest',
-  })
+  const [rightFilters, setRightFilters] = useState<PanelFilters>(
+    makeFilters('FR'),
+  )
 
-  // Fetch options from a baseline overview call
+  // Fetch filter options from baseline EU27 call
   const { data: baseOverview } = useQuery({
     queryKey: ['overview-base-options'],
-    queryFn: () => fetchOverview(DEFAULT_FILTERS),
+    queryFn: () => fetchOverview(makeFilters('ALL')),
     staleTime: 5 * 60_000,
   })
 
   const baseOv = (baseOverview ?? {}) as AnyObj
   const options = ((baseOv.filters as AnyObj)?.options as AnyObj) ?? {}
 
-  // Fetch both panels for the side-by-side metric rows
+  // Independent data for the side-by-side rows (reuses panel query cache)
   const { data: leftData } = useQuery({
     queryKey: ['overview-compare', 'left', leftFilters],
     queryFn: () => fetchOverview(leftFilters),
     retry: 1,
   })
-
   const { data: rightData } = useQuery({
     queryKey: ['overview-compare', 'right', rightFilters],
     queryFn: () => fetchOverview(rightFilters),
@@ -208,7 +218,6 @@ export function CompareSection() {
   const leftMetrics = (((leftData ?? {}) as AnyObj).metrics as AnyObj[]) ?? []
   const rightMetrics = (((rightData ?? {}) as AnyObj).metrics as AnyObj[]) ?? []
 
-  // Build metric rows by matching metric IDs
   const metricRows = leftMetrics.map((lm) => {
     const rm = rightMetrics.find((r) => r.id === lm.id)
     return {
