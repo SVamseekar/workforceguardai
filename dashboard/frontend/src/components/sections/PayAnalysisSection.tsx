@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useOverviewData } from '../../hooks/useOverviewData'
+import { FreshnessPill } from '../primitives/FreshnessPill'
 import { ToneChip } from '../primitives/ToneChip'
 import { EvidenceDrawer } from '../shared/EvidenceDrawer'
 
@@ -74,6 +75,7 @@ export function PayAnalysisSection() {
   return (
     <div className="dashboard">
       <div className="dashboard__halo dashboard__halo--one" />
+      <FreshnessPill />
 
       <p className="hero__eyebrow" style={{ marginBottom: 8 }}>Pay Analysis</p>
 

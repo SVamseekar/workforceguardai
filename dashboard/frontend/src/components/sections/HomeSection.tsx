@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useOverviewData } from '../../hooks/useOverviewData'
 import { MetricCard } from '../primitives/MetricCard'
+import { FreshnessPill } from '../primitives/FreshnessPill'
 import { AlertTriangle, CheckCircle } from 'lucide-react'
 
 type AnyObj = Record<string, unknown>
@@ -69,6 +70,7 @@ export function HomeSection() {
     <div className="dashboard">
       <div className="dashboard__halo dashboard__halo--one" />
       <div className="dashboard__halo dashboard__halo--two" />
+      <FreshnessPill />
 
       <section className="metric-section" style={{ marginBottom: 28 }}>
         <p className="hero__eyebrow">Command Centre</p>

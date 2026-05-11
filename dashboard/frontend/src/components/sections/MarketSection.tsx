@@ -4,6 +4,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts'
 import { useOverviewData } from '../../hooks/useOverviewData'
+import { FreshnessPill } from '../primitives/FreshnessPill'
 import { FilterBar } from '../shared/FilterBar'
 import { ChartPanel } from '../shared/ChartPanel'
 import { EvidenceDrawer } from '../shared/EvidenceDrawer'
@@ -66,6 +67,7 @@ export function MarketSection() {
   return (
     <div className="dashboard">
       <div className="dashboard__halo dashboard__halo--one" />
+      <FreshnessPill />
 
       <p className="hero__eyebrow" style={{ marginBottom: 8 }}>Market Intelligence</p>
 
