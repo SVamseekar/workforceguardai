@@ -1,7 +1,8 @@
 .app-shell {
   display: grid;
   grid-template-rows: 56px 1fr;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .app-body {
@@ -76,7 +77,8 @@
   border-right: 1px solid rgba(159, 185, 214, 0.1);
   background: rgba(7, 17, 31, 0.6);
   padding: 20px 12px;
-  overflow-y: auto;
+  overflow: hidden;
+  height: 100%;
 }
 
 .sidebar__nav {
@@ -139,8 +141,6 @@
 
 .dashboard {
   position: relative;
-  overflow: hidden;
-  min-height: 100vh;
   padding: 48px clamp(20px, 4vw, 48px) 56px;
 }
 
