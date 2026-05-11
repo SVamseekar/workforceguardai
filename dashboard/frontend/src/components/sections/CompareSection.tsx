@@ -116,9 +116,20 @@ function ComparePanel({
     return 'Could not load data.'
   })()
 
+  // Derive a readable panel heading from the applied filters in the response
+  const appliedFilters = ((ov.filters as AnyObj)?.applied as AnyObj) ?? {}
+  const panelHeading = [
+    (appliedFilters.geography_label as string) || (filters.country === 'ALL' ? 'EU27 Average' : filters.country),
+    filters.sector !== 'ALL' ? (appliedFilters.sector_label as string) || filters.sector : null,
+    filters.period !== 'latest' ? filters.period : null,
+  ].filter(Boolean).join(' · ')
+
   return (
     <div className="compare-panel">
       <p className="panel__eyebrow">{title}</p>
+      <h3 style={{ margin: '4px 0 14px', fontSize: '1rem', color: 'var(--text-strong)', fontWeight: 600 }}>
+        {panelHeading || 'Select a scope'}
+      </h3>
       <div className="filter-bar" style={{ marginBottom: 16 }}>
         <div className="filter-grid">
           <SelectField
@@ -166,9 +177,9 @@ export function CompareSection() {
   })
 
   const [rightFilters, setRightFilters] = useState<PanelFilters>({
-    country: DEFAULT_FILTERS.country,
-    sector: DEFAULT_FILTERS.sector,
-    period: DEFAULT_FILTERS.period,
+    country: 'FR',
+    sector: 'ALL',
+    period: 'latest',
   })
 
   // Fetch options from a baseline overview call

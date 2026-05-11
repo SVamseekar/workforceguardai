@@ -10,9 +10,9 @@ const dateFormatter = new Intl.DateTimeFormat('en-IE', {
 export function FreshnessPill() {
   const queryClient = useQueryClient()
 
-  // Read generated_at from whatever overview query is already cached — no extra network call
-  const overviewData = queryClient.getQueriesData<Record<string, unknown>>({ queryKey: ['overview'] })
-  const generatedAt = overviewData
+  // Read generated_at from any cached overview query (any key prefix)
+  const allQueries = queryClient.getQueriesData<Record<string, unknown>>({})
+  const generatedAt = allQueries
     .map(([, data]) => (data as Record<string, unknown>)?.generated_at as string | undefined)
     .find(Boolean)
 
