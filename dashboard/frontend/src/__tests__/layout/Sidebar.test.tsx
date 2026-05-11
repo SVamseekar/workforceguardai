@@ -12,10 +12,11 @@ const renderSidebar = (initialPath = '/', onCopilotOpen = vi.fn()) =>
   )
 
 describe('Sidebar', () => {
-  it('renders all 4 nav links', () => {
+  it('renders all 5 nav links', () => {
     renderSidebar()
     expect(screen.getByRole('link', { name: /Home/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Market Intelligence/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Compare/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Pay Analysis/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Govern & Export/i })).toBeInTheDocument()
   })

@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom'
-import { BarChart2, Home, Scale, ShieldCheck, MessageSquare } from 'lucide-react'
+import { BarChart2, Home, Scale, ShieldCheck, MessageSquare, GitCompare } from 'lucide-react'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Home', Icon: Home, end: true },
   { to: '/market', label: 'Market Intelligence', Icon: BarChart2 },
+  { to: '/compare', label: 'Compare', Icon: GitCompare },
   { to: '/pay-analysis', label: 'Pay Analysis', Icon: Scale },
   { to: '/govern', label: 'Govern & Export', Icon: ShieldCheck },
 ]
