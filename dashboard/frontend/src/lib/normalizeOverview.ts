@@ -58,14 +58,22 @@ export function normalizeOverview(raw: unknown): AnyObj {
     summary: briefSummary.body ?? briefRaw.summary ?? briefRaw.title,
   }
 
-  // ── intelligence.signals: map detail→summary, evidence_bundle→evidence
+  // ── intelligence: normalize signals, recommendations, watchlist field names
   const intelRaw = asObj(d.intelligence)
   const signals = asArr(intelRaw.signals).map((s) => ({
     ...s,
     summary: s.summary ?? s.detail,
     evidence: s.evidence ?? s.evidence_bundle,
   }))
-  const intelligence = { ...intelRaw, signals }
+  const recommendations = asArr(intelRaw.recommendations).map((r) => ({
+    ...r,
+    summary: r.summary ?? r.detail,
+  }))
+  const watchlist = asArr(intelRaw.watchlist).map((w) => ({
+    ...w,
+    summary: w.summary ?? w.detail,
+  }))
+  const intelligence = { ...intelRaw, signals, recommendations, watchlist }
 
   // ── governance: logged_events→events, available_actions key normalization
   const govRaw = asObj(d.governance)

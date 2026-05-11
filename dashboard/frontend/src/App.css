@@ -246,9 +246,6 @@
   display: grid;
   gap: 16px;
   padding: 18px;
-  position: sticky;
-  top: 14px;
-  z-index: 3;
 }
 
 .filter-bar__header h2 {

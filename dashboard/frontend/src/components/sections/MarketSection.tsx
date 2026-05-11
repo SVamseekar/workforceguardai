@@ -95,9 +95,6 @@ export function MarketSection() {
                   <div key={i} className="recommendation-item">
                     <div className="recommendation-item__top">
                       <h3>{rec.title as string}</h3>
-                      <span className={`priority-badge priority-badge--${rec.priority}`}>
-                        {rec.priority as string}
-                      </span>
                     </div>
                     <p>{rec.summary as string}</p>
                   </div>
@@ -115,7 +112,7 @@ export function MarketSection() {
                     <div className="watchlist-item__top">
                       <span className="watchlist-item__label">{item.label as string}</span>
                       <ToneChip tone={(item.tone as string) ?? 'neutral'}>
-                        {item.tone === 'watch' ? 'Watch' : 'Monitor'}
+                        {item.tone === 'watch' ? 'Watch' : item.tone === 'good' ? 'Good' : 'Neutral'}
                       </ToneChip>
                     </div>
                     <p>{item.summary as string}</p>
