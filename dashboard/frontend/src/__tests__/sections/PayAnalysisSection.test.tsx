@@ -14,7 +14,7 @@ describe('PayAnalysisSection', () => {
   it('shows "No company data loaded" chip when internal data unavailable', async () => {
     renderInRouter(<PayAnalysisSection />)
     await waitFor(() =>
-      expect(screen.getByText('No company data loaded')).toBeInTheDocument(),
+      expect(screen.getAllByText('No company data loaded').length).toBeGreaterThan(0),
     )
   })
 

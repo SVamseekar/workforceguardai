@@ -4,6 +4,7 @@ import { FreshnessPill } from '../primitives/FreshnessPill'
 import { ToneChip } from '../primitives/ToneChip'
 import { EvidenceDrawer } from '../shared/EvidenceDrawer'
 import { DataState } from '../shared/DataState'
+import { FilterBar } from '../shared/FilterBar'
 
 type AnyObj = Record<string, unknown>
 
@@ -26,7 +27,7 @@ function formatValue(value: unknown, unit = '%') {
 }
 
 export function PayAnalysisSection() {
-  const { overview, loading, error, recordGovernanceAction, actionLoading, uploadPayroll } = useOverviewData()
+  const { overview, filters, setFilters, loading, error, recordGovernanceAction, actionLoading, uploadPayroll } = useOverviewData()
   const [selectedEvidence, setSelectedEvidence] = useState<unknown>(null)
 
   const ov = (overview ?? {}) as AnyObj
@@ -37,6 +38,7 @@ export function PayAnalysisSection() {
   const payTransparency = (ov.pay_transparency as AnyObj) ?? {}
   const benchmarkAvailable = Boolean(companyBenchmark.available)
   const internalLoaded = Boolean(internalData.available)
+  const options = ((ov.filters as AnyObj)?.options as AnyObj) ?? {}
 
   const coverageLabel = ({
     partial: 'Partial market data',
@@ -63,6 +65,21 @@ export function PayAnalysisSection() {
 
       <DataState loading={loading} error={error} empty={!loading && !error && !overview}>
       <p className="hero__eyebrow" style={{ marginBottom: 8 }}>Pay Analysis</p>
+
+      <FilterBar
+        filters={filters}
+        options={options}
+        onFilterChange={(next) => {
+          // When country changes, sync geography to activate company benchmarking
+          if (next.country !== filters.country && next.country !== 'ALL') {
+            setFilters({ ...next, geography: next.country })
+          } else if (next.country === 'ALL') {
+            setFilters({ ...next, geography: 'EU27_AVG' })
+          } else {
+            setFilters(next)
+          }
+        }}
+      />
 
       {/* Company vs Market */}
       <section className="comparison-section">
@@ -124,9 +141,13 @@ export function PayAnalysisSection() {
             </div>
           ) : (
             <div className="comparison-focus">
-              <ToneChip tone="watch">Market data only</ToneChip>
+              <ToneChip tone={internalLoaded ? 'watch' : 'neutral'}>
+                {internalLoaded ? 'Select a country to activate' : 'No company data loaded'}
+              </ToneChip>
               <p className="comparison-focus__summary">
-                {(companyBenchmark.note as string) ?? 'Company benchmark is not available for the current scope.'}
+                {internalLoaded
+                  ? 'Company data is loaded. Select a country scope above — for example France — to compare your internal pay gaps against the market.'
+                  : (companyBenchmark.note as string) ?? 'Upload your company payroll data to enable benchmarking.'}
               </p>
             </div>
           )}

@@ -90,9 +90,17 @@ export function normalizeOverview(raw: unknown): AnyObj {
     pending_handoffs: pendingHandoffs,
   }
 
-  // ── pay_transparency: categories→review_items
+  // ── pay_transparency: categories→review_items, normalize item field names
   const ptRaw = asObj(d.pay_transparency)
-  const categories = asArr(ptRaw.categories ?? ptRaw.review_items ?? ptRaw.top_review_items)
+  const rawCategories = asArr(ptRaw.categories ?? ptRaw.review_items ?? ptRaw.top_review_items)
+  const categories = rawCategories.map((cat) => ({
+    ...cat,
+    label: cat.label ?? asObj(cat.worker_category).label,
+    gap_value: cat.gap_value ?? cat.internal_gap,
+    note: cat.note ?? cat.rationale,
+    // governance target id for action recording
+    id: cat.id ?? asObj(cat.governance_target).target_id,
+  }))
   const pay_transparency = { ...ptRaw, categories }
 
   return {
