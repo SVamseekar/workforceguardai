@@ -9,9 +9,9 @@ describe('TopBar', () => {
     expect(screen.getByAltText('WorkforceGuard')).toBeInTheDocument()
   })
 
-  it('renders company name AeroTech Europe SAS', () => {
+  it('renders company name WorkforceGuard AI', () => {
     render(<MemoryRouter><TopBar /></MemoryRouter>)
-    expect(screen.getByText('AeroTech Europe SAS')).toBeInTheDocument()
+    expect(screen.getByText('WorkforceGuard AI')).toBeInTheDocument()
   })
 
   it('shows default context when no URL params set', () => {
