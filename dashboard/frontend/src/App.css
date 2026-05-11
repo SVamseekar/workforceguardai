@@ -175,14 +175,23 @@
 }
 
 .hero__eyebrow,
-.panel__eyebrow,
-.metric-card__eyebrow {
+.panel__eyebrow {
   margin: 0;
   color: var(--accent-teal);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
+}
+
+.metric-card__eyebrow {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  line-height: 1.3;
 }
 
 .loading-panel,
@@ -1454,12 +1463,13 @@
 .metric-card__delta,
 .metric-card__period {
   margin: 0;
-  font-size: 0.92rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
 }
 
 .metric-card__delta {
   margin-bottom: 6px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .metric-card__delta--good {

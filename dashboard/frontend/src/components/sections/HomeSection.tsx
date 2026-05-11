@@ -94,22 +94,22 @@ export function HomeSection() {
               </>
             )}
             {urgentItems.length === 0 && positiveItems.length > 0 && (
-              <p className="panel__eyebrow" style={{ marginBottom: 12 }}>Looking good</p>
-            )}
-            {positiveItems.length > 0 && (
-              <div className="product-notes">
-                {positiveItems.map((item, i) => (
-                  <button
-                    key={i}
-                    className="product-note inline-notice inline-notice--good"
-                    onClick={() => navigate(item.route)}
-                    style={{ textAlign: 'left', cursor: 'pointer' }}
-                  >
-                    <CheckCircle size={16} style={{ flexShrink: 0 }} />
-                    <span>{item.text}</span>
-                  </button>
-                ))}
-              </div>
+              <>
+                <p className="panel__eyebrow" style={{ marginBottom: 12 }}>Looking good</p>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  {positiveItems.map((item, i) => (
+                    <button
+                      key={i}
+                      className="product-note inline-notice inline-notice--good"
+                      onClick={() => navigate(item.route)}
+                      style={{ textAlign: 'left', cursor: 'pointer', flex: '0 0 auto' }}
+                    >
+                      <CheckCircle size={14} style={{ flexShrink: 0 }} />
+                      <span>{item.text}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
             )}
           </section>
         )}
