@@ -30,12 +30,24 @@ export function normalizeOverview(raw: unknown): AnyObj {
   if (!raw || typeof raw !== 'object') return {}
   const d = raw as AnyObj
 
-  // ── metrics: add top-level tone + delta derived from comparisons.prior_period
-  const metrics = asArr(d.metrics).map((m) => ({
-    ...m,
-    tone: m.tone ?? metricTone(m),
-    delta: m.delta ?? metricDelta(m),
-  }))
+  // ── metrics: add top-level tone + delta + gap_label derived from comparisons.prior_period
+  const metrics = asArr(d.metrics).map((m) => {
+    const pp = asObj(asObj(m.comparisons).prior_period)
+    return {
+      ...m,
+      tone: m.tone ?? metricTone(m),
+      delta: m.delta ?? metricDelta(m),
+      // gap_label is the human-readable delta string from the API e.g. "0.5 pts above"
+      gap_label: m.gap_label ?? pp.gap_label,
+      // period_label: a cleaner period string e.g. "2024" or "Q3 2025"
+      period_label: m.period_label ?? (() => {
+        const p = m.period as string | undefined
+        if (!p) return ''
+        // Convert "2025-Q3" → "Q3 2025", leave "2024" as-is
+        return p.replace(/^(\d{4})-Q(\d)$/, 'Q$2 $1')
+      })(),
+    }
+  })
 
   // ── filters.options: normalize key names
   const filtersRaw = asObj(d.filters)

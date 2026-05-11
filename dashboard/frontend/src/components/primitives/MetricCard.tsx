@@ -43,9 +43,12 @@ export function MetricCard({ metric, onOpenEvidence, onClick }: { metric: AnyObj
       </div>
       <p className="metric-card__value">{formatValue(metric.value, metric.unit as string | undefined)}</p>
       <p className={`metric-card__delta metric-card__delta--${tone}`}>
-        {formatDelta(metric.delta, metric.unit as string | undefined)}
+        {metric.gap_label
+          ? `${(metric.gap_label as string).charAt(0).toUpperCase() + (metric.gap_label as string).slice(1)} vs prior period`
+          : formatDelta(metric.delta, metric.unit as string | undefined)
+        }
       </p>
-      <p className="metric-card__period">{metric.period as string}</p>
+      <p className="metric-card__period">{(metric.period_label as string) || (metric.period as string)}</p>
       {Boolean(metric.tone) && (
         <div className="metric-card__coverage" style={{ marginTop: 8 }}>
           <ToneChip tone={tone}>

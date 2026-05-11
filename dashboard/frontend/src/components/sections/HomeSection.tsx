@@ -23,7 +23,16 @@ export function HomeSection() {
   const brief = briefRaw
     ? {
         headline: briefRaw.headline ?? (briefRaw.summary as AnyObj | undefined)?.headline ?? briefRaw.title,
-        summary: (briefRaw.summary as AnyObj | undefined)?.body ?? briefRaw.summary ?? briefRaw.title,
+        summary: (() => {
+          const body = ((briefRaw.summary as AnyObj | undefined)?.body ?? briefRaw.summary ?? briefRaw.title) as string | undefined
+          if (!body) return ''
+          // Strip internal methodology sentences added by the backend
+          return body
+            .replace(/\s*Active benchmark basis:[^.]+\./g, '')
+            .replace(/\s*All \d+ observed metrics are currently comparable[^.]+\./g, '')
+            .replace(/\s*[A-Za-z ]+ is \d+(\.\d+)? pts (above|below) [^.]+\./g, '')
+            .trim()
+        })(),
       }
     : null
 
