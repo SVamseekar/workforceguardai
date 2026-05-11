@@ -1,36 +1,14 @@
 import { useState } from 'react'
-import {
-  ResponsiveContainer, LineChart, Line, BarChart, Bar,
-  XAxis, YAxis, CartesianGrid, Tooltip,
-} from 'recharts'
 import { useOverviewData } from '../../hooks/useOverviewData'
 import { FreshnessPill } from '../primitives/FreshnessPill'
 import { FilterBar } from '../shared/FilterBar'
 import { ChartPanel } from '../shared/ChartPanel'
+import { MetricChart } from '../shared/MetricChart'
 import { EvidenceDrawer } from '../shared/EvidenceDrawer'
 import { ToneChip } from '../primitives/ToneChip'
 import { DataState } from '../shared/DataState'
 
 type AnyObj = Record<string, unknown>
-
-interface ChartTooltipProps {
-  active?: boolean
-  payload?: Array<{ value: unknown }>
-  label?: string
-  unit?: string
-}
-
-function ChartTooltip({ active, payload, label, unit = '%' }: ChartTooltipProps) {
-  if (!active || !payload?.length) return null
-  return (
-    <div className="chart-tooltip">
-      <p className="chart-tooltip__title">{label}</p>
-      <p className="chart-tooltip__value">
-        {unit === '%' ? `${Number(payload[0].value).toFixed(1)}%` : String(payload[0].value)}
-      </p>
-    </div>
-  )
-}
 
 export function MarketSection() {
   const { filters, setFilters, overview, loading, error } = useOverviewData()
@@ -64,53 +42,21 @@ export function MarketSection() {
 
       <div className="dashboard-grid" style={{ marginTop: 18 }}>
         <ChartPanel title="Unemployment trend" sourceId="eurostat_lfs">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={unemploymentSeries}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(159,185,214,0.08)" />
-              <XAxis dataKey="period" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
-              <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} unit="%" />
-              <Tooltip content={<ChartTooltip unit="%" />} />
-              <Line type="monotone" dataKey="value" stroke="#7ff4ea" strokeWidth={2} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
+          <MetricChart chartType="line" data={unemploymentSeries} xKey="period" color="#7ff4ea" />
         </ChartPanel>
 
         <ChartPanel title="Vacancy rate by sector" sourceId="eurostat_jvs">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={vacancySeries}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(159,185,214,0.08)" />
-              <XAxis dataKey="sector_label" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
-              <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} unit="%" />
-              <Tooltip content={<ChartTooltip unit="%" />} />
-              <Bar dataKey="value" fill="#7ff4ea" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <MetricChart chartType="bar" data={vacancySeries} xKey="sector_label" color="#7ff4ea" />
         </ChartPanel>
       </div>
 
       <div className="dashboard-grid" style={{ marginTop: 18 }}>
         <ChartPanel title="Employment trend" sourceId="eurostat_lfs">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={employmentSeries}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(159,185,214,0.08)" />
-              <XAxis dataKey="period" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
-              <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} unit="%" />
-              <Tooltip content={<ChartTooltip unit="%" />} />
-              <Line type="monotone" dataKey="value" stroke="#8db1ff" strokeWidth={2} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
+          <MetricChart chartType="line" data={employmentSeries} xKey="period" color="#8db1ff" />
         </ChartPanel>
 
         <ChartPanel title="Gender pay gap by sector" sourceId="eurostat_ses">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={payGapSeries}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(159,185,214,0.08)" />
-              <XAxis dataKey="sector_label" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
-              <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} unit="%" />
-              <Tooltip content={<ChartTooltip unit="%" />} />
-              <Bar dataKey="value" fill="#ffbf8f" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <MetricChart chartType="bar" data={payGapSeries} xKey="sector_label" color="#ffbf8f" />
         </ChartPanel>
       </div>
 

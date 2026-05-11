@@ -13,7 +13,7 @@ const REVIEW_STATE_LABELS: Record<string, string> = {
   unresolved_review_item: 'Needs review',
 }
 
-const numberFormatter = new Intl.NumberFormat('en-US', {
+const numberFormatter = new Intl.NumberFormat('en-IE', {
   maximumFractionDigits: 1,
   minimumFractionDigits: 0,
 })
