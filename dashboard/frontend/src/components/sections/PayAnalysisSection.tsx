@@ -102,7 +102,7 @@ export function PayAnalysisSection() {
                 <div className="comparison-meta__top">
                   <strong>Internal pay gap</strong>
                   <ToneChip tone={companyBenchmark.confidence === 'high' ? 'good' : companyBenchmark.confidence === 'low' ? 'watch' : 'neutral'}>
-                    {companyBenchmark.confidence === 'low' ? 'Limited data — treat with caution' : `${companyBenchmark.confidence ?? 'moderate'} confidence`}
+                    {companyBenchmark.confidence === 'low' ? 'Limited data — treat with caution' : `${String(companyBenchmark.confidence ?? 'medium')} confidence`}
                   </ToneChip>
                 </div>
                 <div className="comparison-meta__detail-list">
@@ -136,8 +136,21 @@ export function PayAnalysisSection() {
                   <span>{workerCategory.label as string}</span>
                   <span>{companyBenchmark.headcount as number} employees</span>
                 </div>
-                <p>{companyBenchmark.note as string}</p>
+                <p>
+                  {(internalData.sources as { source_id: string; record_count: number }[] | undefined)
+                    ?.filter(s => s.record_count > 0)
+                    .map(s => `${s.source_id.replace('internal_', '').replace('_snapshot', '')}: ${s.record_count} records`)
+                    .join(' · ')
+                  }
+                </p>
               </div>
+
+              {companyBenchmark.coverage_status === 'directional' && (
+                <div className="inline-notice inline-notice--watch" style={{ marginTop: 12, gridColumn: '1 / -1' }}>
+                  <strong>Directional estimate</strong>
+                  <p style={{ margin: 0 }}>These figures are modelled from your uploaded data via the benchmark mart. They indicate direction and relative position — not a regulatory pay-equity determination. Upload a fuller payroll snapshot for higher confidence.</p>
+                </div>
+              )}
             </div>
           ) : (
             <div className="comparison-focus">
