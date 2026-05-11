@@ -113,57 +113,63 @@ export function PayAnalysisSection() {
 
           {benchmarkAvailable ? (
             <div className="comparison-overview__meta">
+              {/* Column 1 — Internal pay gap */}
               <div className="comparison-meta">
                 <div className="comparison-meta__top">
                   <strong>Internal pay gap</strong>
                   <ToneChip tone={companyBenchmark.confidence === 'high' ? 'good' : companyBenchmark.confidence === 'low' ? 'watch' : 'neutral'}>
-                    {companyBenchmark.confidence === 'low' ? 'Limited data — treat with caution' : `${String(companyBenchmark.confidence ?? 'medium')} confidence`}
+                    {companyBenchmark.confidence === 'low' ? 'Limited data' : `${String(companyBenchmark.confidence ?? 'medium')} confidence`}
                   </ToneChip>
                 </div>
+                <p className="comparison-meta__value">{formatValue(companyBenchmark.internal_value)}</p>
                 <div className="comparison-meta__detail-list">
-                  <span>{formatValue(companyBenchmark.internal_value)}</span>
-                  <span>{companyBenchmark.female_count as number} female</span>
-                  <span>{companyBenchmark.male_count as number} male</span>
+                  <span>{companyBenchmark.female_count as number}F / {companyBenchmark.male_count as number}M</span>
+                  <span>{companyBenchmark.headcount as number} employees</span>
                 </div>
-                <p>Internal pay gap for {(workerCategory.label as string) ?? 'selected category'}.</p>
+                <p>{(workerCategory.label as string) ?? 'Selected category'}</p>
               </div>
 
+              {/* Column 2 — Market comparator */}
               <div className="comparison-meta">
                 <div className="comparison-meta__top">
                   <strong>Market comparator</strong>
-                  <span className="comparison-meta__pill">{coverageLabel}</span>
+                  {coverageLabel && coverageLabel !== 'Market data status unknown' && (
+                    <span className="comparison-meta__pill">{coverageLabel}</span>
+                  )}
                 </div>
+                <p className="comparison-meta__value">{formatValue(companyBenchmark.market_value)}</p>
                 <div className="comparison-meta__detail-list">
-                  <span>{formatValue(companyBenchmark.market_value)}</span>
                   <span>{companyBenchmark.delta_label as string} vs market</span>
                 </div>
                 <p>
-                  {evidenceBasisLabel && <span>{evidenceBasisLabel} · </span>}
-                  Data as of: {(companyBenchmark.snapshot_date as string) ?? 'Unknown'}
+                  {evidenceBasisLabel && `${evidenceBasisLabel} · `}
+                  Data as of {(companyBenchmark.snapshot_date as string) ?? 'Unknown'}
                 </p>
               </div>
 
+              {/* Column 3 — Data sources */}
               <div className="comparison-meta">
                 <div className="comparison-meta__top">
-                  <strong>Worker category</strong>
+                  <strong>Data sources</strong>
                 </div>
-                <div className="comparison-meta__detail-list">
-                  <span>{workerCategory.label as string}</span>
-                  <span>{companyBenchmark.headcount as number} employees</span>
-                </div>
-                <p>
+                <div className="comparison-meta__detail-list" style={{ marginTop: 4 }}>
                   {(internalData.sources as { source_id: string; record_count: number }[] | undefined)
                     ?.filter(s => s.record_count > 0)
-                    .map(s => `${s.source_id.replace('internal_', '').replace('_snapshot', '')}: ${s.record_count} records`)
-                    .join(' · ')
+                    .map(s => (
+                      <span key={s.source_id}>
+                        {s.source_id.replace('internal_', '').replace(/_/g, ' ')}: {s.record_count}
+                      </span>
+                    ))
                   }
-                </p>
+                  <span>Eurostat LFS · France</span>
+                </div>
+                <p style={{ marginTop: 8 }}>Snapshot: {(internalData.snapshot_date as string) ?? '—'}</p>
               </div>
 
               {companyBenchmark.coverage_status === 'directional' && (
-                <div className="inline-notice inline-notice--watch" style={{ marginTop: 12, gridColumn: '1 / -1' }}>
+                <div className="inline-notice inline-notice--watch" style={{ gridColumn: '1 / -1' }}>
                   <strong>Directional estimate</strong>
-                  <p style={{ margin: 0 }}>These figures are modelled from your uploaded data via the benchmark mart. They indicate direction and relative position — not a regulatory pay-equity determination. Upload a fuller payroll snapshot for higher confidence.</p>
+                  <p style={{ margin: 0 }}>Modelled from your uploaded data. Indicates direction and relative position — not a regulatory pay-equity determination. A fuller payroll snapshot will raise confidence.</p>
                 </div>
               )}
             </div>

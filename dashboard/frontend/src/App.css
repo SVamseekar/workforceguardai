@@ -682,7 +682,7 @@
 
 .comparison-overview__meta {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 14px;
   margin-top: 18px;
 }
@@ -690,7 +690,7 @@
 .comparison-meta,
 .comparison-card {
   border: 1px solid rgba(159, 185, 214, 0.14);
-  border-radius: 20px;
+  border-radius: 16px;
   background:
     linear-gradient(180deg, rgba(17, 34, 64, 0.86), rgba(10, 18, 38, 0.94)),
     rgba(10, 18, 38, 0.78);
@@ -698,49 +698,70 @@
 }
 
 .comparison-meta {
-  padding: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .comparison-meta__top {
   display: flex;
-  justify-content: space-between;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
   align-items: flex-start;
+}
+
+.comparison-meta__top strong {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.comparison-meta__value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-strong);
+  line-height: 1;
+  margin: 4px 0;
 }
 
 .comparison-meta__detail-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
+  gap: 6px;
 }
 
 .comparison-meta__detail-list span {
-  padding: 5px 8px;
+  padding: 4px 10px;
   border: 1px solid rgba(159, 185, 214, 0.14);
   border-radius: 999px;
   color: #b5d8fa;
-  font-size: 0.72rem;
+  font-size: 0.76rem;
   background: rgba(65, 101, 177, 0.14);
+  white-space: nowrap;
 }
 
 .comparison-meta__pill {
   display: inline-flex;
   align-items: center;
-  padding: 5px 8px;
+  padding: 4px 10px;
   border: 1px solid rgba(159, 185, 214, 0.14);
   border-radius: 999px;
   color: #b5d8fa;
-  font-size: 0.72rem;
+  font-size: 0.76rem;
   background: rgba(65, 101, 177, 0.14);
+  white-space: nowrap;
 }
 
 .comparison-meta p,
 .comparison-card__explanation,
 .comparison-card__note {
-  margin: 10px 0 0;
+  margin: 0;
   color: var(--text-muted);
-  line-height: 1.65;
+  font-size: 0.82rem;
+  line-height: 1.55;
 }
 
 .comparison-meta__footnote {
