@@ -147,23 +147,19 @@ export function PayAnalysisSection() {
                 </p>
               </div>
 
-              {/* Column 3 — Data sources */}
+              {/* Column 3 — Context */}
               <div className="comparison-meta">
                 <div className="comparison-meta__top">
-                  <strong>Data sources</strong>
+                  <strong>Context</strong>
                 </div>
                 <div className="comparison-meta__detail-list" style={{ marginTop: 4 }}>
-                  {(internalData.sources as { source_id: string; record_count: number }[] | undefined)
-                    ?.filter(s => s.record_count > 0)
-                    .map(s => (
-                      <span key={s.source_id}>
-                        {s.source_id.replace('internal_', '').replace(/_/g, ' ')}: {s.record_count}
-                      </span>
-                    ))
-                  }
-                  <span>Eurostat LFS · France</span>
+                  <span>{(workerCategory.label as string) ?? 'All categories'}</span>
+                  <span>{companyBenchmark.headcount as number} employees</span>
                 </div>
-                <p style={{ marginTop: 8 }}>Snapshot: {(internalData.snapshot_date as string) ?? '—'}</p>
+                <p>
+                  Company data as of {(internalData.snapshot_date as string) ?? '—'}.
+                  Market reference: Eurostat LFS, {(companyBenchmark.market_period_code as string) ?? 'latest'}.
+                </p>
               </div>
 
               {companyBenchmark.coverage_status === 'directional' && (
