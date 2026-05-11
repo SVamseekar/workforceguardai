@@ -9,6 +9,7 @@ import { MarketSection } from './components/sections/MarketSection'
 import { PayAnalysisSection } from './components/sections/PayAnalysisSection'
 import { GovernSection } from './components/sections/GovernSection'
 import { CompareSection } from './components/sections/CompareSection'
+import { NoticeBar } from './components/shared/NoticeBar'
 import './App.css'
 
 const queryClient = new QueryClient({
@@ -39,6 +40,7 @@ function AppShell() {
         </main>
       </div>
       {copilotOpen && <CopilotPanel onClose={() => setCopilotOpen(false)} />}
+      <NoticeBar />
     </div>
   )
 }

@@ -75,9 +75,23 @@ export function normalizeOverview(raw: unknown): AnyObj {
   }))
   const intelligence = { ...intelRaw, signals, recommendations, watchlist }
 
-  // ── governance: logged_events→events, available_actions key normalization
+  // ── governance: logged_events→events, normalize event and action field names
   const govRaw = asObj(d.governance)
-  const loggedEvents = asArr(govRaw.logged_events ?? govRaw.events ?? govRaw.recent_events)
+  const loggedEvents = asArr(govRaw.logged_events ?? govRaw.events ?? govRaw.recent_events).map((e) => ({
+    ...e,
+    // Normalize field names the UI reads
+    action_code: e.action_code,
+    action_label: e.action_label ?? e.action_name
+      ?? (typeof e.action_code === 'string'
+        ? e.action_code.charAt(0).toUpperCase() + e.action_code.slice(1).replace(/_/g, ' ')
+        : e.action_code),
+    recorded_at: e.recorded_at ?? e.created_at,
+    // Clean up target_id: strip prefixes like "pay_transparency_category_review:"
+    target_label: e.target_label
+      ?? (typeof e.target_id === 'string'
+        ? e.target_id.replace(/^pay_transparency_category_review:/, '').replace(/::/g, ' · ').replace(/_/g, ' ')
+        : e.target_id),
+  }))
   const availableActions = asArr(govRaw.available_actions).map((a) => ({
     ...a,
     code: a.code ?? a.action_code,
