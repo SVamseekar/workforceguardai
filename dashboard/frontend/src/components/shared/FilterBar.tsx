@@ -20,10 +20,16 @@ function SelectField({ label, value, options, onChange }: { label: string; value
 }
 
 export function FilterBar({ filters, options, onFilterChange, onAnalyse, children }: { filters: Filters; options: Record<string, unknown>; onFilterChange: (f: Filters) => void; onAnalyse?: () => void; children?: ReactNode }) {
-  const countryOptions = [{ id: 'ALL', label: 'All countries' }, ...((options?.countries as SelectOption[]) ?? [])]
-  const sectorOptions = [{ id: 'ALL', label: 'All sectors' }, ...((options?.sectors as SelectOption[]) ?? [])]
-  const periodOptions = (options?.periods as SelectOption[]) ?? []
-  const benchmarkOptions = (options?.benchmark_geographies as SelectOption[]) ?? []
+  // Support both old key names (countries/sectors/periods) and backend key names (country_options/sector_options/period_options)
+  const rawCountries = (options?.countries ?? options?.country_options) as SelectOption[] | undefined
+  const rawSectors = (options?.sectors ?? options?.sector_options) as SelectOption[] | undefined
+  const rawPeriods = (options?.periods ?? options?.period_options) as SelectOption[] | undefined
+  const rawBenchmarks = (options?.benchmark_geographies ?? options?.geography_options) as SelectOption[] | undefined
+
+  const countryOptions = rawCountries?.length ? rawCountries : [{ id: 'ALL', label: 'All countries' }]
+  const sectorOptions = rawSectors?.length ? rawSectors : [{ id: 'ALL', label: 'All sectors' }]
+  const periodOptions = rawPeriods ?? []
+  const benchmarkOptions = rawBenchmarks ?? []
 
   return (
     <div className="filter-bar">

@@ -1,18 +1,5 @@
 import { Clock } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
-import axios from 'axios'
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
-
-interface FreshnessData {
-  pulled_at: string
-  source_label?: string
-}
-
-async function fetchFreshness(): Promise<FreshnessData> {
-  const response = await axios.get(`${API_BASE}/freshness`)
-  return response.data
-}
+import { useQueryClient } from '@tanstack/react-query'
 
 const dateFormatter = new Intl.DateTimeFormat('en-IE', {
   dateStyle: 'medium',
@@ -21,25 +8,24 @@ const dateFormatter = new Intl.DateTimeFormat('en-IE', {
 })
 
 export function FreshnessPill() {
-  const { data, isLoading } = useQuery({
-    queryKey: ['freshness'],
-    queryFn: fetchFreshness,
-    staleTime: 5 * 60_000,
-    retry: 1,
-  })
+  const queryClient = useQueryClient()
 
-  if (isLoading || !data) {
+  // Read generated_at from whatever overview query is already cached — no extra network call
+  const overviewData = queryClient.getQueriesData<Record<string, unknown>>({ queryKey: ['overview'] })
+  const generatedAt = overviewData
+    .map(([, data]) => (data as Record<string, unknown>)?.generated_at as string | undefined)
+    .find(Boolean)
+
+  if (!generatedAt) {
     return (
       <div className="freshness-pill freshness-pill--loading">
         <Clock size={12} />
-        <span>Checking data freshness…</span>
+        <span>Loading data…</span>
       </div>
     )
   }
 
-  const label = data.pulled_at
-    ? `As of ${dateFormatter.format(new Date(data.pulled_at))} UTC`
-    : 'Freshness unknown'
+  const label = `As of ${dateFormatter.format(new Date(generatedAt))} UTC`
 
   return (
     <div className="freshness-pill">
