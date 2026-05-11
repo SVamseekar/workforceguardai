@@ -555,8 +555,8 @@
 .watchlist-item {
   position: relative;
   overflow: hidden;
-  border-radius: 20px;
-  padding: 18px;
+  border-radius: 16px;
+  padding: 16px 18px;
 }
 
 .score-card::after,
@@ -592,16 +592,22 @@
 .watchlist-item p {
   position: relative;
   z-index: 1;
-  margin: 10px 0 0;
+  margin: 6px 0 0;
   color: var(--text-muted);
-  line-height: 1.65;
+  font-size: 0.84rem;
+  line-height: 1.55;
 }
 
-.signal-list,
+.signal-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
 .recommendation-list,
 .watchlist {
   display: grid;
-  gap: 14px;
+  gap: 10px;
 }
 
 .signal-item h3,
@@ -609,13 +615,18 @@
   position: relative;
   z-index: 1;
   margin: 0;
-  font-size: 1rem;
-  letter-spacing: -0.02em;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.signal-item__top {
+  align-items: center;
 }
 
 .intelligence-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr 1fr;
   gap: 18px;
 }
 
