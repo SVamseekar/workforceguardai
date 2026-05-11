@@ -53,6 +53,23 @@
   color: var(--text-muted);
 }
 
+.freshness-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  background: rgba(127, 244, 234, 0.06);
+  border: 1px solid rgba(127, 244, 234, 0.18);
+  border-radius: 20px;
+  padding: 3px 10px;
+  margin-bottom: 16px;
+}
+
+.freshness-pill--loading {
+  opacity: 0.5;
+}
+
 .sidebar {
   display: flex;
   flex-direction: column;

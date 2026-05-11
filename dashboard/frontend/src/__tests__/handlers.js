@@ -62,6 +62,10 @@ export const handlers = [
   http.post('/api/upload/payroll', () =>
     HttpResponse.json({ record_count: 42, status: 'accepted' }),
   ),
+
+  http.get('/api/freshness', () =>
+    HttpResponse.json({ pulled_at: '2026-05-11T02:00:00Z', source_label: 'Eurostat' }),
+  ),
 ]
 
 export const server = setupServer(...handlers)

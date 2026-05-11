@@ -1,4 +1,5 @@
 import { useOverviewData } from '../../hooks/useOverviewData'
+import { FreshnessPill } from '../primitives/FreshnessPill'
 import { Download, Play } from 'lucide-react'
 
 type AnyObj = Record<string, unknown>
@@ -54,6 +55,7 @@ export function GovernSection() {
   return (
     <div className="dashboard">
       <div className="dashboard__halo dashboard__halo--one" />
+      <FreshnessPill />
 
       <p className="hero__eyebrow" style={{ marginBottom: 8 }}>Govern & Export</p>
 
