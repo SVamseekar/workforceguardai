@@ -9,7 +9,7 @@ const TONE_CLASS: Record<string, string> = {
   neutral: 'metric-card--blue',
 }
 
-const numberFormatter = new Intl.NumberFormat('en-US', {
+const numberFormatter = new Intl.NumberFormat('en-IE', {
   maximumFractionDigits: 1,
   minimumFractionDigits: 0,
 })

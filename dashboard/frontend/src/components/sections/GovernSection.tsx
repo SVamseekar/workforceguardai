@@ -5,7 +5,7 @@ import { DataState } from '../shared/DataState'
 
 type AnyObj = Record<string, unknown>
 
-const fullDateFormatter = new Intl.DateTimeFormat('en-GB', {
+const fullDateFormatter = new Intl.DateTimeFormat('en-IE', {
   dateStyle: 'medium',
   timeStyle: 'short',
 })
