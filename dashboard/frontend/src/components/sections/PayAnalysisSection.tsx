@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useOverviewData } from '../../hooks/useOverviewData'
 import { FreshnessPill } from '../primitives/FreshnessPill'
 import { ToneChip } from '../primitives/ToneChip'
@@ -29,6 +29,14 @@ function formatValue(value: unknown, unit = '%') {
 export function PayAnalysisSection() {
   const { overview, filters, setFilters, loading, error, recordGovernanceAction, actionLoading, uploadPayroll } = useOverviewData()
   const [selectedEvidence, setSelectedEvidence] = useState<unknown>(null)
+
+  // Pay Analysis needs geography=country to activate company benchmarking.
+  // Sync on mount and whenever country changes.
+  useEffect(() => {
+    if (filters.country !== 'ALL' && filters.geography !== filters.country) {
+      setFilters({ ...filters, geography: filters.country })
+    }
+  }, [filters.country]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const ov = (overview ?? {}) as AnyObj
 
