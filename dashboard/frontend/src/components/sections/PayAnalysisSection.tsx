@@ -31,10 +31,17 @@ export function PayAnalysisSection() {
   const [selectedEvidence, setSelectedEvidence] = useState<unknown>(null)
 
   // Pay Analysis needs geography=country to activate company benchmarking.
-  // Sync on mount and whenever country changes.
+  // Sync geography to country on mount and whenever country changes.
+  // Also reset sector to ALL — company benchmark mart covers all sectors.
   useEffect(() => {
-    if (filters.country !== 'ALL' && filters.geography !== filters.country) {
-      setFilters({ ...filters, geography: filters.country })
+    const needsGeoSync = filters.country !== 'ALL' && filters.geography !== filters.country
+    const needsSectorReset = filters.sector !== 'ALL'
+    if (needsGeoSync || needsSectorReset) {
+      setFilters({
+        ...filters,
+        geography: filters.country !== 'ALL' ? filters.country : filters.geography,
+        sector: 'ALL',
+      })
     }
   }, [filters.country]) // eslint-disable-line react-hooks/exhaustive-deps
 
