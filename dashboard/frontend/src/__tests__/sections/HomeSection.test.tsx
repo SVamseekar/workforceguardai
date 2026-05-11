@@ -8,7 +8,7 @@ import { renderInRouter } from '../test-utils'
 describe('HomeSection', () => {
   it('shows loading state initially', () => {
     renderInRouter(<HomeSection />)
-    expect(screen.getByText('Loading…')).toBeInTheDocument()
+    expect(screen.getByRole('status', { name: 'Loading data' })).toBeInTheDocument()
   })
 
   it('renders Command Centre heading after data loads', async () => {

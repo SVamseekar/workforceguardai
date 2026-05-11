@@ -1875,3 +1875,106 @@
 .copilot-panel__form {
   margin-bottom: 16px;
 }
+
+/* ── DataState & Skeleton ───────────────────────────────────────────────── */
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    rgba(159, 185, 214, 0.08) 25%,
+    rgba(159, 185, 214, 0.16) 50%,
+    rgba(159, 185, 214, 0.08) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s infinite;
+}
+
+.skeleton--eyebrow { height: 12px; width: 60%; margin-bottom: 12px; }
+.skeleton--value   { height: 32px; width: 80%; margin-bottom: 8px; }
+.skeleton--delta   { height: 10px; width: 50%; margin-bottom: 6px; }
+.skeleton--period  { height: 10px; width: 40%; }
+.skeleton--title   { height: 14px; width: 45%; margin-bottom: 16px; }
+
+.skeleton-card {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.skeleton-chart {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  min-height: 220px;
+}
+
+.skeleton-chart__bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  flex: 1;
+}
+
+.skeleton-chart__bar {
+  flex: 1;
+  border-radius: 4px 4px 0 0;
+  background: linear-gradient(
+    90deg,
+    rgba(159, 185, 214, 0.08) 25%,
+    rgba(159, 185, 214, 0.16) 50%,
+    rgba(159, 185, 214, 0.08) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s infinite;
+}
+
+.error-panel__message {
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.error-panel__request-id {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.error-panel__request-id code {
+  font-family: monospace;
+  background: rgba(159, 185, 214, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.error-panel__actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.error-panel__copy {
+  font-size: 0.85rem;
+  padding: 6px 14px;
+  border: 1px solid rgba(159, 185, 214, 0.24);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.error-panel__copy:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-strong);
+}
+
+.error-panel__report {
+  font-size: 0.85rem;
+  color: var(--accent-teal);
+  text-decoration: underline;
+}

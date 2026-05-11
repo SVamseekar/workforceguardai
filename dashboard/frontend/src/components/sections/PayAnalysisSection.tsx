@@ -3,6 +3,7 @@ import { useOverviewData } from '../../hooks/useOverviewData'
 import { FreshnessPill } from '../primitives/FreshnessPill'
 import { ToneChip } from '../primitives/ToneChip'
 import { EvidenceDrawer } from '../shared/EvidenceDrawer'
+import { DataState } from '../shared/DataState'
 
 type AnyObj = Record<string, unknown>
 
@@ -28,24 +29,7 @@ export function PayAnalysisSection() {
   const { overview, loading, error, recordGovernanceAction, actionLoading, uploadPayroll } = useOverviewData()
   const [selectedEvidence, setSelectedEvidence] = useState<unknown>(null)
 
-  if (loading) {
-    return (
-      <div className="dashboard--loading">
-        <div className="loading-panel"><h2>Loading…</h2></div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="dashboard--error">
-        <div className="error-panel"><h2>Could not load data</h2><p>{error}</p></div>
-      </div>
-    )
-  }
-
-  if (!overview) return null
-  const ov = overview as AnyObj
+  const ov = (overview ?? {}) as AnyObj
 
   const companyBenchmark = (ov.company_benchmark as AnyObj) ?? {}
   const internalData = (ov.internal_data as AnyObj) ?? {}
@@ -77,6 +61,7 @@ export function PayAnalysisSection() {
       <div className="dashboard__halo dashboard__halo--one" />
       <FreshnessPill />
 
+      <DataState loading={loading} error={error} empty={!loading && !error && !overview}>
       <p className="hero__eyebrow" style={{ marginBottom: 8 }}>Pay Analysis</p>
 
       {/* Company vs Market */}
@@ -268,6 +253,7 @@ export function PayAnalysisSection() {
         evidence={selectedEvidence}
         onClose={() => setSelectedEvidence(null)}
       />
+      </DataState>
     </div>
   )
 }

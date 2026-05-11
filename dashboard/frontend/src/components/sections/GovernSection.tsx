@@ -1,6 +1,7 @@
 import { useOverviewData } from '../../hooks/useOverviewData'
 import { FreshnessPill } from '../primitives/FreshnessPill'
 import { Download, Play } from 'lucide-react'
+import { DataState } from '../shared/DataState'
 
 type AnyObj = Record<string, unknown>
 
@@ -27,24 +28,7 @@ export function GovernSection() {
     scheduleBrief,
   } = useOverviewData()
 
-  if (loading) {
-    return (
-      <div className="dashboard--loading">
-        <div className="loading-panel"><h2>Loading…</h2></div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="dashboard--error">
-        <div className="error-panel"><h2>Could not load data</h2><p>{error}</p></div>
-      </div>
-    )
-  }
-
-  if (!overview) return null
-  const ov = overview as AnyObj
+  const ov = (overview ?? {}) as AnyObj
 
   const governance = (ov.governance as AnyObj) ?? {}
   const automation = (ov.automation as AnyObj) ?? {}
@@ -57,6 +41,7 @@ export function GovernSection() {
       <div className="dashboard__halo dashboard__halo--one" />
       <FreshnessPill />
 
+      <DataState loading={loading} error={error} empty={!loading && !error && !overview}>
       <p className="hero__eyebrow" style={{ marginBottom: 8 }}>Govern & Export</p>
 
       {/* Governance Log */}
@@ -191,6 +176,7 @@ export function GovernSection() {
           </div>
         </section>
       )}
+      </DataState>
     </div>
   )
 }
