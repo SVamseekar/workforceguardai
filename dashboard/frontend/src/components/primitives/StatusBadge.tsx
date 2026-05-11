@@ -1,4 +1,4 @@
-const STATUS_LABELS = {
+const STATUS_LABELS: Record<string, string> = {
   'internal mart active': 'Company data connected',
   'internal mart inactive': 'No company data loaded',
   'external-only answers': 'Market data only',
@@ -16,7 +16,7 @@ const STATUS_LABELS = {
   low: 'Limited data — treat with caution',
 }
 
-export function StatusBadge({ status, className = '' }) {
+export function StatusBadge({ status, className = '' }: { status: string; className?: string }) {
   const label = STATUS_LABELS[status] ?? status
   return <span className={`comparison-meta__pill ${className}`}>{label}</span>
 }

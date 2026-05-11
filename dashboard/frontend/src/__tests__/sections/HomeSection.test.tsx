@@ -1,11 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { screen, waitFor } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '../handlers.js'
 import { HomeSection } from '../../components/sections/HomeSection.jsx'
-
-const renderInRouter = (ui) => render(<MemoryRouter>{ui}</MemoryRouter>)
+import { renderInRouter } from '../test-utils'
 
 describe('HomeSection', () => {
   it('shows loading state initially', () => {

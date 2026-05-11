@@ -1,10 +1,12 @@
-const SOURCE_LABELS = {
+import type { ReactNode } from 'react'
+
+const SOURCE_LABELS: Record<string, string> = {
   eurostat_lfs: 'Eurostat LFS',
   eurostat_jvs: 'Eurostat JVS',
   eurostat_ses: 'Eurostat SES',
 }
 
-export function ChartPanel({ title, sourceId, children }) {
+export function ChartPanel({ title, sourceId, children }: { title: string; sourceId?: string; children?: ReactNode }) {
   return (
     <div className="panel">
       <div className="panel__header panel__header--tight">

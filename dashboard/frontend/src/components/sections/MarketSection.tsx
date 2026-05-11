@@ -9,13 +9,22 @@ import { ChartPanel } from '../shared/ChartPanel'
 import { EvidenceDrawer } from '../shared/EvidenceDrawer'
 import { ToneChip } from '../primitives/ToneChip'
 
-function ChartTooltip({ active, payload, label, unit = '%' }) {
+type AnyObj = Record<string, unknown>
+
+interface ChartTooltipProps {
+  active?: boolean
+  payload?: Array<{ value: unknown }>
+  label?: string
+  unit?: string
+}
+
+function ChartTooltip({ active, payload, label, unit = '%' }: ChartTooltipProps) {
   if (!active || !payload?.length) return null
   return (
     <div className="chart-tooltip">
       <p className="chart-tooltip__title">{label}</p>
       <p className="chart-tooltip__value">
-        {unit === '%' ? `${Number(payload[0].value).toFixed(1)}%` : payload[0].value}
+        {unit === '%' ? `${Number(payload[0].value).toFixed(1)}%` : String(payload[0].value)}
       </p>
     </div>
   )
@@ -23,7 +32,7 @@ function ChartTooltip({ active, payload, label, unit = '%' }) {
 
 export function MarketSection() {
   const { filters, setFilters, overview, loading, error } = useOverviewData()
-  const [selectedEvidence, setSelectedEvidence] = useState(null)
+  const [selectedEvidence, setSelectedEvidence] = useState<unknown>(null)
 
   if (loading) {
     return (
@@ -42,15 +51,17 @@ export function MarketSection() {
   }
 
   if (!overview) return null
+  const ov = overview as AnyObj
 
-  const charts = overview.charts ?? {}
-  const intelligence = overview.intelligence ?? {}
-  const options = overview.filters?.options ?? {}
+  const charts = (ov.charts as AnyObj) ?? {}
+  const intelligence = (ov.intelligence as AnyObj) ?? {}
+  const ovFilters = (ov.filters as AnyObj) ?? {}
+  const options = (ovFilters.options as Record<string, unknown>) ?? {}
 
-  const unemploymentSeries = charts.unemployment_trend?.series ?? []
-  const employmentSeries = charts.employment_trend?.series ?? []
-  const vacancySeries = charts.vacancy_by_sector?.series ?? []
-  const payGapSeries = charts.pay_gap_by_sector?.series ?? []
+  const unemploymentSeries = ((charts.unemployment_trend as AnyObj)?.series as AnyObj[]) ?? []
+  const employmentSeries = ((charts.employment_trend as AnyObj)?.series as AnyObj[]) ?? []
+  const vacancySeries = ((charts.vacancy_by_sector as AnyObj)?.series as AnyObj[]) ?? []
+  const payGapSeries = ((charts.pay_gap_by_sector as AnyObj)?.series as AnyObj[]) ?? []
 
   return (
     <div className="dashboard">
@@ -119,16 +130,16 @@ export function MarketSection() {
       <section className="intelligence-section">
         <p className="panel__eyebrow" style={{ marginBottom: 14 }}>Intelligence Signals</p>
         <div className="signal-list">
-          {(intelligence.signals ?? []).map((signal, i) => (
+          {((intelligence.signals as AnyObj[]) ?? []).map((signal, i) => (
             <div key={i} className="signal-item">
               <div className="signal-item__top">
-                <h3>{signal.title}</h3>
-                <ToneChip tone={signal.tone}>
+                <h3>{signal.title as string}</h3>
+                <ToneChip tone={signal.tone as string}>
                   {signal.tone === 'good' ? 'Good' : signal.tone === 'watch' ? 'Watch' : 'Neutral'}
                 </ToneChip>
               </div>
-              <p>{signal.summary}</p>
-              {signal.evidence && (
+              <p>{signal.summary as string}</p>
+              {Boolean(signal.evidence) && (
                 <button
                   className="insight-button"
                   onClick={() => setSelectedEvidence(signal.evidence)}
@@ -141,40 +152,40 @@ export function MarketSection() {
         </div>
       </section>
 
-      {(intelligence.recommendations?.length > 0 || intelligence.watchlist?.length > 0) && (
+      {(((intelligence.recommendations as AnyObj[])?.length ?? 0) > 0 || ((intelligence.watchlist as AnyObj[])?.length ?? 0) > 0) && (
         <div className="intelligence-grid" style={{ marginTop: 18 }}>
-          {intelligence.recommendations?.length > 0 && (
+          {((intelligence.recommendations as AnyObj[])?.length ?? 0) > 0 && (
             <div>
               <p className="panel__eyebrow" style={{ marginBottom: 12 }}>Recommendations</p>
               <div className="recommendation-list">
-                {intelligence.recommendations.map((rec, i) => (
+                {(intelligence.recommendations as AnyObj[]).map((rec, i) => (
                   <div key={i} className="recommendation-item">
                     <div className="recommendation-item__top">
-                      <h3>{rec.title}</h3>
+                      <h3>{rec.title as string}</h3>
                       <span className={`priority-badge priority-badge--${rec.priority}`}>
-                        {rec.priority}
+                        {rec.priority as string}
                       </span>
                     </div>
-                    <p>{rec.summary}</p>
+                    <p>{rec.summary as string}</p>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {intelligence.watchlist?.length > 0 && (
+          {((intelligence.watchlist as AnyObj[])?.length ?? 0) > 0 && (
             <div>
               <p className="panel__eyebrow" style={{ marginBottom: 12 }}>Watchlist</p>
               <div className="watchlist">
-                {intelligence.watchlist.map((item, i) => (
+                {(intelligence.watchlist as AnyObj[]).map((item, i) => (
                   <div key={i} className="watchlist-item">
                     <div className="watchlist-item__top">
-                      <span className="watchlist-item__label">{item.label}</span>
-                      <ToneChip tone={item.tone ?? 'neutral'}>
+                      <span className="watchlist-item__label">{item.label as string}</span>
+                      <ToneChip tone={(item.tone as string) ?? 'neutral'}>
                         {item.tone === 'watch' ? 'Watch' : 'Monitor'}
                       </ToneChip>
                     </div>
-                    <p>{item.summary}</p>
+                    <p>{item.summary as string}</p>
                   </div>
                 ))}
               </div>

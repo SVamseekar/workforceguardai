@@ -1,10 +1,11 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi } from 'vitest'
-import { FilterBar } from '../../components/shared/FilterBar.jsx'
+import { FilterBar } from '../../components/shared/FilterBar'
 
 const DEFAULT_FILTERS = {
   country: 'ALL',
+  geography: 'EU27_AVG',
   sector: 'ALL',
   period: 'latest',
   benchmark_geography: '',

@@ -1,6 +1,7 @@
-import { render, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import React from 'react'
+import { waitFor } from '@testing-library/react'
 import { describe, it, expect, beforeEach } from 'vitest'
+import { renderInRouter } from './test-utils'
 import { http, HttpResponse } from 'msw'
 import { server, MOCK_OVERVIEW } from './handlers.js'
 import { HomeSection } from '../components/sections/HomeSection.jsx'
@@ -57,12 +58,8 @@ const RICH_OVERVIEW = {
   },
 }
 
-function renderSection(Section) {
-  const { container } = render(
-    <MemoryRouter>
-      <Section />
-    </MemoryRouter>,
-  )
+function renderSection(Section: React.ComponentType) {
+  const { container } = renderInRouter(<Section />)
   return container
 }
 

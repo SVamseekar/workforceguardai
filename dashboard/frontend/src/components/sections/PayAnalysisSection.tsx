@@ -3,7 +3,9 @@ import { useOverviewData } from '../../hooks/useOverviewData'
 import { ToneChip } from '../primitives/ToneChip'
 import { EvidenceDrawer } from '../shared/EvidenceDrawer'
 
-const REVIEW_STATE_LABELS = {
+type AnyObj = Record<string, unknown>
+
+const REVIEW_STATE_LABELS: Record<string, string> = {
   observed_gap: 'Pay gap identified',
   justified_difference: 'Documented difference',
   unresolved_review_item: 'Needs review',
@@ -14,7 +16,7 @@ const numberFormatter = new Intl.NumberFormat('en-US', {
   minimumFractionDigits: 0,
 })
 
-function formatValue(value, unit = '%') {
+function formatValue(value: unknown, unit = '%') {
   if (value == null) return '—'
   if (unit === '%') return `${numberFormatter.format(Number(value))}%`
   if (unit === 'score') return `${numberFormatter.format(Number(value))}/100`
@@ -23,7 +25,7 @@ function formatValue(value, unit = '%') {
 
 export function PayAnalysisSection() {
   const { overview, loading, error, recordGovernanceAction, actionLoading, uploadPayroll } = useOverviewData()
-  const [selectedEvidence, setSelectedEvidence] = useState(null)
+  const [selectedEvidence, setSelectedEvidence] = useState<unknown>(null)
 
   if (loading) {
     return (
@@ -42,25 +44,32 @@ export function PayAnalysisSection() {
   }
 
   if (!overview) return null
+  const ov = overview as AnyObj
 
-  const companyBenchmark = overview.company_benchmark ?? {}
-  const internalData = overview.internal_data ?? {}
-  const semanticMetrics = overview.semantic_metrics ?? []
-  const payTransparency = overview.pay_transparency ?? {}
+  const companyBenchmark = (ov.company_benchmark as AnyObj) ?? {}
+  const internalData = (ov.internal_data as AnyObj) ?? {}
+  const semanticMetrics = (ov.semantic_metrics as AnyObj[]) ?? []
+  const payTransparency = (ov.pay_transparency as AnyObj) ?? {}
   const benchmarkAvailable = Boolean(companyBenchmark.available)
   const internalLoaded = Boolean(internalData.available)
 
-  const coverageLabel = {
+  const coverageLabel = ({
     partial: 'Partial market data',
     full: 'Full market data',
     unavailable: 'Market data unavailable',
-  }[companyBenchmark.coverage_status] ?? 'Market data status unknown'
+  } as Record<string, string>)[companyBenchmark.coverage_status as string] ?? 'Market data status unknown'
 
-  const evidenceBasisLabel = {
+  const evidenceBasisLabel = ({
     blended: 'Evidence source: Combined',
     internal: 'Evidence source: Company data',
     external: 'Evidence source: Market data',
-  }[companyBenchmark.evidence_basis] ?? ''
+  } as Record<string, string>)[companyBenchmark.evidence_basis as string] ?? ''
+
+  const workerCategory = (companyBenchmark.worker_category as AnyObj | undefined) ?? {}
+  const ptSummary = (payTransparency.summary as AnyObj | undefined) ?? {}
+  const governance = (ov.governance as AnyObj) ?? {}
+  const availableActions = (governance.available_actions as AnyObj[]) ?? []
+  const egaproBenchmark = (ov.egapro_peer_benchmark as AnyObj) ?? {}
 
   return (
     <div className="dashboard">
@@ -94,10 +103,10 @@ export function PayAnalysisSection() {
                 </div>
                 <div className="comparison-meta__detail-list">
                   <span>{formatValue(companyBenchmark.internal_value)}</span>
-                  <span>{companyBenchmark.female_count} female</span>
-                  <span>{companyBenchmark.male_count} male</span>
+                  <span>{companyBenchmark.female_count as number} female</span>
+                  <span>{companyBenchmark.male_count as number} male</span>
                 </div>
-                <p>Internal pay gap for {companyBenchmark.worker_category?.label ?? 'selected category'}.</p>
+                <p>Internal pay gap for {(workerCategory.label as string) ?? 'selected category'}.</p>
               </div>
 
               <div className="comparison-meta">
@@ -107,11 +116,11 @@ export function PayAnalysisSection() {
                 </div>
                 <div className="comparison-meta__detail-list">
                   <span>{formatValue(companyBenchmark.market_value)}</span>
-                  <span>{companyBenchmark.delta_label} vs market</span>
+                  <span>{companyBenchmark.delta_label as string} vs market</span>
                 </div>
                 <p>
                   {evidenceBasisLabel && <span>{evidenceBasisLabel} · </span>}
-                  Data as of: {companyBenchmark.snapshot_date ?? 'Unknown'}
+                  Data as of: {(companyBenchmark.snapshot_date as string) ?? 'Unknown'}
                 </p>
               </div>
 
@@ -120,17 +129,17 @@ export function PayAnalysisSection() {
                   <strong>Worker category</strong>
                 </div>
                 <div className="comparison-meta__detail-list">
-                  <span>{companyBenchmark.worker_category?.label}</span>
-                  <span>{companyBenchmark.headcount} employees</span>
+                  <span>{workerCategory.label as string}</span>
+                  <span>{companyBenchmark.headcount as number} employees</span>
                 </div>
-                <p>{companyBenchmark.note}</p>
+                <p>{companyBenchmark.note as string}</p>
               </div>
             </div>
           ) : (
             <div className="comparison-focus">
               <ToneChip tone="watch">Market data only</ToneChip>
               <p className="comparison-focus__summary">
-                {companyBenchmark.note ?? 'Company benchmark is not available for the current scope.'}
+                {(companyBenchmark.note as string) ?? 'Company benchmark is not available for the current scope.'}
               </p>
             </div>
           )}
@@ -143,13 +152,13 @@ export function PayAnalysisSection() {
           <p className="panel__eyebrow" style={{ marginBottom: 12 }}>Derived Scores</p>
           <div className="metric-grid">
             {semanticMetrics.map((metric) => (
-              <article key={metric.id} className="metric-card">
-                <p className="metric-card__eyebrow">{metric.title}</p>
-                <p className="metric-card__value">{formatValue(metric.value, metric.unit)}</p>
-                <p className="metric-card__period">{metric.definition}</p>
-                {metric.tone && (
+              <article key={metric.id as string} className="metric-card">
+                <p className="metric-card__eyebrow">{metric.title as string}</p>
+                <p className="metric-card__value">{formatValue(metric.value, metric.unit as string)}</p>
+                <p className="metric-card__period">{metric.definition as string}</p>
+                {Boolean(metric.tone) && (
                   <div style={{ marginTop: 8 }}>
-                    <ToneChip tone={metric.tone}>
+                    <ToneChip tone={metric.tone as string}>
                       {metric.tone === 'good' ? 'Good' : metric.tone === 'watch' ? 'Watch' : 'Neutral'}
                     </ToneChip>
                   </div>
@@ -161,7 +170,7 @@ export function PayAnalysisSection() {
       )}
 
       {/* Pay Transparency Compliance */}
-      {payTransparency.available && (
+      {Boolean(payTransparency.available) && (
         <section className="comparison-section">
           <div className="panel" style={{ minHeight: 'auto', padding: 22 }}>
             <div className="panel__header panel__header--tight">
@@ -169,35 +178,35 @@ export function PayAnalysisSection() {
                 <p className="panel__eyebrow">EU Pay Transparency Directive</p>
                 <h2>Pay transparency compliance</h2>
               </div>
-              <ToneChip tone={payTransparency.summary?.unresolved_review_item_count > 0 ? 'watch' : 'good'}>
-                {payTransparency.summary?.unresolved_review_item_count > 0
-                  ? `${payTransparency.summary.unresolved_review_item_count} need review`
+              <ToneChip tone={(ptSummary.unresolved_review_item_count as number) > 0 ? 'watch' : 'good'}>
+                {(ptSummary.unresolved_review_item_count as number) > 0
+                  ? `${ptSummary.unresolved_review_item_count} need review`
                   : 'All reviewed'}
               </ToneChip>
             </div>
 
             <div className="compliance-review-list">
-              {(payTransparency.categories ?? []).map((cat) => (
-                <div key={cat.id} className="compliance-review-item">
+              {((payTransparency.categories as AnyObj[]) ?? []).map((cat) => (
+                <div key={cat.id as string} className="compliance-review-item">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <strong>{cat.label}</strong>
+                    <strong>{cat.label as string}</strong>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                       <span>{formatValue(cat.gap_value)}</span>
                       <ToneChip tone={cat.review_state === 'unresolved_review_item' ? 'watch' : 'neutral'}>
-                        {REVIEW_STATE_LABELS[cat.review_state] ?? cat.review_state}
+                        {REVIEW_STATE_LABELS[cat.review_state as string] ?? cat.review_state as string}
                       </ToneChip>
                     </div>
                   </div>
-                  {cat.note && <p>{cat.note}</p>}
+                  {Boolean(cat.note) && <p>{cat.note as string}</p>}
                   <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
-                    {(overview.governance?.available_actions ?? []).map((action) => (
+                    {availableActions.map((action) => (
                       <button
-                        key={action.code}
+                        key={action.code as string}
                         className={`governance-button governance-button--${action.code}`}
                         disabled={actionLoading}
-                        onClick={() => recordGovernanceAction(action.code, 'pay_category', cat.id)}
+                        onClick={() => recordGovernanceAction(action.code as string, 'pay_category', cat.id as string)}
                       >
-                        {action.label}
+                        {action.label as string}
                       </button>
                     ))}
                   </div>
@@ -209,7 +218,7 @@ export function PayAnalysisSection() {
       )}
 
       {/* Égapro peer benchmark — only shown when country=FR and data available */}
-      {overview.egapro_peer_benchmark?.available && (
+      {Boolean(egaproBenchmark.available) && (
         <section className="comparison-section">
           <div className="panel" style={{ minHeight: 'auto', padding: 22 }}>
             <p className="panel__eyebrow">France Égapro Index</p>
@@ -218,14 +227,14 @@ export function PayAnalysisSection() {
               <div className="comparison-meta">
                 <div className="comparison-meta__top">
                   <strong>Sector median score</strong>
-                  <span className="comparison-meta__pill">{overview.egapro_peer_benchmark.company_count} companies</span>
+                  <span className="comparison-meta__pill">{egaproBenchmark.company_count as number} companies</span>
                 </div>
                 <div className="comparison-meta__detail-list">
-                  <span>P25: {overview.egapro_peer_benchmark.p25_score}</span>
-                  <span>P50: {overview.egapro_peer_benchmark.p50_score}</span>
-                  <span>P75: {overview.egapro_peer_benchmark.p75_score}</span>
+                  <span>P25: {egaproBenchmark.p25_score as number}</span>
+                  <span>P50: {egaproBenchmark.p50_score as number}</span>
+                  <span>P75: {egaproBenchmark.p75_score as number}</span>
                 </div>
-                <p>{overview.egapro_peer_benchmark.note}</p>
+                <p>{egaproBenchmark.note as string}</p>
               </div>
             </div>
           </div>

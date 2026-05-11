@@ -3,6 +3,8 @@ import { useOverviewData } from '../../hooks/useOverviewData'
 import { MetricCard } from '../primitives/MetricCard'
 import { AlertTriangle, CheckCircle } from 'lucide-react'
 
+type AnyObj = Record<string, unknown>
+
 export function HomeSection() {
   const { overview, loading, error } = useOverviewData()
   const navigate = useNavigate()
@@ -30,24 +32,37 @@ export function HomeSection() {
   }
 
   if (!overview) return null
+  const ov = overview as AnyObj
 
-  const watchSignals = (overview.intelligence?.signals ?? []).filter((s) => s.tone === 'watch')
-  const unresolvedCount = overview.pay_transparency?.summary?.unresolved_review_item_count ?? 0
-  const brief = overview.brief
+  const intelligence = (ov.intelligence as AnyObj | undefined) ?? {}
+  const signals = (intelligence.signals as AnyObj[]) ?? []
+  const watchSignals = signals.filter((s) => s.tone === 'watch')
+  const payTransparency = (ov.pay_transparency as AnyObj | undefined) ?? {}
+  const ptSummary = (payTransparency.summary as AnyObj | undefined) ?? {}
+  const unresolvedCount = (ptSummary.unresolved_review_item_count as number) ?? 0
+  const briefRaw = ov.brief as AnyObj | undefined
+  const brief = briefRaw
+    ? {
+        headline: briefRaw.headline ?? (briefRaw.summary as AnyObj | undefined)?.headline ?? briefRaw.title,
+        summary: (briefRaw.summary as AnyObj | undefined)?.body ?? briefRaw.summary ?? briefRaw.title,
+      }
+    : null
+
+  const metrics = (ov.metrics as AnyObj[]) ?? []
 
   const attentionItems = [
     ...watchSignals.slice(0, 2).map((s) => ({
       type: 'watch',
-      text: s.title,
+      text: s.title as string,
       route: '/market',
     })),
     ...(unresolvedCount > 0
       ? [{ type: 'watch', text: `${unresolvedCount} pay transparency ${unresolvedCount === 1 ? 'category needs' : 'categories need'} review`, route: '/pay-analysis' }]
       : []),
-    ...(overview.metrics ?? [])
+    ...metrics
       .filter((m) => m.tone === 'good')
       .slice(0, 1)
-      .map((m) => ({ type: 'good', text: `${m.title} is ${m.delta > 0 ? 'improving' : 'stable'}`, route: '/market' })),
+      .map((m) => ({ type: 'good', text: `${m.title} is ${(m.delta as number) > 0 ? 'improving' : 'stable'}`, route: '/market' })),
   ]
 
   return (
@@ -58,9 +73,9 @@ export function HomeSection() {
       <section className="metric-section" style={{ marginBottom: 28 }}>
         <p className="hero__eyebrow">Command Centre</p>
         <div className="metric-grid">
-          {(overview.metrics ?? []).map((metric) => (
+          {metrics.map((metric) => (
             <MetricCard
-              key={metric.id}
+              key={metric.id as string}
               metric={metric}
               onClick={() => navigate('/market')}
             />
@@ -94,8 +109,8 @@ export function HomeSection() {
         <section className="intelligence-section">
           <div className="intelligence-brief">
             <p className="panel__eyebrow">Executive Brief</p>
-            <h2 style={{ margin: '8px 0 14px', fontSize: '1.15rem' }}>{brief.headline}</h2>
-            <p className="intelligence-brief__summary">{brief.summary}</p>
+            <h2 style={{ margin: '8px 0 14px', fontSize: '1.15rem' }}>{brief.headline as string}</h2>
+            <p className="intelligence-brief__summary">{brief.summary as string}</p>
           </div>
         </section>
       )}

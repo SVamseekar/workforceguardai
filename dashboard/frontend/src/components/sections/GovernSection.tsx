@@ -1,12 +1,14 @@
 import { useOverviewData } from '../../hooks/useOverviewData'
 import { Download, Play } from 'lucide-react'
 
+type AnyObj = Record<string, unknown>
+
 const fullDateFormatter = new Intl.DateTimeFormat('en-GB', {
   dateStyle: 'medium',
   timeStyle: 'short',
 })
 
-const ACTION_LABELS = {
+const ACTION_LABELS: Record<string, string> = {
   approved: 'Approved',
   overridden: 'Overridden',
   reversed: 'Reversed',
@@ -41,12 +43,13 @@ export function GovernSection() {
   }
 
   if (!overview) return null
+  const ov = overview as AnyObj
 
-  const governance = overview.governance ?? {}
-  const automation = overview.automation ?? {}
-  const loggedEvents = governance.logged_events ?? []
-  const workflows = automation.scheduled_workflows ?? []
-  const handoffs = automation.pending_handoffs ?? []
+  const governance = (ov.governance as AnyObj) ?? {}
+  const automation = (ov.automation as AnyObj) ?? {}
+  const loggedEvents = (governance.logged_events as AnyObj[]) ?? []
+  const workflows = (automation.scheduled_workflows as AnyObj[]) ?? []
+  const handoffs = (automation.pending_handoffs as AnyObj[]) ?? []
 
   return (
     <div className="dashboard">
@@ -78,17 +81,17 @@ export function GovernSection() {
                 {loggedEvents.map((event, i) => (
                   <tr key={i} style={{ borderTop: '1px solid rgba(159,185,214,0.1)' }}>
                     <td style={{ padding: '12px 0', color: 'var(--text-strong)', fontWeight: 600 }}>
-                      {ACTION_LABELS[event.action_code] ?? event.action_code}
+                      {ACTION_LABELS[event.action_code as string] ?? event.action_code as string}
                     </td>
                     <td style={{ padding: '12px 0', color: 'var(--text-muted)' }}>
-                      {event.target_id ?? event.target_type}
+                      {(event.target_id as string) ?? (event.target_type as string)}
                     </td>
                     <td style={{ padding: '12px 0', color: 'var(--text-muted)' }}>
-                      {event.actor ?? 'Dashboard user'}
+                      {(event.actor as string) ?? 'Dashboard user'}
                     </td>
                     <td style={{ padding: '12px 0', color: 'var(--text-muted)' }}>
                       {event.recorded_at
-                        ? fullDateFormatter.format(new Date(event.recorded_at))
+                        ? fullDateFormatter.format(new Date(event.recorded_at as string))
                         : '—'}
                     </td>
                   </tr>
@@ -142,16 +145,16 @@ export function GovernSection() {
             {workflows.length > 0 && (
               <div className="phase5-configured" style={{ marginBottom: 20 }}>
                 {workflows.map((wf) => (
-                  <div key={wf.id} className="phase5-handoff">
+                  <div key={wf.id as string} className="phase5-handoff">
                     <div>
-                      <strong>{wf.label}</strong>
+                      <strong>{wf.label as string}</strong>
                       <span style={{ color: 'var(--text-muted)', fontSize: '0.84rem', display: 'block', marginTop: 2 }}>
-                        {wf.status}
+                        {wf.status as string}
                       </span>
                     </div>
                     <button
                       className="governance-button governance-button--approve"
-                      onClick={() => scheduleBrief(wf)}
+                      onClick={() => scheduleBrief(wf as { id: string; label: string })}
                       disabled={scheduleLoading}
                       style={{ display: 'flex', gap: 6, alignItems: 'center' }}
                     >
@@ -171,11 +174,11 @@ export function GovernSection() {
                     <div key={i} className="phase5-alert">
                       <div className="phase5-alert__top">
                         <div>
-                          <h3>{handoff.title}</h3>
-                          <p>{handoff.description}</p>
+                          <h3>{handoff.title as string}</h3>
+                          <p>{handoff.description as string}</p>
                         </div>
-                        {handoff.due_label && (
-                          <span className="comparison-meta__pill">Due: {handoff.due_label}</span>
+                        {Boolean(handoff.due_label) && (
+                          <span className="comparison-meta__pill">Due: {handoff.due_label as string}</span>
                         )}
                       </div>
                     </div>

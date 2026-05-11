@@ -1,22 +1,30 @@
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect, vi } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '../handlers.js'
-import { useOverviewData } from '../../hooks/useOverviewData.js'
+import { useOverviewData } from '../../hooks/useOverviewData'
 
-const wrapper = ({ children }) => <MemoryRouter>{children}</MemoryRouter>
+function makeWrapper() {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={qc}>
+      <MemoryRouter>{children}</MemoryRouter>
+    </QueryClientProvider>
+  )
+}
 
 describe('useOverviewData', () => {
   it('fetches overview on mount and sets loading false when done', async () => {
-    const { result } = renderHook(() => useOverviewData(), { wrapper })
+    const { result } = renderHook(() => useOverviewData(), { wrapper: makeWrapper() })
 
     expect(result.current.loading).toBe(true)
 
     await waitFor(() => expect(result.current.loading).toBe(false))
 
     expect(result.current.overview).not.toBeNull()
-    expect(result.current.overview.metrics).toHaveLength(2)
+    expect((result.current.overview as Record<string, unknown>).metrics).toHaveLength(2)
     expect(result.current.error).toBe('')
   })
 
@@ -25,7 +33,7 @@ describe('useOverviewData', () => {
       http.get('/api/overview', () => HttpResponse.json({ detail: 'boom' }, { status: 500 })),
     )
 
-    const { result } = renderHook(() => useOverviewData(), { wrapper })
+    const { result } = renderHook(() => useOverviewData(), { wrapper: makeWrapper() })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
 
@@ -40,7 +48,7 @@ describe('useOverviewData', () => {
       http.get('/api/overview', () => HttpResponse.error()),
     )
 
-    const { result } = renderHook(() => useOverviewData(), { wrapper })
+    const { result } = renderHook(() => useOverviewData(), { wrapper: makeWrapper() })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
 
@@ -48,19 +56,17 @@ describe('useOverviewData', () => {
   })
 
   it('uploadPayroll posts file and shows success notice', async () => {
-    const { result } = renderHook(() => useOverviewData(), { wrapper })
+    const { result } = renderHook(() => useOverviewData(), { wrapper: makeWrapper() })
     await waitFor(() => expect(result.current.loading).toBe(false))
 
     const file = new File(['emp_id,salary\n1,50000'], 'payroll.csv', { type: 'text/csv' })
 
     await act(async () => {
-      await result.current.uploadPayroll(file)
+      result.current.uploadPayroll(file)
     })
 
-    expect(result.current.notice).toEqual({
-      type: 'success',
-      message: 'Upload accepted — 42 employees loaded.',
-    })
+    await waitFor(() => expect(result.current.notice?.type).toBe('success'))
+    expect(result.current.notice?.message).toBe('Upload accepted — 42 employees loaded.')
   })
 
   it('uploadPayroll shows error notice on failure', async () => {
@@ -70,33 +76,29 @@ describe('useOverviewData', () => {
       ),
     )
 
-    const { result } = renderHook(() => useOverviewData(), { wrapper })
+    const { result } = renderHook(() => useOverviewData(), { wrapper: makeWrapper() })
     await waitFor(() => expect(result.current.loading).toBe(false))
 
     const file = new File(['bad'], 'bad.csv', { type: 'text/csv' })
 
     await act(async () => {
-      await result.current.uploadPayroll(file)
+      result.current.uploadPayroll(file)
     })
 
-    expect(result.current.notice).toEqual({
-      type: 'error',
-      message: 'Invalid columns.',
-    })
+    await waitFor(() => expect(result.current.notice?.type).toBe('error'))
+    expect(result.current.notice?.message).toBe('Invalid columns.')
   })
 
   it('recordGovernanceAction posts event and shows success notice', async () => {
-    const { result } = renderHook(() => useOverviewData(), { wrapper })
+    const { result } = renderHook(() => useOverviewData(), { wrapper: makeWrapper() })
     await waitFor(() => expect(result.current.loading).toBe(false))
 
     await act(async () => {
-      await result.current.recordGovernanceAction('approved', 'pay_category', 'cat-1')
+      result.current.recordGovernanceAction('approved', 'pay_category', 'cat-1')
     })
 
-    expect(result.current.notice).toEqual({
-      type: 'success',
-      message: 'Decision recorded.',
-    })
+    await waitFor(() => expect(result.current.notice?.type).toBe('success'))
+    expect(result.current.notice?.message).toBe('Decision recorded.')
   })
 
   it('exportEvidencePack triggers download link and does not set error', async () => {
@@ -113,14 +115,14 @@ describe('useOverviewData', () => {
       return el
     })
 
-    const { result } = renderHook(() => useOverviewData(), { wrapper })
+    const { result } = renderHook(() => useOverviewData(), { wrapper: makeWrapper() })
     await waitFor(() => expect(result.current.loading).toBe(false))
 
     await act(async () => {
-      await result.current.exportEvidencePack()
+      result.current.exportEvidencePack()
     })
 
-    expect(createObjectURL).toHaveBeenCalled()
+    await waitFor(() => expect(createObjectURL).toHaveBeenCalled())
     expect(clickSpy).toHaveBeenCalled()
     expect(result.current.notice).toBeNull()
 
@@ -128,16 +130,14 @@ describe('useOverviewData', () => {
   })
 
   it('scheduleBrief posts schedule and shows success notice', async () => {
-    const { result } = renderHook(() => useOverviewData(), { wrapper })
+    const { result } = renderHook(() => useOverviewData(), { wrapper: makeWrapper() })
     await waitFor(() => expect(result.current.loading).toBe(false))
 
     await act(async () => {
       await result.current.scheduleBrief({ id: 'weekly-brief', label: 'Weekly brief' })
     })
 
-    expect(result.current.notice).toEqual({
-      type: 'success',
-      message: 'Workflow "Weekly brief" scheduled.',
-    })
+    await waitFor(() => expect(result.current.notice?.type).toBe('success'))
+    expect(result.current.notice?.message).toBe('Workflow "Weekly brief" scheduled.')
   })
 })
