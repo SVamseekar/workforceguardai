@@ -86,11 +86,26 @@ export function normalizeOverview(raw: unknown): AnyObj {
         ? e.action_code.charAt(0).toUpperCase() + e.action_code.slice(1).replace(/_/g, ' ')
         : e.action_code),
     recorded_at: e.recorded_at ?? e.created_at,
-    // Clean up target_id: strip prefixes like "pay_transparency_category_review:"
-    target_label: e.target_label
-      ?? (typeof e.target_id === 'string'
-        ? e.target_id.replace(/^pay_transparency_category_review:/, '').replace(/::/g, ' · ').replace(/_/g, ' ')
-        : e.target_id),
+    // Clean up target_id into a readable label based on target_type
+    target_label: e.target_label ?? (() => {
+      const id = e.target_id as string | undefined
+      const type = e.target_type as string | undefined
+      if (!id) return e.target_type
+      if (type === 'pay_category' || type === 'pay_transparency_category') {
+        // "pay_transparency_category_review:eng_senior" → "Engineering Senior"
+        const key = id.replace(/^pay_transparency_category_review:/, '').replace(/_/g, ' ')
+        return key.charAt(0).toUpperCase() + key.slice(1)
+      }
+      if (type === 'automation_schedule') {
+        // "weekly_executive_update::ALL::EU27_AVG::ALL::latest" → just the template label
+        return id.split('::')[0].replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      }
+      if (type === 'evidence_pack') {
+        return 'Evidence pack'
+      }
+      // fallback: humanise the raw id
+      return id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+    })(),
   }))
   const availableActions = asArr(govRaw.available_actions).map((a) => ({
     ...a,

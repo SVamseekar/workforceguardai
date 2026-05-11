@@ -181,7 +181,10 @@ export function GovernSection() {
                             </p>
                           </div>
                           <span className="comparison-meta__pill" style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
-                            {(handoff.status as string) === 'ready' ? 'Ready' : (handoff.status as string)}
+                            {(() => {
+                              const s = handoff.status as string
+                              return s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Pending'
+                            })()}
                           </span>
                         </div>
                       </div>
