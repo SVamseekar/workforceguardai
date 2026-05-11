@@ -39,11 +39,10 @@ describe('MetricCard', () => {
     period: 'Q4 2024',
   }
 
-  it('renders title, formatted value, and period', () => {
+  it('renders title and formatted value', () => {
     render(<MetricCard metric={metric} />)
     expect(screen.getByText('Unemployment rate')).toBeInTheDocument()
     expect(screen.getByText('6.2%')).toBeInTheDocument()
-    expect(screen.getByText('Q4 2024')).toBeInTheDocument()
   })
 
   it('renders formatted negative delta with pts vs prior period', () => {

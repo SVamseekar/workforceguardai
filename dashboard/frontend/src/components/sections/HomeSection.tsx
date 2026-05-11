@@ -38,7 +38,7 @@ export function HomeSection() {
 
   const metrics = (ov.metrics as AnyObj[]) ?? []
 
-  const attentionItems = [
+  const urgentItems = [
     ...watchSignals.slice(0, 2).map((s) => ({
       type: 'watch',
       text: s.title as string,
@@ -47,11 +47,12 @@ export function HomeSection() {
     ...(unresolvedCount > 0
       ? [{ type: 'watch', text: `${unresolvedCount} pay transparency ${unresolvedCount === 1 ? 'category needs' : 'categories need'} review`, route: '/pay-analysis' }]
       : []),
-    ...metrics
-      .filter((m) => m.tone === 'good')
-      .slice(0, 1)
-      .map((m) => ({ type: 'good', text: `${m.title} is ${(m.delta as number) > 0 ? 'improving' : 'stable'}`, route: '/market' })),
   ]
+
+  const positiveItems = metrics
+    .filter((m) => m.tone === 'good')
+    .slice(0, 2)
+    .map((m) => ({ type: 'good', text: `${m.title as string}: ${m.gap_label as string ?? 'improving'}`, route: '/market' }))
 
   return (
     <div className="dashboard">
@@ -72,25 +73,44 @@ export function HomeSection() {
           </div>
         </section>
 
-        {attentionItems.length > 0 && (
+        {(urgentItems.length > 0 || positiveItems.length > 0) && (
           <section className="metric-section" style={{ marginBottom: 28 }}>
-            <p className="panel__eyebrow" style={{ marginBottom: 12 }}>Needs Attention</p>
-            <div className="product-notes">
-              {attentionItems.map((item, i) => (
-                <button
-                  key={i}
-                  className={`product-note inline-notice inline-notice--${item.type === 'watch' ? 'watch' : 'good'}`}
-                  onClick={() => navigate(item.route)}
-                  style={{ textAlign: 'left', cursor: 'pointer' }}
-                >
-                  {item.type === 'watch'
-                    ? <AlertTriangle size={16} style={{ flexShrink: 0 }} />
-                    : <CheckCircle size={16} style={{ flexShrink: 0 }} />
-                  }
-                  <span>{item.text}</span>
-                </button>
-              ))}
-            </div>
+            {urgentItems.length > 0 && (
+              <>
+                <p className="panel__eyebrow" style={{ marginBottom: 12 }}>Needs Attention</p>
+                <div className="product-notes" style={{ marginBottom: positiveItems.length > 0 ? 12 : 0 }}>
+                  {urgentItems.map((item, i) => (
+                    <button
+                      key={i}
+                      className="product-note inline-notice inline-notice--watch"
+                      onClick={() => navigate(item.route)}
+                      style={{ textAlign: 'left', cursor: 'pointer' }}
+                    >
+                      <AlertTriangle size={16} style={{ flexShrink: 0 }} />
+                      <span>{item.text}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+            {urgentItems.length === 0 && positiveItems.length > 0 && (
+              <p className="panel__eyebrow" style={{ marginBottom: 12 }}>Looking good</p>
+            )}
+            {positiveItems.length > 0 && (
+              <div className="product-notes">
+                {positiveItems.map((item, i) => (
+                  <button
+                    key={i}
+                    className="product-note inline-notice inline-notice--good"
+                    onClick={() => navigate(item.route)}
+                    style={{ textAlign: 'left', cursor: 'pointer' }}
+                  >
+                    <CheckCircle size={16} style={{ flexShrink: 0 }} />
+                    <span>{item.text}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </section>
         )}
 
