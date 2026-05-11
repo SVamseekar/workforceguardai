@@ -8,6 +8,7 @@ import { HomeSection } from './components/sections/HomeSection'
 import { MarketSection } from './components/sections/MarketSection'
 import { PayAnalysisSection } from './components/sections/PayAnalysisSection'
 import { GovernSection } from './components/sections/GovernSection'
+import { CompareSection } from './components/sections/CompareSection'
 import './App.css'
 
 const queryClient = new QueryClient({
@@ -31,6 +32,7 @@ function AppShell() {
           <Routes>
             <Route path="/" element={<HomeSection />} />
             <Route path="/market" element={<MarketSection />} />
+            <Route path="/compare" element={<CompareSection />} />
             <Route path="/pay-analysis" element={<PayAnalysisSection />} />
             <Route path="/govern" element={<GovernSection />} />
           </Routes>
