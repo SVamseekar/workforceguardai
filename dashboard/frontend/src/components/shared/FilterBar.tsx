@@ -4,10 +4,11 @@ import type { Filters } from '../../hooks/useOverviewData'
 type SelectOption = { id?: string; label?: string } | string
 
 function SelectField({ label, value, options, onChange }: { label: string; value: string; options: SelectOption[]; onChange: (v: string) => void }) {
+  const id = `filter-${label.toLowerCase().replace(/\s+/g, '-')}`
   return (
     <div className="control-field">
-      <span>{label}</span>
-      <select value={value} onChange={(e) => onChange(e.target.value)}>
+      <label htmlFor={id}>{label}</label>
+      <select id={id} value={value} onChange={(e) => onChange(e.target.value)}>
         {options.map((opt) => (
           <option key={typeof opt === 'string' ? opt : (opt.id ?? '')} value={typeof opt === 'string' ? opt : (opt.id ?? '')}>
             {typeof opt === 'string' ? opt : (opt.label ?? opt.id ?? '')}
