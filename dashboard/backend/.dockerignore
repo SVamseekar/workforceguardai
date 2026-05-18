@@ -1,4 +1,7 @@
 .venv
 __pycache__
 *.pyc
-tests
+*.pyo
+tests/
+.pytest_cache/
+.DS_Store
