@@ -1,0 +1,26 @@
+[Unit]
+Description=WorkforceGuard FastAPI Backend
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=REPLACE_USER
+WorkingDirectory=/home/REPLACE_USER/WorkforceGuard-AI
+EnvironmentFile=/home/REPLACE_USER/WorkforceGuard-AI/deploy/.env.production
+ExecStartPre=-/usr/bin/docker stop workforceguard-api
+ExecStartPre=-/usr/bin/docker rm workforceguard-api
+ExecStart=/usr/bin/docker run \
+  --name workforceguard-api \
+  -p 8080:8080 \
+  -e PORT=8080 \
+  -e WORKFORCEGUARD_ROOT=/data \
+  -e CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS} \
+  -v /home/REPLACE_USER/WorkforceGuard-AI/data:/data \
+  workforceguard-api:latest
+ExecStop=/usr/bin/docker stop workforceguard-api
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
