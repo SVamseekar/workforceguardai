@@ -4,6 +4,7 @@
 .env
 .env.*
 !.env.example
+!deploy/.env.production.example
 analytics/.user.yml
 
 # Python
@@ -37,3 +38,4 @@ data/internal_meta/*
 !data/internal_meta/.gitkeep
 data/internal_raw/*
 !data/internal_raw/.gitkeep
+deploy/.env.production
