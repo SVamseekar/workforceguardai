@@ -18,10 +18,10 @@ clean-targets:
   - dbt_packages
 
 vars:
-  eu_raw_path: "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/eu_raw"
-  internal_path: "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/internal"
-  reference_path: "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/reference"
-  public_company_path: "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/public_company"
+  eu_raw_path: "{{ env_var('WORKFORCEGUARD_EU_RAW_PATH', '/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/eu_raw') }}"
+  internal_path: "{{ env_var('WORKFORCEGUARD_INTERNAL_PATH', '/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/internal') }}"
+  reference_path: "{{ env_var('WORKFORCEGUARD_REFERENCE_PATH', '/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/reference') }}"
+  public_company_path: "{{ env_var('WORKFORCEGUARD_PUBLIC_COMPANY_PATH', '/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/public_company') }}"
   metric_registry_seed_version: "2026.03"
 
 models:
