@@ -6,7 +6,8 @@ const SOURCE_LABELS: Record<string, string> = {
   eurostat_ses: 'Eurostat SES',
 }
 
-export function ChartPanel({ title, sourceId, children }: { title: string; sourceId?: string; children?: ReactNode }) {
+export function ChartPanel({ title, sourceId, period, children }: { title: string; sourceId?: string; period?: string; children?: ReactNode }) {
+  const titleWithPeriod = period ? `${title} · ${period}` : title
   return (
     <div className="panel">
       <div className="panel__header panel__header--tight">
@@ -14,7 +15,7 @@ export function ChartPanel({ title, sourceId, children }: { title: string; sourc
           <p className="panel__eyebrow">
             {sourceId ? SOURCE_LABELS[sourceId] ?? sourceId : 'Market data'}
           </p>
-          <h2>{title}</h2>
+          <h2>{titleWithPeriod}</h2>
         </div>
       </div>
       <div className="panel__body panel__body--chart">
