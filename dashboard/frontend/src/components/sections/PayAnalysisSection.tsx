@@ -96,6 +96,56 @@ export function PayAnalysisSection() {
         }}
       />
 
+      {/* ── Empty-state onboarding ── */}
+      {!loading && !internalLoaded && filters.country === 'ALL' && (
+        <div className="panel" style={{ padding: 28, marginBottom: 20 }}>
+          <p className="panel__eyebrow" style={{ marginBottom: 6 }}>Getting started</p>
+          <h2 style={{ margin: '0 0 20px', fontSize: '1.1rem', color: 'var(--text-strong)' }}>
+            Three steps to see your pay analysis
+          </h2>
+          <ol style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {[
+              {
+                n: '1',
+                title: 'Select a country',
+                body: 'Use the Country filter above — France, Germany, and Ireland have full EU Pay Transparency Directive simulation available.',
+              },
+              {
+                n: '2',
+                title: 'Upload your payroll CSV',
+                body: 'Go to Home and upload a payroll CSV (columns: gender, salary, department). Your data stays local — it powers the internal pay gap benchmark.',
+              },
+              {
+                n: '3',
+                title: 'Review your benchmark',
+                body: 'Your internal pay gap is compared against the live Eurostat market benchmark for your country and sector. Categories with gaps above the Article 9 threshold are flagged for review.',
+              },
+            ].map(step => (
+              <li key={step.n} style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+                <span style={{
+                  flexShrink: 0,
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  background: 'var(--accent-primary-glow)',
+                  border: '1px solid var(--accent-primary)',
+                  color: 'var(--accent-primary)',
+                  fontWeight: 800,
+                  fontSize: '0.82rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>{step.n}</span>
+                <div>
+                  <strong style={{ fontSize: '0.88rem', color: 'var(--text-strong)', display: 'block', marginBottom: 3 }}>{step.title}</strong>
+                  <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.55 }}>{step.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
       {/* Company vs Market */}
       <section className="comparison-section">
         <div className="panel" style={{ minHeight: 'auto', padding: 22 }}>
@@ -193,6 +243,11 @@ export function PayAnalysisSection() {
               <article key={metric.id as string} className="metric-card">
                 <p className="metric-card__eyebrow">{metric.title as string}</p>
                 <p className="metric-card__value">{formatValue(metric.value, metric.unit as string)}</p>
+                {Array.isArray(metric.evidence_summary) && (metric.evidence_summary as string[]).length > 2 && (
+                  <p style={{ margin: '0 0 6px', fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                    {(metric.evidence_summary as string[])[2]}
+                  </p>
+                )}
                 <p className="metric-card__period">{metric.definition as string}</p>
                 {Boolean(metric.tone) && (
                   <div style={{ marginTop: 8 }}>
@@ -224,32 +279,43 @@ export function PayAnalysisSection() {
             </div>
 
             <div className="compliance-review-list">
-              {((payTransparency.categories as AnyObj[]) ?? []).map((cat) => (
-                <div key={cat.id as string} className="compliance-review-item">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <strong>{cat.label as string}</strong>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      <span>{formatValue(cat.gap_value)}</span>
-                      <ToneChip tone={cat.review_state === 'unresolved_review_item' ? 'watch' : 'neutral'}>
-                        {REVIEW_STATE_LABELS[cat.review_state as string] ?? cat.review_state as string}
-                      </ToneChip>
+              {((payTransparency.categories as AnyObj[]) ?? []).map((cat) => {
+                const internalGap = cat.gap_value as number | undefined
+                const marketGap = cat.market_gap as number | undefined
+                const diff = (internalGap != null && marketGap != null) ? (internalGap - marketGap) : null
+                const needsArticle9 = cat.review_state === 'unresolved_review_item' && diff != null && Math.abs(diff) >= 1
+                return (
+                  <div key={cat.id as string} className="compliance-review-item">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <strong>{cat.label as string}</strong>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <span>{formatValue(cat.gap_value)}</span>
+                        <ToneChip tone={cat.review_state === 'unresolved_review_item' ? 'watch' : 'neutral'}>
+                          {REVIEW_STATE_LABELS[cat.review_state as string] ?? cat.review_state as string}
+                        </ToneChip>
+                      </div>
+                    </div>
+                    {Boolean(cat.note) && <p>{cat.note as string}</p>}
+                    {needsArticle9 && (
+                      <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: 'var(--tone-watch)', lineHeight: 1.5, fontWeight: 500 }}>
+                        Internal gap is {Math.abs(diff!).toFixed(1)} pts {diff! > 0 ? 'above' : 'below'} the market benchmark — justification required under Article 9 of the EU Pay Transparency Directive.
+                      </p>
+                    )}
+                    <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
+                      {availableActions.map((action) => (
+                        <button
+                          key={action.code as string}
+                          className={`governance-button governance-button--${action.code}`}
+                          disabled={actionLoading}
+                          onClick={() => recordGovernanceAction(action.code as string, 'pay_category', cat.id as string)}
+                        >
+                          {action.label as string}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                  {Boolean(cat.note) && <p>{cat.note as string}</p>}
-                  <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
-                    {availableActions.map((action) => (
-                      <button
-                        key={action.code as string}
-                        className={`governance-button governance-button--${action.code}`}
-                        disabled={actionLoading}
-                        onClick={() => recordGovernanceAction(action.code as string, 'pay_category', cat.id as string)}
-                      >
-                        {action.label as string}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         </section>
