@@ -32,20 +32,32 @@ export function normalizeOverview(raw: unknown): AnyObj {
 
   // ── metrics: add top-level tone + delta + gap_label derived from comparisons.prior_period
   const metrics = asArr(d.metrics).map((m) => {
-    const pp = asObj(asObj(m.comparisons).prior_period)
+    const comps = asObj(m.comparisons)
+    const pp = asObj(comps.prior_period)
+    const eu = asObj(comps.eu)
+    // Pick active comparison: prior_period when available and country-scoped, else eu
+    const activeComp = (pp.available && pp.benchmark_value != null) ? pp
+      : (eu.available && eu.benchmark_value != null) ? eu
+      : null
     return {
       ...m,
       tone: m.tone ?? metricTone(m),
       delta: m.delta ?? metricDelta(m),
-      // gap_label is the human-readable delta string from the API e.g. "0.5 pts above"
       gap_label: m.gap_label ?? pp.gap_label,
-      // period_label: a cleaner period string e.g. "2024" or "Q3 2025"
       period_label: m.period_label ?? (() => {
         const p = m.period as string | undefined
         if (!p) return ''
-        // Convert "2025-Q3" → "Q3 2025", leave "2024" as-is
         return p.replace(/^(\d{4})-Q(\d)$/, 'Q$2 $1')
       })(),
+      active_comparison: activeComp
+        ? {
+            label: activeComp.label as string,
+            gap_label: activeComp.gap_label as string,
+            tone: activeComp.tone as string,
+            benchmark_value: activeComp.benchmark_value as number,
+            explanation: activeComp.explanation as string | undefined,
+          }
+        : null,
     }
   })
 
@@ -72,11 +84,17 @@ export function normalizeOverview(raw: unknown): AnyObj {
 
   // ── intelligence: normalize signals, recommendations, watchlist field names
   const intelRaw = asObj(d.intelligence)
-  const signals = asArr(intelRaw.signals).map((s) => ({
-    ...s,
-    summary: s.summary ?? s.detail,
-    evidence: s.evidence ?? s.evidence_bundle,
-  }))
+  const signals = asArr(intelRaw.signals).map((s) => {
+    const eb = asObj(s.evidence_bundle ?? s.evidence)
+    const evidenceArr = asArr(eb.evidence)
+    const scoreLabel = evidenceArr[0]?.value as string | undefined
+    return {
+      ...s,
+      summary: s.summary ?? s.detail,
+      evidence: s.evidence ?? s.evidence_bundle,
+      score_label: s.score_label ?? scoreLabel ?? null,
+    }
+  })
   const recommendations = asArr(intelRaw.recommendations).map((r) => ({
     ...r,
     summary: r.summary ?? r.detail,
@@ -85,7 +103,13 @@ export function normalizeOverview(raw: unknown): AnyObj {
     ...w,
     summary: w.summary ?? w.detail,
   }))
-  const intelligence = { ...intelRaw, signals, recommendations, watchlist }
+  const intelligence = {
+    ...intelRaw,
+    signals,
+    recommendations,
+    watchlist,
+    benchmark_context: intelRaw.benchmark_context ?? null,
+  }
 
   // ── governance: logged_events→events, normalize event and action field names
   const govRaw = asObj(d.governance)
@@ -129,6 +153,8 @@ export function normalizeOverview(raw: unknown): AnyObj {
   // ── automation: scheduled_workflows→scheduled_briefs, pending_handoffs→handoffs
   const autoRaw = asObj(d.automation)
   const scheduledWorkflows = asArr(autoRaw.scheduled_workflows ?? autoRaw.scheduled_briefs)
+  const scheduledBriefs = asArr(autoRaw.scheduled_briefs)
+  const configuredSchedules = asArr(autoRaw.configured_schedules)
   const pendingHandoffs = asArr(autoRaw.pending_handoffs ?? autoRaw.handoffs).map((h) => ({
     ...h,
     due_label: h.due_label ?? h.approval_checkpoint,
@@ -136,6 +162,8 @@ export function normalizeOverview(raw: unknown): AnyObj {
   const automation = {
     ...autoRaw,
     scheduled_workflows: scheduledWorkflows,
+    scheduled_briefs: scheduledBriefs,
+    configured_schedules: configuredSchedules,
     pending_handoffs: pendingHandoffs,
   }
 
