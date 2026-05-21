@@ -288,6 +288,15 @@
   color: var(--text-muted);
 }
 
+.metric-card__benchmark {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
 .metric-card__period {
   margin: 0;
   font-size: 0.78rem;

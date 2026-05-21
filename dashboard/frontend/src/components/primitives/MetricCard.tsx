@@ -28,9 +28,16 @@ function formatDelta(delta: unknown, unit = '%') {
   return `${sign}${numberFormatter.format(Number(delta))} vs prior period`
 }
 
+const TONE_DOT: Record<string, string> = {
+  good: 'var(--tone-good)',
+  watch: 'var(--tone-watch)',
+  neutral: 'var(--text-muted)',
+}
+
 export function MetricCard({ metric, onOpenEvidence, onClick }: { metric: AnyObj; onOpenEvidence?: (m: unknown) => void; onClick?: () => void }) {
   const tone = (metric.tone as string) ?? 'neutral'
   const toneClass = TONE_CLASS[tone] ?? ''
+  const activeComp = metric.active_comparison as { label: string; gap_label: string; tone: string } | null | undefined
 
   return (
     <article
@@ -42,14 +49,34 @@ export function MetricCard({ metric, onOpenEvidence, onClick }: { metric: AnyObj
         <p className="metric-card__eyebrow">{metric.title as string}</p>
       </div>
       <p className="metric-card__value">{formatValue(metric.value, metric.unit as string | undefined)}</p>
-      <p className={`metric-card__delta metric-card__delta--${tone}`}>
-        {metric.gap_label
-          ? (metric.gap_label as string) === 'In line'
-            ? 'Stable vs prior period'
-            : `${metric.gap_label as string} · prior period`
-          : formatDelta(metric.delta, metric.unit as string | undefined)
-        }
-      </p>
+
+      {activeComp ? (
+        <p className="metric-card__benchmark" style={{ color: TONE_DOT[activeComp.tone] ?? 'var(--text-muted)' }}>
+          <span
+            style={{
+              display: 'inline-block',
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: TONE_DOT[activeComp.tone] ?? 'var(--text-muted)',
+              marginRight: 5,
+              verticalAlign: 'middle',
+              flexShrink: 0,
+            }}
+          />
+          {activeComp.gap_label} · {activeComp.label}
+        </p>
+      ) : (
+        <p className={`metric-card__delta metric-card__delta--${tone}`}>
+          {metric.gap_label
+            ? (metric.gap_label as string) === 'In line'
+              ? 'Stable vs prior period'
+              : `${metric.gap_label as string} · prior period`
+            : formatDelta(metric.delta, metric.unit as string | undefined)
+          }
+        </p>
+      )}
+
       {Boolean(metric.tone) && (
         <div className="metric-card__coverage" style={{ marginTop: 8 }}>
           <ToneChip tone={tone}>
