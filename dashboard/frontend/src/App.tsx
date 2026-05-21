@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Sidebar } from './components/layout/Sidebar'
@@ -23,10 +23,22 @@ const queryClient = new QueryClient({
 
 function AppShell() {
   const [copilotOpen, setCopilotOpen] = useState(false)
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('theme')
+    if (saved === 'light' || saved === 'dark') return saved
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  })
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
+  const toggleTheme = () => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
 
   return (
     <div className="app-shell">
-      <TopBar />
+      <TopBar theme={theme} onToggleTheme={toggleTheme} />
       <div className="app-body">
         <Sidebar onCopilotOpen={() => setCopilotOpen(true)} />
         <main className="app-main">

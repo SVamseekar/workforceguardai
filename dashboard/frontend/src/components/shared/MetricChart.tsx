@@ -45,7 +45,7 @@ export function MetricChart({
     <ResponsiveContainer width="100%" height="100%">
       {chartType === 'line' ? (
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(159,185,214,0.08)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
           <XAxis dataKey={xKey} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
           <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} unit={unit} />
           <Tooltip content={<ChartTooltip unit={unit} />} />
@@ -53,7 +53,7 @@ export function MetricChart({
         </LineChart>
       ) : (
         <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(159,185,214,0.08)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
           <XAxis dataKey={xKey} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
           <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} unit={unit} />
           <Tooltip content={<ChartTooltip unit={unit} />} />

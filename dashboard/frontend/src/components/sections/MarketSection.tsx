@@ -42,21 +42,21 @@ export function MarketSection() {
 
       <div className="dashboard-grid" style={{ marginTop: 18 }}>
         <ChartPanel title="Unemployment trend" sourceId="eurostat_lfs">
-          <MetricChart chartType="line" data={unemploymentSeries} xKey="period" color="#7ff4ea" />
+          <MetricChart chartType="line" data={unemploymentSeries} xKey="period" color="var(--accent-teal)" />
         </ChartPanel>
 
         <ChartPanel title="Vacancy rate by sector" sourceId="eurostat_jvs">
-          <MetricChart chartType="bar" data={vacancySeries} xKey="sector_label" color="#7ff4ea" />
+          <MetricChart chartType="bar" data={vacancySeries} xKey="sector_label" color="var(--accent-teal)" />
         </ChartPanel>
       </div>
 
       <div className="dashboard-grid" style={{ marginTop: 18 }}>
         <ChartPanel title="Employment trend" sourceId="eurostat_lfs">
-          <MetricChart chartType="line" data={employmentSeries} xKey="period" color="#8db1ff" />
+          <MetricChart chartType="line" data={employmentSeries} xKey="period" color="var(--accent-primary)" />
         </ChartPanel>
 
         <ChartPanel title="Gender pay gap by sector" sourceId="eurostat_ses">
-          <MetricChart chartType="bar" data={payGapSeries} xKey="sector_label" color="#ffbf8f" />
+          <MetricChart chartType="bar" data={payGapSeries} xKey="sector_label" color="var(--tone-watch)" />
         </ChartPanel>
       </div>
 

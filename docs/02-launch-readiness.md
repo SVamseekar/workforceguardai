@@ -32,21 +32,22 @@ The thirteen go/no-go decisions below were taken on 2026-04-27 by the CTO
 and recorded here as the binding scope for v1.0. Any change requires an
 explicit amendment to this document, signed by the owner.
 
-| # | Decision | Outcome |
-|---|---|---|
-| D1 | Primary buyer | CPO / VP People at a 500–5,000 person EU employer with a Pay Transparency Directive filing obligation in 2027 (for 2026 data). |
-| D2 | Launch scope | Phase 1 (EU market intelligence) + Phase 2 (comparative benchmarking) + Phase 3 partial (internal data visible behind the trust gate). |
-| D3 | Real data sources | Eurostat (16 datasets) + ESCO + EU-SILC + EURES + EIGE, plus one design partner's payroll and job architecture under NDA. |
-| D4 | Trust guardrail | On by default. Company-specific claims render only after `data_trust_level = customer_reconciled`. |
-| D5 | Technical baseline | Medium. Backend split, SQLite-backed governance, CSV validation with reporting, freshness signals, env-driven CORS allowlist. |
-| D6 | Frontend capability | Comparative dashboard, evidence drawer, evidence-pack export. Data upload is a managed onboarding step, not self-serve. |
-| D7 | Phase 4 (compliance workflows) | Deferred. The spec comes from observing the design partner's first real filing, not from imagination. |
-| D8 | Governance infrastructure | SQLite, hash-chained, single-tenant. RBAC and tamper-proof storage are out of v1.0. |
-| D9 | Customer capacity | One paying customer at GA. Hard cap at two before customer #3 forces the multi-tenant migration. |
-| D10 | Go-to-market | One named design partner under a paid pilot agreement. Reference logo on close. |
-| D11 | Trade-off A | Ship Phase 3 visible-but-gated rather than hide it. Pull from the customer to share real data; transparency about capability. |
-| D12 | Trade-off B | Harden the backend over polishing the UI. Compliance buyers grade on defensibility, not aesthetics. |
-| D13 | Trade-off C | Launch in six weeks with v1.0 scope; build Phase 4 against the design partner's 2026 filing-rehearsal cycle, ahead of the binding 2027 report. |
+| #                                                                | Decision                       | Outcome                                                                                                                                        |
+| ---------------------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1                                                               | Primary buyer                  | CPO / VP People at a 500–5,000 person EU employer with a Pay Transparency Directive filing obligation in 2027 (for 2026 data).                 |
+| D2                                                               | Launch scope                   | Phase 1 (EU market intelligence) + Phase 2 (comparative benchmarking) + Phase 3 partial (internal data visible behind the trust gate).         |
+| D3                                                               | Real data sources              | Eurostat (16 datasets) + ESCO + EU-SILC + EURES + EIGE, plus one design partner's payroll and job architecture under NDA.                      |
+| D4                                                               | Trust guardrail                | On by default. Company-specific claims render only after `data_trust_level = customer_reconciled`.                                             |
+| D5                                                               | Technical baseline             | Medium. Backend split, SQLite-backed governance, CSV validation with reporting, freshness signals, env-driven CORS allowlist.                  |
+| D6                                                               | Frontend capability            | Comparative dashboard, evidence drawer, evidence-pack export. Data upload is a managed onboarding step, not self-serve.                        |
+| D7                                                               | Phase 4 (compliance workflows) | Deferred. The spec comes from observi                                                                                                          |
+| ng the design partner's first real filing, not from imagination. |
+| D8                                                               | Governance infrastructure      | SQLite, hash-chained, single-tenant. RBAC and tamper-proof storage are out of v1.0.                                                            |
+| D9                                                               | Customer capacity              | One paying customer at GA. Hard cap at two before customer #3 forces the multi-tenant migration.                                               |
+| D10                                                              | Go-to-market                   | One named design partner under a paid pilot agreement. Reference logo on close.                                                                |
+| D11                                                              | Trade-off A                    | Ship Phase 3 visible-but-gated rather than hide it. Pull from the customer to share real data; transparency about capability.                  |
+| D12                                                              | Trade-off B                    | Harden the backend over polishing the UI. Compliance buyers grade on defensibility, not aesthetics.                                            |
+| D13                                                              | Trade-off C                    | Launch in six weeks with v1.0 scope; build Phase 4 against the design partner's 2026 filing-rehearsal cycle, ahead of the binding 2027 report. |
 
 These decisions are mutually consistent. Together they define a product
 that can be sold this quarter and defended in front of employment counsel.
@@ -113,14 +114,14 @@ that can be sold this quarter and defended in front of employment counsel.
 
 ### 3.3 Out of scope reasoning, in one sentence each
 
-| Excluded | Why |
-|---|---|
-| Multi-tenant | One customer cannot pay for the engineering required to isolate against ten. |
-| LLM in v1.0 | The verification layer that prevents a wrong number reaching a regulator is non-trivial; build it once we have a real narrative corpus. |
-| Phase 4 | A workflow built without watching a real filing happen will be the wrong workflow. |
-| Phase 5 | The buyer is not asking for a copilot; they are asking for a defensible report. |
-| HRIS integrations | The design partner ships a CSV in 30 minutes; building a Workday adapter takes a quarter. |
-| Mobile | Compliance work is desktop work. Every hour spent on responsive layout is an hour not spent on provenance. |
+| Excluded          | Why                                                                                                                                     |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Multi-tenant      | One customer cannot pay for the engineering required to isolate against ten.                                                            |
+| LLM in v1.0       | The verification layer that prevents a wrong number reaching a regulator is non-trivial; build it once we have a real narrative corpus. |
+| Phase 4           | A workflow built without watching a real filing happen will be the wrong workflow.                                                      |
+| Phase 5           | The buyer is not asking for a copilot; they are asking for a defensible report.                                                         |
+| HRIS integrations | The design partner ships a CSV in 30 minutes; building a Workday adapter takes a quarter.                                               |
+| Mobile            | Compliance work is desktop work. Every hour spent on responsive layout is an hour not spent on provenance.                              |
 
 ---
 
@@ -131,14 +132,14 @@ that can be sold this quarter and defended in front of employment counsel.
 The launch window is six weeks. Day 0 is the kickoff Monday after
 Q&A sign-off on this document.
 
-| Week | Theme | Engineering output | Customer-facing output |
-|---|---|---|---|
-| 1 | Data integrity foundation | Provenance columns through every model, `dim_date`, `data_trust_level`, three reconciliation tests | None |
-| 2 | Backend split | `service.py` dissolved into `api/`, `domain/`, `repository/`, `policy/`; SQLite governance log with hash chain | None |
-| 3 | Evidence pack | Provenance per claim, sha256 + ed25519 signing, WeasyPrint PDF, regeneration determinism test | None |
-| 4 | Frontend refactor I | TypeScript migration, page split, TanStack Query, contract-derived types | Internal demo to design partner |
-| 5 | Frontend refactor II + ingestion gaps | EURES + EIGE ingestions, Compare/Evidence/Governance pages, axe pass | Design partner CSV ingest, reconciliation, first evidence pack draft |
-| 6 | Production posture | TLS, OIDC, EU deploy, backups, restore drill, runbooks, CI | GA: design partner is on the live deployment with their own data |
+| Week | Theme                                 | Engineering output                                                                                             | Customer-facing output                                               |
+| ---- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| 1    | Data integrity foundation             | Provenance columns through every model, `dim_date`, `data_trust_level`, three reconciliation tests             | None                                                                 |
+| 2    | Backend split                         | `service.py` dissolved into `api/`, `domain/`, `repository/`, `policy/`; SQLite governance log with hash chain | None                                                                 |
+| 3    | Evidence pack                         | Provenance per claim, sha256 + ed25519 signing, WeasyPrint PDF, regeneration determinism test                  | None                                                                 |
+| 4    | Frontend refactor I                   | TypeScript migration, page split, TanStack Query, contract-derived types                                       | Internal demo to design partner                                      |
+| 5    | Frontend refactor II + ingestion gaps | EURES + EIGE ingestions, Compare/Evidence/Governance pages, axe pass                                           | Design partner CSV ingest, reconciliation, first evidence pack draft |
+| 6    | Production posture                    | TLS, OIDC, EU deploy, backups, restore drill, runbooks, CI                                                     | GA: design partner is on the live deployment with their own data     |
 
 Each week ends with a Friday demo to the design partner. Slipping a week
 is acceptable; skipping a Friday demo is not.
@@ -248,18 +249,18 @@ metric below threshold triggers the response in §5.2.
 
 ### 5.1 Metrics and thresholds
 
-| # | Metric | Source | 7-day | 30-day | 90-day |
-|---|---|---|---|---|---|
-| M1 | Days the deployment was available (5xx rate < 0.1%) | uptime monitor | 7/7 | 29/30 | 88/90 |
-| M2 | Successful evidence-pack regenerations | governance log | ≥3 | ≥10 | ≥25 |
-| M3 | Days with a Eurostat refresh (no SLA breach) | `/api/freshness` history | 7/7 | 28/30 | 85/90 |
-| M4 | Hash-chain integrity verifications passing | scheduled job | 100% | 100% | 100% |
-| M5 | Reconciliation tests passing on every dbt build | CI | 100% | 100% | 100% |
-| M6 | Design partner active sessions per week | OIDC log | ≥1 | ≥3 | ≥3 |
-| M7 | Evidence packs used in design partner's internal comp meeting | qualitative confirmation | 1 | 1 | 2 |
-| M8 | Issues filed by design partner | GitHub issues | n/a | ≥3 | ≥5 |
-| M9 | Critical/security CVEs unpatched after 7 days | dependency audit | 0 | 0 | 0 |
-| M10 | Time from first design-partner data drop to first evidence pack | runbook timing | n/a | < 1 working day | < 1 working day |
+| #   | Metric                                                          | Source                   | 7-day | 30-day          | 90-day          |
+| --- | --------------------------------------------------------------- | ------------------------ | ----- | --------------- | --------------- |
+| M1  | Days the deployment was available (5xx rate < 0.1%)             | uptime monitor           | 7/7   | 29/30           | 88/90           |
+| M2  | Successful evidence-pack regenerations                          | governance log           | ≥3    | ≥10             | ≥25             |
+| M3  | Days with a Eurostat refresh (no SLA breach)                    | `/api/freshness` history | 7/7   | 28/30           | 85/90           |
+| M4  | Hash-chain integrity verifications passing                      | scheduled job            | 100%  | 100%            | 100%            |
+| M5  | Reconciliation tests passing on every dbt build                 | CI                       | 100%  | 100%            | 100%            |
+| M6  | Design partner active sessions per week                         | OIDC log                 | ≥1    | ≥3              | ≥3              |
+| M7  | Evidence packs used in design partner's internal comp meeting   | qualitative confirmation | 1     | 1               | 2               |
+| M8  | Issues filed by design partner                                  | GitHub issues            | n/a   | ≥3              | ≥5              |
+| M9  | Critical/security CVEs unpatched after 7 days                   | dependency audit         | 0     | 0               | 0               |
+| M10 | Time from first design-partner data drop to first evidence pack | runbook timing           | n/a   | < 1 working day | < 1 working day |
 
 M2, M6, and M7 are the leading indicators of product-market fit. M1, M3,
 M4, M5, and M9 are the floor. M8 measures whether the customer is
@@ -268,11 +269,11 @@ customer).
 
 ### 5.2 What we do when a metric misses
 
-| Tier | Definition | Response |
-|---|---|---|
-| Floor metric below threshold (M1, M3, M4, M5, M9) | Any miss | Stop new feature work; root-cause and fix before anything else |
-| Engagement metric below threshold (M2, M6, M7, M8) | Two consecutive measurement windows | Schedule a customer-success call; review the buyer thesis (D1) |
-| M10 above threshold | Two consecutive windows | Audit the onboarding runbook; rewrite the sections that cost time |
+| Tier                                               | Definition                          | Response                                                          |
+| -------------------------------------------------- | ----------------------------------- | ----------------------------------------------------------------- |
+| Floor metric below threshold (M1, M3, M4, M5, M9)  | Any miss                            | Stop new feature work; root-cause and fix before anything else    |
+| Engagement metric below threshold (M2, M6, M7, M8) | Two consecutive measurement windows | Schedule a customer-success call; review the buyer thesis (D1)    |
+| M10 above threshold                                | Two consecutive windows             | Audit the onboarding runbook; rewrite the sections that cost time |
 
 A metric miss is information, not failure. A metric miss that we ignore
 is failure.
@@ -305,35 +306,35 @@ revisited at the 30-day post-launch review.
 
 ### 7.1 Top risks (priority ≥ 12)
 
-| ID | Risk | L | I | P | Mitigation | Owner |
-|---|---|---|---|---|---|---|
-| R1 | A customer-facing pay claim is wrong because internal data was not actually reconciled | 3 | 5 | 15 | Trust gate (D4); claims suppressed until `customer_reconciled`; reconciliation requires CTO + customer data owner double sign-off; logged in governance with hash | CTO |
-| R2 | Eurostat changes a dataset dimension or code, ingestion silently produces a different population | 4 | 4 | 16 | Schema-baseline files in `configs/source_schemas/`; ingestion fails on diff; on-call paged | Data eng lead |
-| R3 | Evidence pack regenerates differently after a code change, breaking customer trust in artefact stability | 2 | 5 | 10 | Determinism test in CI on every PR (regenerate against fixture warehouse, assert byte-identical); freezes vintages explicitly | Backend lead |
-| R4 | Governance hash chain breaks and we don't notice for days | 2 | 5 | 10 | Verifier runs every 15 min and on every read; pages on break; daily off-site backup is the recovery path | CTO |
-| R5 | Design partner cancels mid-pilot, leaving no reference customer | 3 | 4 | 12 | Weekly check-in with design partner CPO; second prospect in pipeline by week 4; written go/no-go review at week 4 | CEO/CTO |
-| R6 | EU residency commitment violated by a transitive dependency that phones home to a US service | 2 | 5 | 10 | Outbound firewall on the VM; allowlist of EU endpoints only; quarterly review of `requirements.txt` and `package.json` for telemetry | CTO |
-| R7 | OIDC integration fails on launch day because the IdP team is unavailable | 3 | 4 | 12 | Magic-link break-glass in code, documented but disabled by default; week-2 dry-run with the IdP team's sandbox tenant | Backend lead |
-| R8 | The single backend engineer leaves or is unavailable for two weeks | 2 | 5 | 10 | Pair-author every weekly Friday demo; runbook is the source of truth, not anyone's head; second engineer reads and dry-runs the onboarding runbook in week 5 | CTO |
+| ID  | Risk                                                                                                     | L   | I   | P   | Mitigation                                                                                                                                                        | Owner         |
+| --- | -------------------------------------------------------------------------------------------------------- | --- | --- | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| R1  | A customer-facing pay claim is wrong because internal data was not actually reconciled                   | 3   | 5   | 15  | Trust gate (D4); claims suppressed until `customer_reconciled`; reconciliation requires CTO + customer data owner double sign-off; logged in governance with hash | CTO           |
+| R2  | Eurostat changes a dataset dimension or code, ingestion silently produces a different population         | 4   | 4   | 16  | Schema-baseline files in `configs/source_schemas/`; ingestion fails on diff; on-call paged                                                                        | Data eng lead |
+| R3  | Evidence pack regenerates differently after a code change, breaking customer trust in artefact stability | 2   | 5   | 10  | Determinism test in CI on every PR (regenerate against fixture warehouse, assert byte-identical); freezes vintages explicitly                                     | Backend lead  |
+| R4  | Governance hash chain breaks and we don't notice for days                                                | 2   | 5   | 10  | Verifier runs every 15 min and on every read; pages on break; daily off-site backup is the recovery path                                                          | CTO           |
+| R5  | Design partner cancels mid-pilot, leaving no reference customer                                          | 3   | 4   | 12  | Weekly check-in with design partner CPO; second prospect in pipeline by week 4; written go/no-go review at week 4                                                 | CEO/CTO       |
+| R6  | EU residency commitment violated by a transitive dependency that phones home to a US service             | 2   | 5   | 10  | Outbound firewall on the VM; allowlist of EU endpoints only; quarterly review of `requirements.txt` and `package.json` for telemetry                              | CTO           |
+| R7  | OIDC integration fails on launch day because the IdP team is unavailable                                 | 3   | 4   | 12  | Magic-link break-glass in code, documented but disabled by default; week-2 dry-run with the IdP team's sandbox tenant                                             | Backend lead  |
+| R8  | The single backend engineer leaves or is unavailable for two weeks                                       | 2   | 5   | 10  | Pair-author every weekly Friday demo; runbook is the source of truth, not anyone's head; second engineer reads and dry-runs the onboarding runbook in week 5      | CTO           |
 
 ### 7.2 Watched risks (priority 6–11)
 
-| ID | Risk | L | I | P | Note |
-|---|---|---|---|---|---|
-| R9 | DuckDB file corruption | 2 | 4 | 8 | Daily backup; recovery tested |
-| R10 | WeasyPrint OOM on a large pack | 3 | 3 | 9 | Process limit; JSON pack fallback |
-| R11 | dbt model output schema drifts from API contract | 3 | 3 | 9 | Contract tests in CI |
-| R12 | Customer's CSV contains PII beyond the documented schema | 3 | 3 | 9 | Validator strips unknown columns; runbook for data minimisation |
-| R13 | Cron job for ingestion runs concurrently with itself after a slow night | 2 | 3 | 6 | `flock` on script entrypoints |
-| R14 | Storage on the VM fills up over months of borgbackup | 3 | 2 | 6 | Disk-usage alert at 70%; pruning policy |
+| ID  | Risk                                                                    | L   | I   | P   | Note                                                            |
+| --- | ----------------------------------------------------------------------- | --- | --- | --- | --------------------------------------------------------------- |
+| R9  | DuckDB file corruption                                                  | 2   | 4   | 8   | Daily backup; recovery tested                                   |
+| R10 | WeasyPrint OOM on a large pack                                          | 3   | 3   | 9   | Process limit; JSON pack fallback                               |
+| R11 | dbt model output schema drifts from API contract                        | 3   | 3   | 9   | Contract tests in CI                                            |
+| R12 | Customer's CSV contains PII beyond the documented schema                | 3   | 3   | 9   | Validator strips unknown columns; runbook for data minimisation |
+| R13 | Cron job for ingestion runs concurrently with itself after a slow night | 2   | 3   | 6   | `flock` on script entrypoints                                   |
+| R14 | Storage on the VM fills up over months of borgbackup                    | 3   | 2   | 6   | Disk-usage alert at 70%; pruning policy                         |
 
 ### 7.3 Risks we are choosing to accept
 
-| ID | Risk | Why we accept |
-|---|---|---|
-| R15 | A second customer signs before multi-tenant migration is ready | Mitigation is to stand up a second VM (1 day of work); we accept the operational duplication |
-| R16 | A future LLM hallucination if v1.1 ships before the verifier is fully tested | We accept by deferring v1.1 LLM until verifier passes a documented harness; not a v1.0 risk |
-| R17 | Eurostat publishes corrected historical data that invalidates a previous evidence pack | Inherent to working with public statistics; documented in the customer-facing user guide |
+| ID  | Risk                                                                                   | Why we accept                                                                                |
+| --- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| R15 | A second customer signs before multi-tenant migration is ready                         | Mitigation is to stand up a second VM (1 day of work); we accept the operational duplication |
+| R16 | A future LLM hallucination if v1.1 ships before the verifier is fully tested           | We accept by deferring v1.1 LLM until verifier passes a documented harness; not a v1.0 risk  |
+| R17 | Eurostat publishes corrected historical data that invalidates a previous evidence pack | Inherent to working with public statistics; documented in the customer-facing user guide     |
 
 ---
 
@@ -363,11 +364,11 @@ Anything else is an issue, not a page.
 
 ### 8.3 Incident severity
 
-| Sev | Definition | Response time | Examples |
-|---|---|---|---|
-| 1 | Customer cannot use the product, or a wrong number was published | Immediate | Hash chain broken; reconciliation regression in production; OIDC down |
-| 2 | Customer can use the product but a critical capability is degraded | 4 working hours | Evidence pack PDF render fails; one source stale past SLA |
-| 3 | Cosmetic or non-blocking issue | Next working day | UI spacing bug; non-critical CVE; flaky test |
+| Sev | Definition                                                         | Response time    | Examples                                                              |
+| --- | ------------------------------------------------------------------ | ---------------- | --------------------------------------------------------------------- |
+| 1   | Customer cannot use the product, or a wrong number was published   | Immediate        | Hash chain broken; reconciliation regression in production; OIDC down |
+| 2   | Customer can use the product but a critical capability is degraded | 4 working hours  | Evidence pack PDF render fails; one source stale past SLA             |
+| 3   | Cosmetic or non-blocking issue                                     | Next working day | UI spacing bug; non-critical CVE; flaky test                          |
 
 ### 8.4 Sev-1 procedure
 
@@ -510,16 +511,16 @@ The launch does not proceed until every signatory below has signed the
 current version of this document, and the pre-GA checklist (§4.3) is
 fully checked.
 
-| Role | Name | Date | Signature |
-|---|---|---|---|
-| CTO | | | |
-| CEO | | | |
-| Backend lead | | | |
-| Data engineering lead | | | |
-| Frontend lead (if separate) | | | |
-| Customer data owner (design partner) | | | |
-| Customer compliance lead (design partner) | | | |
-| Customer IT / security (design partner) | | | |
+| Role                                      | Name | Date | Signature |
+| ----------------------------------------- | ---- | ---- | --------- |
+| CTO                                       |      |      |           |
+| CEO                                       |      |      |           |
+| Backend lead                              |      |      |           |
+| Data engineering lead                     |      |      |           |
+| Frontend lead (if separate)               |      |      |           |
+| Customer data owner (design partner)      |      |      |           |
+| Customer compliance lead (design partner) |      |      |           |
+| Customer IT / security (design partner)   |      |      |           |
 
 A signature is a commitment that the signer has read this document, has
 read `docs/01-technical-design.md`, and is on the hook for their
@@ -529,9 +530,9 @@ section. A signature on a stale version of either document is invalid.
 
 ## 12. Amendments
 
-| Date | Amendment | Author | Approved by |
-|---|---|---|---|
-| 2026-04-27 | Initial draft. | CTO | pending |
+| Date       | Amendment      | Author | Approved by |
+| ---------- | -------------- | ------ | ----------- |
+| 2026-04-27 | Initial draft. | CTO    | pending     |
 
 Any change to the scope (§3), the success metrics (§5), the rollout (§4),
 or the risk register (§7) is an amendment. Amendments require the same
