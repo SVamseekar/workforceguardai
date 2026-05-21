@@ -1,0 +1,26 @@
+[
+  {
+    "approval_required": false,
+    "approved": true,
+    "cadence": "weekly",
+    "created_at": "2026-05-11T16:53:24.959096+00:00",
+    "created_by": "dashboard-user",
+    "filters": {
+      "country": "ALL",
+      "geography": "EU27_AVG",
+      "period": "latest",
+      "sector": "ALL"
+    },
+    "governance_target": {
+      "target_id": "weekly_executive_update::ALL::EU27_AVG::ALL::latest",
+      "target_type": "automation_schedule"
+    },
+    "label": "Weekly executive update",
+    "last_generated_at": null,
+    "output": "executive_workforce_brief",
+    "rrule": "FREQ=WEEKLY;BYDAY=MO;BYHOUR=9;BYMINUTE=0",
+    "schedule_id": "weekly_executive_update::ALL::EU27_AVG::ALL::latest",
+    "status": "active",
+    "template_id": "weekly_executive_update"
+  }
+]
