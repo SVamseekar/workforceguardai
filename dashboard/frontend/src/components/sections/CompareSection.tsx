@@ -11,6 +11,38 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
 
 type AnyObj = Record<string, unknown>
 
+const DESIRED_DIRECTION: Record<string, 'up' | 'down'> = {
+  employment_rate: 'up',
+  unemployment_rate: 'down',
+  vacancy_rate: 'down',
+  gender_pay_gap: 'down',
+}
+
+function deltaTone(metricId: string, delta: number): 'good' | 'watch' | 'neutral' {
+  if (Math.abs(delta) < 0.05) return 'neutral'
+  const dir = DESIRED_DIRECTION[metricId] ?? 'up'
+  if (dir === 'up') return delta > 0 ? 'good' : 'watch'
+  return delta < 0 ? 'good' : 'watch'
+}
+
+function buildNarrative(rows: Array<{ id: string; leftValue: string; rightValue: string }>, leftLabel: string, rightLabel: string): string {
+  if (!rows.length) return ''
+  let leftWins = 0
+  let rightWins = 0
+  rows.forEach(r => {
+    const dir = DESIRED_DIRECTION[r.id] ?? 'up'
+    const lv = parseFloat(r.leftValue)
+    const rv = parseFloat(r.rightValue)
+    if (isNaN(lv) || isNaN(rv)) return
+    if (dir === 'up') { lv > rv ? leftWins++ : rv > lv ? rightWins++ : null }
+    else { lv < rv ? leftWins++ : rv < lv ? rightWins++ : null }
+  })
+  const total = rows.length
+  if (leftWins > rightWins) return `${leftLabel} outperforms ${rightLabel} on ${leftWins} of ${total} indicators.`
+  if (rightWins > leftWins) return `${rightLabel} outperforms ${leftLabel} on ${rightWins} of ${total} indicators.`
+  return `${leftLabel} and ${rightLabel} are broadly comparable across all ${total} indicators.`
+}
+
 const numberFormatter = new Intl.NumberFormat('en-IE', {
   maximumFractionDigits: 1,
   minimumFractionDigits: 0,
@@ -69,13 +101,21 @@ function SelectField({
   )
 }
 
-function MetricRow({ label, leftValue, rightValue, leftTone, rightTone }: {
+function MetricRow({ id, label, leftValue, rightValue, leftTone, rightTone }: {
+  id: string
   label: string
   leftValue: string
   rightValue: string
   leftTone?: string
   rightTone?: string
 }) {
+  const lv = parseFloat(leftValue)
+  const rv = parseFloat(rightValue)
+  const delta = (!isNaN(lv) && !isNaN(rv)) ? lv - rv : null
+  const tone = delta !== null ? deltaTone(id, delta) : 'neutral'
+  const toneColor = tone === 'good' ? 'var(--tone-good)' : tone === 'watch' ? 'var(--tone-watch)' : 'var(--text-muted)'
+  const deltaStr = delta !== null ? `${delta > 0 ? '+' : ''}${delta.toFixed(1)} pts` : '—'
+
   return (
     <div className="compare-row">
       <div className="compare-row__left">
@@ -86,7 +126,10 @@ function MetricRow({ label, leftValue, rightValue, leftTone, rightTone }: {
           </ToneChip>
         )}
       </div>
-      <div className="compare-row__label">{label}</div>
+      <div className="compare-row__label">
+        <span>{label}</span>
+        <span className="compare-row__delta" style={{ color: toneColor }}>{deltaStr}</span>
+      </div>
       <div className="compare-row__right">
         <span className="compare-row__value">{rightValue}</span>
         {rightTone && (
@@ -120,10 +163,10 @@ function ComparePanel({
 
   const ov = (overview ?? {}) as AnyObj
   const metrics = (ov.metrics as AnyObj[]) ?? []
-  const countryOptions = [
-    { id: 'ALL', label: 'EU27 average' },
-    ...((options.countries as { id: string; label: string }[]) ?? []).filter(c => c.id !== 'ALL'),
-  ]
+  const geoOptions = (options.geography_options ?? options.benchmark_geographies) as Array<{id: string; label: string; nuts_level?: number}> | undefined
+  const countryOptions: { id: string; label: string }[] = geoOptions
+    ? geoOptions.filter(g => g.id === 'EU27_AVG' || g.nuts_level === 0).map(g => ({ id: g.id === 'EU27_AVG' ? 'ALL' : g.id, label: g.label }))
+    : [{ id: 'ALL', label: 'EU27 average' }]
   const sectorOptions = [{ id: 'ALL', label: 'All sectors' }, ...((options.sectors as { id: string; label: string }[]) ?? []).filter(s => s.id !== 'ALL')]
   const periodOptions = (options.periods as { id: string; label: string }[]) ?? [{ id: 'latest', label: 'Latest' }]
 
@@ -257,6 +300,20 @@ export function CompareSection() {
       {metricRows.length > 0 && (
         <section className="comparison-section" style={{ marginTop: 24 }}>
           <div className="panel" style={{ minHeight: 'auto', padding: 22 }}>
+            {(() => {
+              const leftLabel = (((leftData ?? {}) as AnyObj).filters as AnyObj | undefined)
+                ? String(((((leftData ?? {}) as AnyObj).filters as AnyObj).applied as AnyObj)?.geography_label ?? leftFilters.country)
+                : leftFilters.country === 'ALL' ? 'EU27 Average' : leftFilters.country
+              const rightLabel = (((rightData ?? {}) as AnyObj).filters as AnyObj | undefined)
+                ? String(((((rightData ?? {}) as AnyObj).filters as AnyObj).applied as AnyObj)?.geography_label ?? rightFilters.country)
+                : rightFilters.country === 'ALL' ? 'EU27 Average' : rightFilters.country
+              const narrative = buildNarrative(metricRows, leftLabel, rightLabel)
+              return narrative ? (
+                <p style={{ margin: '0 0 18px', fontSize: '0.92rem', color: 'var(--text-strong)', fontWeight: 600, lineHeight: 1.5 }}>
+                  {narrative}
+                </p>
+              ) : null
+            })()}
             <p className="panel__eyebrow" style={{ marginBottom: 16 }}>Side-by-side comparison</p>
             <div className="compare-rows">
               {metricRows.map((row) => (
