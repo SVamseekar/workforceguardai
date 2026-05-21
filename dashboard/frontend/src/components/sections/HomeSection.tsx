@@ -6,9 +6,8 @@ import { DataState } from '../shared/DataState'
 import { FilterBar } from '../shared/FilterBar'
 import {
   AlertTriangle, CheckCircle, Upload, ArrowRight, Download,
-  TrendingUp, TrendingDown, Minus, FileText, Scale, Lock,
-  BarChart2, Briefcase, ShieldCheck, Globe, Users, Search,
-  ShieldAlert, Activity,
+  FileText, Scale, Lock, BarChart2, Search, ShieldAlert, Globe,
+  TrendingUp, TrendingDown, Minus, Briefcase, Users, ShieldCheck,
 } from 'lucide-react'
 
 type AnyObj = Record<string, unknown>
@@ -129,9 +128,10 @@ export function HomeSection() {
 
   /* ── needs-attention items ──────────────────────────────────────────── */
   const urgentItems = [
-    ...watchSignals.slice(0, 2).map(s => ({ text: s.title as string, route: '/market' })),
+    ...watchSignals.slice(0, 2).map(s => ({ text: s.title as string, route: '/market', type: 'signal' as const })),
+    ...watchlist.slice(0, 2).map(w => ({ text: `${w.label as string}: ${w.detail as string}`, route: '/market', type: 'watch' as const })),
     ...(unresolvedCount > 0
-      ? [{ text: `${unresolvedCount} pay transparency ${unresolvedCount === 1 ? 'category needs' : 'categories need'} review`, route: '/pay-analysis' }]
+      ? [{ text: `${unresolvedCount} pay transparency ${unresolvedCount === 1 ? 'category needs' : 'categories need'} review`, route: '/pay-analysis', type: 'signal' as const }]
       : []),
   ]
 
@@ -151,8 +151,35 @@ export function HomeSection() {
       <DataState loading={loading} error={error} empty={!loading && !error && !overview}>
 
         {/* ════════════════════════════════════════════════════════════════
-            § 1 — EXECUTIVE BRIEF
-            AI headline + live metric delta pills + brief body context
+            § 0 — SCORE PULSE STRIP
+            4 composite scores from semantic_metrics — hiring pressure,
+            labour resilience, equity risk, transition readiness
+        ════════════════════════════════════════════════════════════════ */}
+        {metrics.length > 0 && (
+          <section className="score-pulse" style={{ marginBottom: 20 }}>
+            {((ov.semantic_metrics as AnyObj[]) ?? []).map((sm) => {
+              const val = sm.value as number
+              const pct = Math.min(100, Math.max(0, val))
+              const tone = val >= 70 ? 'good' : val >= 45 ? 'neutral' : 'watch'
+              const barColor = tone === 'good' ? 'var(--tone-good)' : tone === 'watch' ? 'var(--tone-watch)' : 'var(--text-muted)'
+              return (
+                <div key={sm.id as string} className="score-pulse__item">
+                  <div className="score-pulse__header">
+                    <span className="score-pulse__label">{sm.title as string}</span>
+                    <span className="score-pulse__value" style={{ color: barColor }}>{Math.round(val)}<span style={{ fontSize: '0.65em', color: 'var(--text-muted)', fontWeight: 500 }}>/100</span></span>
+                  </div>
+                  <div className="score-pulse__track">
+                    <div className="score-pulse__fill" style={{ width: `${pct}%`, background: barColor }} />
+                  </div>
+                  <p className="score-pulse__def">{sm.definition as string}</p>
+                </div>
+              )
+            })}
+          </section>
+        )}
+
+        {/* ════════════════════════════════════════════════════════════════
+            § 1 — EXECUTIVE BRIEF  (AI narrative only — no metric duplication)
         ════════════════════════════════════════════════════════════════ */}
         {headline && (
           <section className="brief-hero panel" style={{ marginBottom: 24, padding: '26px 28px' }}>
@@ -188,25 +215,6 @@ export function HomeSection() {
               </p>
             )}
 
-            {/* Live metric delta pills */}
-            {metricDeltas.length > 0 && (
-              <div className="delta-strip">
-                {metricDeltas.map((item, i) => (
-                  <div key={i} className="delta-pill">
-                    <DeltaIcon tone={item.tone as string} />
-                    <div>
-                      <span className="delta-pill__label">{item.title as string}</span>
-                      <span className="delta-pill__value">
-                        {(item.current_value as number).toFixed(1)}{item.unit as string}
-                      </span>
-                      <span className={`delta-pill__delta delta-pill__delta--${item.tone as string}`}>
-                        {item.delta_label as string} vs {item.benchmark_period as string}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
 
             {/* Data sources */}
             {sources.length > 0 && (
@@ -227,7 +235,7 @@ export function HomeSection() {
         ════════════════════════════════════════════════════════════════ */}
         {metrics.length > 0 && (
           <section style={{ marginBottom: 24 }}>
-            <p className="panel__eyebrow" style={{ marginBottom: 10 }}>Live Market Indicators — click any card to drill into the trend</p>
+            <p className="panel__eyebrow" style={{ marginBottom: 10 }}>Live Market Indicators</p>
             <div className="metric-grid">
               {metrics.map(m => (
                 <MetricCard key={m.id as string} metric={m} onClick={() => navigate('/market')} />
@@ -237,44 +245,38 @@ export function HomeSection() {
         )}
 
         {/* ════════════════════════════════════════════════════════════════
-            § 3 — INTELLIGENCE SIGNALS  (3 rich signal cards)
-            Each card shows the paired live metric number + detail + tone
+            § 3 — ANALYST RECOMMENDATIONS
+            Priority-ranked actions derived from the live data — these tell
+            you WHAT TO DO, not just what the numbers are.
         ════════════════════════════════════════════════════════════════ */}
-        {signals.length > 0 && (
+        {recommendations.length > 0 && (
           <section style={{ marginBottom: 24 }}>
-            <p className="panel__eyebrow" style={{ marginBottom: 10 }}>Intelligence Signals</p>
+            <p className="panel__eyebrow" style={{ marginBottom: 10 }}>Analyst Recommendations</p>
             <div className="signal-cards-grid">
-              {signals.map((sig, i) => {
-                const sid    = sig.id as string
-                const tone   = sig.tone as string
-                const meta   = SIGNAL_META[sid]
-                const Icon   = meta?.icon ?? Activity
-                const paired = meta ? metricById[meta.metricId] : null
-                const val    = paired ? `${(paired.value as number).toFixed(1)}${paired.unit as string}` : null
-                const prev   = paired?.previous_value != null
-                  ? `${(paired.previous_value as number).toFixed(1)}${paired.unit as string}`
-                  : null
-
+              {recommendations.map((rec, i) => {
+                const priority = String(rec.priority)
+                const needsReview = Boolean(rec.review_required)
+                const route = (rec.id as string)?.includes('hiring') ? '/market'
+                  : (rec.id as string)?.includes('equity') ? '/pay-analysis'
+                  : '/market'
                 return (
-                  <button key={i} className={`signal-card signal-card--${tone}`} onClick={() => navigate('/market')}>
+                  <button
+                    key={i}
+                    className={`signal-card signal-card--${priority === 'high' ? 'watch' : priority === 'medium' ? 'neutral' : 'good'}`}
+                    onClick={() => navigate(route)}
+                  >
                     <div className="signal-card__top">
-                      <div className={`signal-card__icon-wrap signal-card__icon-wrap--${tone}`}>
-                        <Icon size={16} />
-                      </div>
-                      <span className={`tone-chip tone-chip--${tone}`} style={{ fontSize: '0.68rem' }}>
-                        {tone === 'good' ? 'Healthy' : tone === 'watch' ? 'Watch' : 'Neutral'}
-                      </span>
+                      <span className={`badge-priority badge-priority--${priority}`}>{priority}</span>
+                      {needsReview && (
+                        <span className="badge-action-needed" style={{ fontSize: '0.62rem' }}>
+                          <AlertTriangle size={10} /> Review required
+                        </span>
+                      )}
                     </div>
-                    <strong className="signal-card__title">{sig.title as string}</strong>
-                    {val && (
-                      <div className="signal-card__metric">
-                        <span className="signal-card__metric-value">{val}</span>
-                        {prev && <span className="signal-card__metric-prev">prev. {prev}</span>}
-                      </div>
-                    )}
-                    <p className="signal-card__detail">{sig.detail as string}</p>
+                    <strong className="signal-card__title">{rec.title as string}</strong>
+                    <p className="signal-card__detail">{rec.detail as string}</p>
                     <div className="signal-card__footer">
-                      <span>{meta?.cta ?? 'Explore'}</span>
+                      <span>Take action</span>
                       <ArrowRight size={12} />
                     </div>
                   </button>
@@ -422,11 +424,11 @@ export function HomeSection() {
               {urgentItems.map((item, i) => (
                 <button
                   key={i}
-                  className="product-note inline-notice inline-notice--watch"
+                  className={`product-note inline-notice ${item.type === 'watch' ? 'inline-notice--neutral' : 'inline-notice--watch'}`}
                   onClick={() => navigate(item.route)}
-                  style={{ textAlign: 'left', cursor: 'pointer', display: 'flex', width: '100%' }}
+                  style={{ textAlign: 'left', cursor: 'pointer', display: 'flex', width: '100%', gap: 10, alignItems: 'flex-start' }}
                 >
-                  <AlertTriangle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
+                  <AlertTriangle size={15} style={{ flexShrink: 0, marginTop: 1, color: item.type === 'watch' ? 'var(--text-muted)' : 'var(--tone-watch)' }} />
                   <span>{item.text}</span>
                 </button>
               ))}
