@@ -1492,6 +1492,296 @@ h3.analyst-console__response-top {
   z-index: 2;
 }
 
+/* ── Metric Delta Strip (what_changed) ──────────────────────────────────── */
+.delta-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.delta-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-light);
+  flex: 1 1 160px;
+  min-width: 0;
+  transition: border-color 0.2s ease;
+}
+
+.delta-pill > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.delta-pill__label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.delta-pill__value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-strong);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.delta-pill__delta {
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.delta-pill__delta--good { color: var(--tone-good); }
+.delta-pill__delta--watch { color: var(--tone-watch); }
+.delta-pill__delta--neutral { color: var(--text-muted); }
+
+/* ── Intelligence Signal Rows ────────────────────────────────────────────── */
+.signal-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-elevated);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.signal-row:hover {
+  border-color: var(--border-medium);
+  transform: translateX(2px);
+}
+
+.signal-row--good { border-left: 3px solid var(--tone-good); }
+.signal-row--watch { border-left: 3px solid var(--tone-watch); }
+.signal-row--neutral { border-left: 3px solid var(--border-medium); }
+
+/* ── Guided Workflow Grid ────────────────────────────────────────────────── */
+.workflow-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.workflow-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-surface);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm);
+}
+
+.workflow-card:hover:not(.workflow-card--blocked):not(.workflow-card--unlock) {
+  border-color: var(--accent-primary);
+  transform: translateX(4px);
+  box-shadow: var(--shadow-soft);
+  background: var(--bg-elevated);
+}
+
+.workflow-card--blocked {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.workflow-card--unlock {
+  border-style: dashed;
+  border-color: var(--accent-primary);
+  background: var(--accent-primary-glow);
+  cursor: default;
+}
+
+.workflow-card__icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: var(--accent-primary-glow);
+  color: var(--accent-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+}
+
+.workflow-card:hover:not(.workflow-card--blocked) .workflow-card__icon {
+  background: var(--accent-primary);
+  color: #fff;
+}
+
+.workflow-card__icon--unlock {
+  background: var(--accent-primary-glow);
+  color: var(--accent-primary);
+}
+
+.workflow-card__title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-strong);
+  display: block;
+  margin-bottom: 3px;
+}
+
+.workflow-card__desc {
+  margin: 0;
+  font-size: 0.79rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.workflow-card__arrow {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.workflow-card:hover:not(.workflow-card--blocked) .workflow-card__arrow {
+  color: var(--accent-primary);
+  transform: translateX(3px);
+}
+
+/* ── Intelligence Signal Cards Grid ─────────────────────────────────────── */
+.signal-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.signal-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px;
+  border-radius: 14px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-surface);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: var(--shadow-sm);
+}
+
+.signal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-soft);
+  border-color: var(--border-medium);
+}
+
+.signal-card--good  { border-top: 3px solid var(--tone-good); }
+.signal-card--watch { border-top: 3px solid var(--tone-watch); }
+.signal-card--neutral { border-top: 3px solid var(--border-medium); }
+
+.signal-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.signal-card__icon-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.signal-card__icon-wrap--good    { background: var(--tone-good-bg);    color: var(--tone-good); }
+.signal-card__icon-wrap--watch   { background: var(--tone-watch-bg);   color: var(--tone-watch); }
+.signal-card__icon-wrap--neutral { background: var(--bg-elevated);     color: var(--text-muted); }
+
+.signal-card__title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-strong);
+  display: block;
+}
+
+.signal-card__metric {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.signal-card__metric-value {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--text-strong);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.signal-card__metric-prev {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.signal-card__detail {
+  margin: 0;
+  font-size: 0.79rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  flex: 1;
+}
+
+.signal-card__footer {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  margin-top: 4px;
+  transition: gap 0.2s ease;
+}
+
+.signal-card:hover .signal-card__footer {
+  gap: 8px;
+}
+
+/* ── Sector Bar Rankings ─────────────────────────────────────────────────── */
+.sector-bar-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.sector-bar-track {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--bg-elevated);
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+}
+
+.sector-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sector-bar-fill--watch   { background: linear-gradient(90deg, var(--tone-watch), rgba(251,191,36,0.5)); }
+.sector-bar-fill--neutral { background: linear-gradient(90deg, var(--accent-primary), var(--accent-teal)); }
+.sector-bar-fill--equity  { background: linear-gradient(90deg, #f59e0b, rgba(251,191,36,0.4)); }
+
 /* ── Media Queries ─────────────────────────────────────────────────────── */
 @media (max-width: 1120px) {
   .app-body {
@@ -1509,6 +1799,10 @@ h3.analyst-console__response-top {
     grid-template-columns: 1fr;
   }
 
+  .signal-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .metric-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1517,6 +1811,14 @@ h3.analyst-console__response-top {
 @media (max-width: 720px) {
   .metric-grid {
     grid-template-columns: 1fr;
+  }
+
+  .signal-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .delta-strip {
+    flex-direction: column;
   }
 
   .filter-grid,

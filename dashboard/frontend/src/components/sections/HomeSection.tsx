@@ -4,398 +4,641 @@ import { MetricCard } from '../primitives/MetricCard'
 import { FreshnessPill } from '../primitives/FreshnessPill'
 import { DataState } from '../shared/DataState'
 import { FilterBar } from '../shared/FilterBar'
-import { AlertTriangle, CheckCircle, Database, Upload, ArrowRight, Download, Play, ShieldAlert, Zap } from 'lucide-react'
+import {
+  AlertTriangle, CheckCircle, Upload, ArrowRight, Download,
+  TrendingUp, TrendingDown, Minus, FileText, Scale, Lock,
+  BarChart2, Briefcase, ShieldCheck, Globe, Users, Search,
+  ShieldAlert, Activity,
+} from 'lucide-react'
 
 type AnyObj = Record<string, unknown>
 
-const dateFormatter = new Intl.DateTimeFormat('en-IE', {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-})
-
-function formatDate(val: unknown): string {
-  if (!val) return '—'
-  try {
-    return dateFormatter.format(new Date(val as string))
-  } catch {
-    return '—'
-  }
+/* ── helpers ──────────────────────────────────────────────────────────── */
+const SOURCE_LABELS: Record<string, string> = {
+  eurostat_lfs: 'Eurostat Labour Force Survey',
+  eurostat_jvs: 'Eurostat Job Vacancy Statistics',
+  eurostat_ses: 'Eurostat Structure of Earnings Survey',
 }
 
+/** Shorten very long NACE sector names */
+function shortSector(label: string): string {
+  const map: Record<string, string> = {
+    'Administrative and support service activities': 'Admin & Support Services',
+    'Financial and insurance activities': 'Finance & Insurance',
+    'Information and communication': 'Information & Communication',
+    'Professional, scientific and technical activities': 'Professional & Technical',
+    'Wholesale and retail trade; repair of motor vehicles and motorcycles': 'Wholesale & Retail Trade',
+    'Human health and social work activities': 'Health & Social Work',
+    'Accommodation and food service activities': 'Accommodation & Food',
+    'Arts, entertainment and recreation': 'Arts & Recreation',
+    'Transportation and storage': 'Transportation & Storage',
+    'Public administration and defence; compulsory social security': 'Public Administration',
+    'Construction': 'Construction',
+    'Manufacturing': 'Manufacturing',
+    'Education': 'Education',
+  }
+  return map[label] ?? (label.length > 38 ? label.slice(0, 36) + '…' : label)
+}
+
+function DeltaIcon({ tone }: { tone: string }) {
+  if (tone === 'good')  return <TrendingUp   size={14} style={{ color: 'var(--tone-good)',  flexShrink: 0 }} />
+  if (tone === 'watch') return <TrendingDown size={14} style={{ color: 'var(--tone-watch)', flexShrink: 0 }} />
+  return                       <Minus        size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+}
+
+const SIGNAL_META: Record<string, { icon: typeof BarChart2; metricId: string; cta: string }> = {
+  signal_hiring_pressure:   { icon: Briefcase,   metricId: 'vacancy_rate',      cta: 'Explore vacancies' },
+  signal_labour_resilience: { icon: Users,        metricId: 'employment_rate',   cta: 'View employment trend' },
+  signal_equity_risk:       { icon: ShieldCheck,  metricId: 'gender_pay_gap',    cta: 'Review pay equity' },
+}
+
+const HANDOFF_META: Record<string, { icon: typeof FileText; desc: string; route: string }> = {
+  handoff_executive_brief:   { icon: FileText, desc: 'AI-written narrative ready for leadership distribution.', route: '/market' },
+  handoff_evidence_pack:     { icon: Download, desc: 'Hash-chained bundle for legal & regulatory filing.',       route: '/govern' },
+  handoff_compliance_review: { icon: Scale,    desc: 'Route pay-equity items to legal for approval or override.', route: '/pay-analysis' },
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   HomeSection
+   ════════════════════════════════════════════════════════════════════════ */
 export function HomeSection() {
   const {
-    overview,
-    filters,
-    setFilters,
-    loading,
-    error,
-    exporting,
-    uploadPayroll,
-    exportEvidencePack,
+    overview, filters, setFilters, loading, error,
+    exporting, uploadPayroll, exportEvidencePack,
   } = useOverviewData()
   const navigate = useNavigate()
 
-  const ov = (overview ?? {}) as AnyObj
+  const ov      = (overview ?? {}) as AnyObj
   const options = ((ov.filters as AnyObj)?.options as Record<string, unknown>) ?? {}
+  const current = ((ov.filters as AnyObj)?.current as AnyObj) ?? {}
+  const isEU27  = !current.country || current.country === 'ALL'
 
-  const intelligence = (ov.intelligence as AnyObj | undefined) ?? {}
-  const signals = (intelligence.signals as AnyObj[]) ?? []
-  const watchSignals = signals.filter((s) => s.tone === 'watch')
-  const payTransparency = (ov.pay_transparency as AnyObj | undefined) ?? {}
-  const ptSummary = (payTransparency.summary as AnyObj | undefined) ?? {}
+  /* ── brief & deltas ─────────────────────────────────────────────────── */
+  const briefRaw     = (ov.brief as AnyObj | undefined) ?? {}
+  const briefSummary = (briefRaw.summary as AnyObj | undefined) ?? {}
+  const headline     = String(briefSummary.headline ?? briefRaw.title ?? '')
+  const bodyText     = String(briefSummary.body ?? '')
+  const confidence   = String(briefSummary.confidence ?? '')
+  const whatChanged  = (briefRaw.what_changed as AnyObj | undefined) ?? {}
+  const basisLabel   = String((whatChanged.basis as AnyObj | undefined)?.label ?? '')
+  const metricDeltas = (whatChanged.items as AnyObj[]) ?? []
+  const provenance   = (briefRaw.provenance as AnyObj[]) ?? []
+  const sources      = [...new Set(provenance.map(p => p.source_id as string).filter(Boolean))]
+
+  /* ── metrics & intelligence ─────────────────────────────────────────── */
+  const metrics  = (ov.metrics as AnyObj[]) ?? []
+  const metricById: Record<string, AnyObj> = {}
+  metrics.forEach(m => { metricById[m.id as string] = m })
+
+  const intel           = (ov.intelligence as AnyObj | undefined) ?? {}
+  const signals         = (intel.signals as AnyObj[]) ?? []
+  const watchSignals    = signals.filter(s => s.tone === 'watch')
+  const recommendations = (intel.recommendations as AnyObj[]) ?? []
+  const watchlist       = (intel.watchlist as AnyObj[]) ?? []
+
+  /* ── sector chart data ──────────────────────────────────────────────── */
+  const charts           = (ov.charts as AnyObj | undefined) ?? {}
+  const vacancyBySector  = ((charts.vacancy_by_sector as AnyObj)?.series as AnyObj[]) ?? []
+  const payGapBySector   = ((charts.pay_gap_by_sector as AnyObj)?.series as AnyObj[]) ?? []
+  // Sort descending and take top 5
+  const topVacancy = [...vacancyBySector].sort((a, b) => (b.value as number) - (a.value as number)).slice(0, 5)
+  const topPayGap  = [...payGapBySector].sort((a, b) => (b.value as number) - (a.value as number)).slice(0, 5)
+  const maxVacancy = (topVacancy[0]?.value as number) || 1
+  const maxPayGap  = (topPayGap[0]?.value as number) || 1
+
+  /* ── pay transparency ───────────────────────────────────────────────── */
+  const pt              = (ov.pay_transparency as AnyObj | undefined) ?? {}
+  const ptAvailable     = Boolean(pt.available)
+  const ptSummary       = (pt.summary as AnyObj | undefined) ?? {}
   const unresolvedCount = (ptSummary.unresolved_review_item_count as number) ?? 0
-  const briefRaw = ov.brief as AnyObj | undefined
+  const ptTopItems      = (pt.top_review_items as AnyObj[]) ?? []
+  const ptNote          = String(pt.unavailable_reason ?? '')
 
-  const brief = briefRaw
-    ? {
-        headline: briefRaw.headline ?? (briefRaw.summary as AnyObj | undefined)?.headline ?? briefRaw.title,
-        summary: (() => {
-          const body = ((briefRaw.summary as AnyObj | undefined)?.body ?? briefRaw.summary ?? briefRaw.title) as string | undefined
-          if (!body) return ''
-          // Strip internal methodology sentences added by the backend
-          return body
-            .replace(/\s*Active benchmark basis:[^.]+\./g, '')
-            .replace(/\s*All \d+ observed metrics are currently comparable[^.]+\./g, '')
-            .replace(/\s*[A-Za-z ]+ is \d+(\.\d+)? pts (above|below) [^.]+\./g, '')
-            .trim()
-        })(),
-        whyItMatters: (briefRaw.why_it_matters as AnyObj[]) ?? [],
-      }
-    : null
+  /* ── automation ─────────────────────────────────────────────────────── */
+  const automation = (ov.automation as AnyObj | undefined) ?? {}
+  const handoffs   = (automation.handoffs as AnyObj[]) ?? []
 
-  const metrics = (ov.metrics as AnyObj[]) ?? []
-  const recommendations = (intelligence.recommendations as AnyObj[]) ?? []
-  const watchlist = (intelligence.watchlist as AnyObj[]) ?? []
+  /* ── company benchmark ──────────────────────────────────────────────── */
+  const cb           = (ov.company_benchmark as AnyObj | undefined) ?? {}
+  const benchmarkAvail = Boolean(cb.available)
 
-  const companyBenchmark = (ov.company_benchmark as AnyObj | undefined) ?? {}
-  const internalData = (ov.internal_data as AnyObj | undefined) ?? {}
-  const benchmarkAvailable = Boolean(companyBenchmark.available)
-  const internalLoaded = Boolean(internalData.available)
+  /* ── governance ─────────────────────────────────────────────────────── */
+  const gov        = (ov.governance as AnyObj | undefined) ?? {}
+  const govInt     = (gov.integrity as AnyObj | undefined) ?? {}
+  const eventCount = (govInt.event_count as number) ?? 0
 
-  const governance = (ov.governance as AnyObj | undefined) ?? {}
-  const loggedEvents = (governance.logged_events as AnyObj[]) ?? []
-
+  /* ── needs-attention items ──────────────────────────────────────────── */
   const urgentItems = [
-    ...watchSignals.slice(0, 2).map((s) => ({
-      type: 'watch',
-      text: s.title as string,
-      route: '/market',
-    })),
+    ...watchSignals.slice(0, 2).map(s => ({ text: s.title as string, route: '/market' })),
     ...(unresolvedCount > 0
-      ? [{ type: 'watch', text: `${unresolvedCount} pay transparency ${unresolvedCount === 1 ? 'category needs' : 'categories need'} review`, route: '/pay-analysis' }]
+      ? [{ text: `${unresolvedCount} pay transparency ${unresolvedCount === 1 ? 'category needs' : 'categories need'} review`, route: '/pay-analysis' }]
       : []),
   ]
-
-  const positiveItems = metrics
-    .filter((m) => m.tone === 'good')
-    .slice(0, 2)
-    .map((m) => ({ type: 'good', text: `${m.title as string}: ${m.gap_label as string ?? 'improving'}`, route: '/market' }))
 
   return (
     <div className="dashboard">
       <div className="dashboard__halo dashboard__halo--one" />
       <div className="dashboard__halo dashboard__halo--two" />
-      
+
+      {/* ── header ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <p className="hero__eyebrow" style={{ margin: 0 }}>Command Centre</p>
         <FreshnessPill />
       </div>
 
-      <FilterBar
-        filters={filters}
-        options={options}
-        onFilterChange={setFilters}
-      />
+      <FilterBar filters={filters} options={options} onFilterChange={setFilters} />
 
       <DataState loading={loading} error={error} empty={!loading && !error && !overview}>
-        
-        {/* Executive Brief Banner */}
-        {brief && (
-          <section className="intelligence-section" style={{ marginBottom: 28 }}>
-            <div className="panel brief-hero" style={{ padding: '26px 28px', borderLeft: '4px solid var(--accent-primary)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <p className="panel__eyebrow" style={{ margin: 0 }}>Executive Brief</p>
-                {Boolean((briefRaw?.summary as AnyObj | undefined)?.confidence) && (
-                  <span className="comparison-meta__pill" style={{ textTransform: 'capitalize', fontSize: '0.74rem' }}>
-                    Confidence: {String((briefRaw?.summary as AnyObj).confidence)}
+
+        {/* ════════════════════════════════════════════════════════════════
+            § 1 — EXECUTIVE BRIEF
+            AI headline + live metric delta pills + brief body context
+        ════════════════════════════════════════════════════════════════ */}
+        {headline && (
+          <section className="brief-hero panel" style={{ marginBottom: 24, padding: '26px 28px' }}>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+              <p className="panel__eyebrow" style={{ margin: 0 }}>Executive Brief</p>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                {confidence && (
+                  <span className={`tone-chip tone-chip--${confidence === 'high' ? 'good' : confidence === 'medium' ? 'neutral' : 'watch'}`} style={{ fontSize: '0.7rem' }}>
+                    {confidence.charAt(0).toUpperCase() + confidence.slice(1)} confidence
+                  </span>
+                )}
+                {basisLabel && (
+                  <span className="comparison-meta__pill" style={{ fontSize: '0.7rem' }}>
+                    <Globe size={10} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
+                    Benchmark: {basisLabel}
                   </span>
                 )}
               </div>
-              <h2 style={{ margin: '0 0 12px', fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-strong)', letterSpacing: '-0.02em', lineHeight: 1.25 }}>
-                {brief.headline as string}
-              </h2>
-              <p className="intelligence-brief__summary" style={{ margin: '0 0 24px', fontSize: '0.98rem', color: 'var(--text-muted)', lineHeight: 1.6, maxWidth: '85ch' }}>
-                {brief.summary as string}
-              </p>
+            </div>
 
-              {brief.whyItMatters && brief.whyItMatters.length > 0 && (
-                <div>
-                  <p className="panel__eyebrow" style={{ marginBottom: 12, fontSize: '0.7rem', opacity: 0.8 }}>Strategic Implications</p>
-                  <div className="implication-grid">
-                    {brief.whyItMatters.map((item, idx) => (
-                      <div key={idx} className="implication-card">
-                        <div className="implication-card__header">
-                          <span className={`badge-priority badge-priority--${String(item.priority).toLowerCase()}`}>
-                            {String(item.priority).toUpperCase()}
-                          </span>
-                          {Boolean(item.review_required) && (
-                            <span className="badge-action-needed">
-                              <AlertTriangle size={12} />
-                              Review Required
-                            </span>
-                          )}
-                        </div>
-                        <h4 className="implication-card__title">{item.title as string}</h4>
-                        <p className="implication-card__detail">{item.detail as string}</p>
-                      </div>
-                    ))}
+            <h1 style={{ margin: '0 0 10px', fontSize: 'clamp(1.15rem, 2vw, 1.5rem)', fontWeight: 800, color: 'var(--text-strong)', letterSpacing: '-0.025em', lineHeight: 1.25, maxWidth: '70ch' }}>
+              {headline}
+            </h1>
+
+            {/* Body text — filtered to remove methodology noise */}
+            {bodyText && (
+              <p style={{ margin: '0 0 20px', fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: 1.65, maxWidth: '80ch' }}>
+                {bodyText
+                  .replace(/\s*Active benchmark basis:[^.]+\./g, '')
+                  .replace(/\s*All \d+ observed metrics are currently comparable[^.]+\./g, '')
+                  .trim()}
+              </p>
+            )}
+
+            {/* Live metric delta pills */}
+            {metricDeltas.length > 0 && (
+              <div className="delta-strip">
+                {metricDeltas.map((item, i) => (
+                  <div key={i} className="delta-pill">
+                    <DeltaIcon tone={item.tone as string} />
+                    <div>
+                      <span className="delta-pill__label">{item.title as string}</span>
+                      <span className="delta-pill__value">
+                        {(item.current_value as number).toFixed(1)}{item.unit as string}
+                      </span>
+                      <span className={`delta-pill__delta delta-pill__delta--${item.tone as string}`}>
+                        {item.delta_label as string} vs {item.benchmark_period as string}
+                      </span>
+                    </div>
                   </div>
+                ))}
+              </div>
+            )}
+
+            {/* Data sources */}
+            {sources.length > 0 && (
+              <div style={{ marginTop: 18, display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.67rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Sources</span>
+                {sources.map(sid => (
+                  <span key={sid} className="comparison-meta__pill" style={{ fontSize: '0.67rem' }}>
+                    {SOURCE_LABELS[sid] ?? sid}
+                  </span>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ════════════════════════════════════════════════════════════════
+            § 2 — LIVE MARKET INDICATORS
+        ════════════════════════════════════════════════════════════════ */}
+        {metrics.length > 0 && (
+          <section style={{ marginBottom: 24 }}>
+            <p className="panel__eyebrow" style={{ marginBottom: 10 }}>Live Market Indicators — click any card to drill into the trend</p>
+            <div className="metric-grid">
+              {metrics.map(m => (
+                <MetricCard key={m.id as string} metric={m} onClick={() => navigate('/market')} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ════════════════════════════════════════════════════════════════
+            § 3 — INTELLIGENCE SIGNALS  (3 rich signal cards)
+            Each card shows the paired live metric number + detail + tone
+        ════════════════════════════════════════════════════════════════ */}
+        {signals.length > 0 && (
+          <section style={{ marginBottom: 24 }}>
+            <p className="panel__eyebrow" style={{ marginBottom: 10 }}>Intelligence Signals</p>
+            <div className="signal-cards-grid">
+              {signals.map((sig, i) => {
+                const sid    = sig.id as string
+                const tone   = sig.tone as string
+                const meta   = SIGNAL_META[sid]
+                const Icon   = meta?.icon ?? Activity
+                const paired = meta ? metricById[meta.metricId] : null
+                const val    = paired ? `${(paired.value as number).toFixed(1)}${paired.unit as string}` : null
+                const prev   = paired?.previous_value != null
+                  ? `${(paired.previous_value as number).toFixed(1)}${paired.unit as string}`
+                  : null
+
+                return (
+                  <button key={i} className={`signal-card signal-card--${tone}`} onClick={() => navigate('/market')}>
+                    <div className="signal-card__top">
+                      <div className={`signal-card__icon-wrap signal-card__icon-wrap--${tone}`}>
+                        <Icon size={16} />
+                      </div>
+                      <span className={`tone-chip tone-chip--${tone}`} style={{ fontSize: '0.68rem' }}>
+                        {tone === 'good' ? 'Healthy' : tone === 'watch' ? 'Watch' : 'Neutral'}
+                      </span>
+                    </div>
+                    <strong className="signal-card__title">{sig.title as string}</strong>
+                    {val && (
+                      <div className="signal-card__metric">
+                        <span className="signal-card__metric-value">{val}</span>
+                        {prev && <span className="signal-card__metric-prev">prev. {prev}</span>}
+                      </div>
+                    )}
+                    <p className="signal-card__detail">{sig.detail as string}</p>
+                    <div className="signal-card__footer">
+                      <span>{meta?.cta ?? 'Explore'}</span>
+                      <ArrowRight size={12} />
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* ════════════════════════════════════════════════════════════════
+            § 4 — SECTOR SPOTLIGHT
+            Left: Top hiring pressure sectors (vacancy rate)
+            Right: Top pay gap sectors (gender pay gap)
+            — uses chart series data from the API
+        ════════════════════════════════════════════════════════════════ */}
+        {(topVacancy.length > 0 || topPayGap.length > 0) && (
+          <section style={{ marginBottom: 24 }}>
+            <p className="panel__eyebrow" style={{ marginBottom: 10 }}>Sector Spotlight — ranked by market signal intensity</p>
+            <div className="dashboard-grid">
+
+              {/* Vacancy pressure ranking */}
+              {topVacancy.length > 0 && (
+                <div className="panel" style={{ padding: 22, minHeight: 'auto' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                    <div style={{ padding: 8, borderRadius: 8, background: 'var(--tone-watch-bg)', color: 'var(--tone-watch)', display: 'flex' }}>
+                      <Search size={15} />
+                    </div>
+                    <div>
+                      <p className="panel__eyebrow" style={{ margin: 0 }}>Hiring Pressure</p>
+                      <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-strong)' }}>
+                        Tightest talent markets
+                      </h3>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {topVacancy.map((row, i) => {
+                      const pct = ((row.value as number) / maxVacancy) * 100
+                      const isHotspot = i === 0
+                      return (
+                        <div key={i} className="sector-bar-row">
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', minWidth: 16 }}>#{i + 1}</span>
+                              <span style={{ fontSize: '0.82rem', color: 'var(--text-strong)', fontWeight: isHotspot ? 700 : 500 }}>
+                                {shortSector(row.sector_label as string)}
+                              </span>
+                              {isHotspot && (
+                                <span className="badge-action-needed" style={{ fontSize: '0.62rem', padding: '1px 6px' }}>
+                                  Hotspot
+                                </span>
+                              )}
+                            </div>
+                            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: isHotspot ? 'var(--tone-watch)' : 'var(--text-strong)', flexShrink: 0, marginLeft: 8 }}>
+                              {(row.value as number).toFixed(1)}%
+                            </span>
+                          </div>
+                          <div className="sector-bar-track">
+                            <div
+                              className={`sector-bar-fill sector-bar-fill--${isHotspot ? 'watch' : 'neutral'}`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  <p style={{ margin: '14px 0 0', fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                    Vacancy rate by sector · {topVacancy[0]?.period as string} · Higher = harder to fill roles
+                  </p>
+                  <button className="panel__action" onClick={() => navigate('/market')} style={{ marginTop: 10 }}>
+                    <BarChart2 size={13} /> Explore vacancy trends
+                  </button>
+                </div>
+              )}
+
+              {/* Pay gap ranking */}
+              {topPayGap.length > 0 && (
+                <div className="panel" style={{ padding: 22, minHeight: 'auto' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                    <div style={{ padding: 8, borderRadius: 8, background: 'rgba(251,191,36,0.12)', color: '#f59e0b', display: 'flex' }}>
+                      <ShieldAlert size={15} />
+                    </div>
+                    <div>
+                      <p className="panel__eyebrow" style={{ margin: 0 }}>Pay Equity Exposure</p>
+                      <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-strong)' }}>
+                        Widest market pay gaps
+                      </h3>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {topPayGap.map((row, i) => {
+                      const pct     = ((row.value as number) / maxPayGap) * 100
+                      const isWorst = i === 0
+                      return (
+                        <div key={i} className="sector-bar-row">
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', minWidth: 16 }}>#{i + 1}</span>
+                              <span style={{ fontSize: '0.82rem', color: 'var(--text-strong)', fontWeight: isWorst ? 700 : 500 }}>
+                                {shortSector(row.sector_label as string)}
+                              </span>
+                              {isWorst && (
+                                <span style={{ fontSize: '0.62rem', padding: '1px 6px', borderRadius: 4, background: 'rgba(251,191,36,0.12)', color: '#f59e0b', fontWeight: 700, flexShrink: 0 }}>
+                                  Widest
+                                </span>
+                              )}
+                            </div>
+                            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: isWorst ? '#f59e0b' : 'var(--text-strong)', flexShrink: 0, marginLeft: 8 }}>
+                              {(row.value as number).toFixed(1)}%
+                            </span>
+                          </div>
+                          <div className="sector-bar-track">
+                            <div
+                              className="sector-bar-fill sector-bar-fill--equity"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  <p style={{ margin: '14px 0 0', fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                    Market gender pay gap by sector · {topPayGap[0]?.period as string} · Internal exposure varies by headcount
+                  </p>
+                  <button className="panel__action" onClick={() => navigate('/pay-analysis')} style={{ marginTop: 10 }}>
+                    <Scale size={13} /> Open pay analysis
+                  </button>
                 </div>
               )}
             </div>
           </section>
         )}
 
-        {/* Command Centre Core Metrics Grid */}
-        <section className="metric-section" style={{ marginBottom: 28 }}>
-          <p className="panel__eyebrow" style={{ marginBottom: 12 }}>Key Indicators</p>
-          <div className="metric-grid">
-            {metrics.map((metric) => (
-              <MetricCard
-                key={metric.id as string}
-                metric={metric}
-                onClick={() => navigate('/market')}
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* Needs Attention Alert Center */}
-        {(urgentItems.length > 0 || positiveItems.length > 0) && (
-          <section className="metric-section" style={{ marginBottom: 28 }}>
-            {urgentItems.length > 0 && (
-              <>
-                <p className="panel__eyebrow" style={{ marginBottom: 12 }}>Needs Attention</p>
-                <div className="product-notes" style={{ marginBottom: positiveItems.length > 0 ? 12 : 0 }}>
-                  {urgentItems.map((item, i) => (
-                    <button
-                      key={i}
-                      className="product-note inline-notice inline-notice--watch"
-                      onClick={() => navigate(item.route)}
-                      style={{ textAlign: 'left', cursor: 'pointer', display: 'flex', width: '100%' }}
-                    >
-                      <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
-                      <span>{item.text}</span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-            {urgentItems.length === 0 && positiveItems.length > 0 && (
-              <>
-                <p className="panel__eyebrow" style={{ marginBottom: 12 }}>Looking good</p>
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  {positiveItems.map((item, i) => (
-                    <button
-                      key={i}
-                      className="product-note inline-notice inline-notice--good"
-                      onClick={() => navigate(item.route)}
-                      style={{ textAlign: 'left', cursor: 'pointer', flex: '1 1 auto' }}
-                    >
-                      <CheckCircle size={14} style={{ flexShrink: 0 }} />
-                      <span>{item.text}</span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
+        {/* ════════════════════════════════════════════════════════════════
+            § 5 — NEEDS ATTENTION
+        ════════════════════════════════════════════════════════════════ */}
+        {urgentItems.length > 0 && (
+          <section style={{ marginBottom: 24 }}>
+            <p className="panel__eyebrow" style={{ marginBottom: 10 }}>Needs Attention</p>
+            <div className="product-notes">
+              {urgentItems.map((item, i) => (
+                <button
+                  key={i}
+                  className="product-note inline-notice inline-notice--watch"
+                  onClick={() => navigate(item.route)}
+                  style={{ textAlign: 'left', cursor: 'pointer', display: 'flex', width: '100%' }}
+                >
+                  <AlertTriangle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
+                  <span>{item.text}</span>
+                </button>
+              ))}
+            </div>
           </section>
         )}
 
-        {/* Two-Column Analytics & Integrations Grid */}
-        <div className="dashboard-grid" style={{ marginBottom: 28 }}>
-          
-          {/* Column 1: Strategic Intelligence (Recommendations & Risks) */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            
-            {/* Actionable Recommendations */}
-            {recommendations.length > 0 && (
-              <section className="panel" style={{ minHeight: 'auto', padding: 22 }}>
-                <p className="panel__eyebrow">Strategic Recommendations</p>
-                <h2 style={{ margin: '6px 0 16px', fontSize: '1.15rem' }}>Action items</h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {recommendations.map((rec, i) => (
-                    <div key={i} className="action-card">
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                        <h3 style={{ margin: 0, fontSize: '0.94rem', fontWeight: 700, color: 'var(--text-strong)' }}>
-                          {rec.title as string}
-                        </h3>
-                        <span className={`badge-priority badge-priority--${String(rec.priority).toLowerCase()}`}>
-                          {String(rec.priority)}
-                        </span>
-                      </div>
-                      <p style={{ margin: '0 0 12px', fontSize: '0.84rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                        {rec.summary as string}
-                      </p>
-                      <button 
-                        onClick={() => navigate('/pay-analysis')} 
-                        className="insight-button"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.78rem', padding: '4px 0', border: 'none', background: 'none', color: 'var(--accent-primary)', fontWeight: 600, cursor: 'pointer' }}
-                      >
-                        Initiate analysis <ArrowRight size={12} />
-                      </button>
-                    </div>
-                  ))}
+        {/* ════════════════════════════════════════════════════════════════
+            § 6 — WHAT TO DO NEXT  (guided workflow)
+        ════════════════════════════════════════════════════════════════ */}
+        <section style={{ marginBottom: 24 }}>
+          <p className="panel__eyebrow" style={{ marginBottom: 10 }}>What to do next</p>
+          <div className="workflow-grid">
+            {handoffs.map((h) => {
+              const hid       = h.id as string
+              const meta      = HANDOFF_META[hid]
+              const Icon      = meta?.icon ?? FileText
+              const isBlocked = h.status === 'blocked'
+              return (
+                <div
+                  key={hid}
+                  className={`workflow-card${isBlocked ? ' workflow-card--blocked' : ''}`}
+                  onClick={() => !isBlocked && navigate(meta?.route ?? '/')}
+                  role="button"
+                  tabIndex={isBlocked ? -1 : 0}
+                  onKeyDown={e => e.key === 'Enter' && !isBlocked && navigate(meta?.route ?? '/')}
+                  aria-disabled={isBlocked}
+                >
+                  <div className="workflow-card__icon">
+                    {isBlocked ? <Lock size={18} /> : <Icon size={18} />}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <strong className="workflow-card__title">{h.title as string}</strong>
+                    <p className="workflow-card__desc">
+                      {isBlocked
+                        ? h.blocked_reason as string
+                        : (meta?.desc ?? h.approval_checkpoint as string)}
+                    </p>
+                  </div>
+                  {isBlocked
+                    ? <span className="badge-priority badge-priority--low" style={{ flexShrink: 0 }}>Locked</span>
+                    : <ArrowRight size={15} className="workflow-card__arrow" />}
                 </div>
-              </section>
-            )}
+              )
+            })}
 
-            {/* Risk Watchlist */}
-            {watchlist.length > 0 && (
-              <section className="panel" style={{ minHeight: 'auto', padding: 22 }}>
-                <p className="panel__eyebrow">Risk Watchlist</p>
-                <h2 style={{ margin: '6px 0 16px', fontSize: '1.15rem' }}>Monitored anomalies</h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {watchlist.map((w, i) => (
-                    <div key={i} className="risk-card" style={{ borderLeft: '3px solid var(--tone-watch)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                        <ShieldAlert size={14} style={{ color: 'var(--tone-watch)' }} />
-                        <h3 style={{ margin: 0, fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-strong)' }}>
-                          {w.title as string ?? w.label as string}
-                        </h3>
-                      </div>
-                      <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                        {w.summary as string}
-                      </p>
-                    </div>
-                  ))}
+            {/* Unlock nudge for EU27 */}
+            {isEU27 && !ptAvailable && (
+              <div className="workflow-card workflow-card--unlock">
+                <div className="workflow-card__icon workflow-card__icon--unlock">
+                  <Scale size={18} />
                 </div>
-              </section>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <strong className="workflow-card__title">Unlock Pay Transparency Simulation</strong>
+                  <p className="workflow-card__desc">
+                    Select a country above — <strong>France (FR)</strong>, <strong>Germany (DE)</strong> or <strong>Ireland (IE)</strong> — to simulate EU Pay Transparency Directive compliance against your internal pay categories.
+                  </p>
+                </div>
+              </div>
             )}
           </div>
+        </section>
 
-          {/* Column 2: Connected Systems, Governance & Quick Actions */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            
-            {/* Payroll Connectivity Card */}
-            <section className="panel" style={{ minHeight: 'auto', padding: 22 }}>
-              <p className="panel__eyebrow">Internal Systems</p>
-              <h2 style={{ margin: '6px 0 16px', fontSize: '1.15rem' }}>Payroll integration</h2>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, background: 'var(--bg-elevated)', border: '1px solid var(--border-light)' }}>
-                  <div style={{ padding: 10, borderRadius: 8, background: internalLoaded ? 'var(--tone-good-bg)' : 'var(--tone-watch-bg)', color: internalLoaded ? 'var(--tone-good)' : 'var(--tone-watch)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Database size={18} />
-                  </div>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <strong style={{ fontSize: '0.88rem', display: 'block', color: 'var(--text-strong)' }}>
-                      {internalLoaded ? 'Active Payroll Feed' : 'No Company Payroll Connected'}
-                    </strong>
-                    <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)', display: 'block', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                      {internalLoaded ? `As of ${internalData.snapshot_date as string}` : 'Upload CSV data to calculate internal benchmarks'}
-                    </span>
-                  </div>
+        {/* ════════════════════════════════════════════════════════════════
+            § 7 — BOTTOM ROW
+            Left: Pay transparency simulation  |  Right: Evidence pack + payroll
+        ════════════════════════════════════════════════════════════════ */}
+        <div className="dashboard-grid">
+
+          {/* Pay transparency */}
+          <section className="panel" style={{ padding: 22, minHeight: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <div>
+                <p className="panel__eyebrow" style={{ margin: '0 0 3px' }}>Pay Transparency</p>
+                <h2 style={{ margin: 0, fontSize: '1.05rem' }}>EU Directive simulation</h2>
+              </div>
+              {ptAvailable && (
+                <span className={`tone-chip ${unresolvedCount > 0 ? 'tone-chip--watch' : 'tone-chip--good'}`}>
+                  {unresolvedCount > 0 ? `${unresolvedCount} unresolved` : 'All clear'}
+                </span>
+              )}
+            </div>
+
+            {ptAvailable ? (
+              <>
+                {/* Summary stats */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
+                  {[
+                    { label: 'Categories', value: String(ptSummary.category_count ?? 0) },
+                    { label: 'Unresolved', value: String(unresolvedCount) },
+                    { label: 'Max internal gap', value: ptSummary.max_internal_gap != null ? `${(ptSummary.max_internal_gap as number).toFixed(1)}%` : '—' },
+                  ].map(s => (
+                    <div key={s.label} style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--bg-elevated)', border: '1px solid var(--border-light)', textAlign: 'center' }}>
+                      <span style={{ fontSize: '0.67rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.label}</span>
+                      <strong style={{ fontSize: '1rem', color: 'var(--text-strong)' }}>{s.value}</strong>
+                    </div>
+                  ))}
                 </div>
 
-                {internalLoaded && benchmarkAvailable && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <div style={{ border: '1px solid var(--border-light)', padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.01)' }}>
-                      <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'block', marginBottom: 2 }}>Headcount</span>
-                      <strong style={{ fontSize: '1.15rem', color: 'var(--text-strong)' }}>{companyBenchmark.headcount as number}</strong>
-                    </div>
-                    <div style={{ border: '1px solid var(--border-light)', padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.01)' }}>
-                      <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'block', marginBottom: 2 }}>Confidence</span>
-                      <strong style={{ fontSize: '1.15rem', color: companyBenchmark.confidence === 'high' ? 'var(--tone-good)' : 'var(--text-strong)' }}>
-                        {String(companyBenchmark.confidence ?? 'Medium').toUpperCase()}
-                      </strong>
-                    </div>
-                  </div>
-                )}
-
-                {/* Upload Zone */}
-                <div className="upload-dropzone" style={{ border: '2px dashed var(--border-medium)', borderRadius: 12, padding: '18px 12px', textAlign: 'center', background: 'rgba(255,255,255,0.01)', position: 'relative', cursor: 'pointer', transition: 'all 0.2s ease' }}>
-                  <input
-                    type="file"
-                    accept=".csv"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (file) uploadPayroll(file)
-                    }}
-                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer', zIndex: 2 }}
-                    aria-label="Upload Payroll CSV File"
-                  />
-                  <Upload size={22} style={{ margin: '0 auto 8px', color: 'var(--text-muted)' }} />
-                  <span style={{ fontSize: '0.82rem', fontWeight: 600, display: 'block', color: 'var(--text-strong)', marginBottom: 2 }}>
-                    Upload payroll CSV
-                  </span>
-                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-                    Drag & drop or click to browse
-                  </span>
-                </div>
-              </div>
-            </section>
-
-            {/* Governance Events & Actions */}
-            <section className="panel" style={{ minHeight: 'auto', padding: 22 }}>
-              <p className="panel__eyebrow">Governance</p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <h2 style={{ margin: 0, fontSize: '1.15rem' }}>Recent Decisions Log</h2>
-                <button 
-                  onClick={() => navigate('/govern')} 
-                  className="insight-button"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.76rem', padding: 0, border: 'none', background: 'none', color: 'var(--accent-primary)', fontWeight: 600, cursor: 'pointer' }}
-                >
-                  View log <ArrowRight size={12} />
-                </button>
-              </div>
-
-              {loggedEvents.length === 0 ? (
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.84rem', margin: 0 }}>
-                  No governance actions recorded yet. Override or approve category gaps in Pay Analysis to begin.
-                </p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {loggedEvents.slice(0, 3).map((event, idx) => (
-                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderRadius: 8, background: 'var(--bg-elevated)', border: '1px solid var(--border-light)', fontSize: '0.8rem' }}>
-                      <div style={{ minWidth: 0, flex: 1, paddingRight: 10 }}>
-                        <strong style={{ color: 'var(--text-strong)', display: 'block', fontSize: '0.82rem', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                          {(event.action_label as string) ?? (event.action_code as string)}
+                {/* Top review items */}
+                {ptTopItems.slice(0, 3).map((item, i) => {
+                  const cat     = item.worker_category as AnyObj
+                  const intGap  = (item.internal_gap as number).toFixed(1)
+                  const mktGap  = (item.market_gap as number).toFixed(1)
+                  const delta   = item.gap_to_market as number
+                  const isAbove = delta > 0
+                  return (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 12px', borderRadius: 8, background: 'var(--bg-elevated)', border: '1px solid var(--border-light)', marginBottom: 7 }}>
+                      <div style={{ minWidth: 0 }}>
+                        <strong style={{ fontSize: '0.83rem', color: 'var(--text-strong)', display: 'block' }}>
+                          {cat.label as string}
                         </strong>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem', display: 'block', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                          {(event.target_label as string) ?? (event.target_id as string)}
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                          Internal {intGap}% · Market benchmark {mktGap}%
                         </span>
                       </div>
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                        {formatDate(event.recorded_at)}
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: Math.abs(delta) > 1 ? 'var(--tone-watch)' : 'var(--tone-good)', flexShrink: 0, marginLeft: 10 }}>
+                        {isAbove ? '+' : ''}{delta.toFixed(1)} pts
                       </span>
                     </div>
+                  )
+                })}
+
+                <button className="panel__action" onClick={() => navigate('/pay-analysis')} style={{ marginTop: 8 }}>
+                  <Scale size={13} /> Review all {ptSummary.category_count as number} categories
+                </button>
+              </>
+            ) : (
+              <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                <div style={{ padding: 10, borderRadius: 10, background: 'var(--bg-elevated)', flexShrink: 0 }}>
+                  <Lock size={18} style={{ color: 'var(--text-muted)' }} />
+                </div>
+                <div>
+                  <p style={{ margin: '0 0 8px', fontSize: '0.83rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                    {ptNote || 'Select a specific country to simulate compliance under the EU Pay Transparency Directive (2023/970).'}
+                  </p>
+                  <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--accent-primary)', fontWeight: 600 }}>
+                    → Try: France (FR), Germany (DE) or Ireland (IE)
+                  </p>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* Evidence pack + payroll */}
+          <section className="panel" style={{ padding: 22, minHeight: 'auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+            <div>
+              <p className="panel__eyebrow" style={{ margin: '0 0 3px' }}>Compliance Export</p>
+              <h2 style={{ margin: '0 0 10px', fontSize: '1.05rem' }}>Evidence pack</h2>
+              <p style={{ margin: '0 0 12px', fontSize: '0.81rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                A cryptographically-hashed JSON bundle containing all market data, pay simulation states, and your full governance audit trail ({eventCount} events) — ready for legal or regulatory review.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 16 }}>
+                {[
+                  'Live Eurostat market snapshots (LFS, JVS)',
+                  'Pay transparency simulation results',
+                  `Governance audit log (${eventCount} events, SHA-256 hash-chained)`,
+                  'Benchmark basis & provenance metadata',
+                ].map(item => (
+                  <div key={item} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                    <CheckCircle size={12} style={{ color: 'var(--tone-good)', flexShrink: 0, marginTop: 2 }} />
+                    {item}
+                  </div>
+                ))}
+              </div>
+              <button
+                className="filter-bar__button"
+                onClick={exportEvidencePack}
+                disabled={exporting}
+                style={{ display: 'inline-flex', gap: 8, alignItems: 'center', width: '100%', justifyContent: 'center' }}
+              >
+                <Download size={14} />
+                {exporting ? 'Preparing...' : 'Export evidence pack'}
+              </button>
+            </div>
+
+            <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: 18 }}>
+              <p className="panel__eyebrow" style={{ margin: '0 0 3px' }}>Internal Payroll</p>
+              <h2 style={{ margin: '0 0 10px', fontSize: '1.05rem' }}>
+                {benchmarkAvail ? 'Benchmark active' : 'Connect your data'}
+              </h2>
+              {benchmarkAvail ? (
+                <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
+                  {[
+                    { l: 'Headcount', v: String(cb.headcount) },
+                    { l: 'Internal gap', v: `${(cb.internal_value as number)?.toFixed(1)}%` },
+                    { l: 'vs Market', v: cb.delta_label as string },
+                  ].map(s => (
+                    <div key={s.l}>
+                      <span style={{ fontSize: '0.67rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 2 }}>{s.l}</span>
+                      <strong style={{ fontSize: '0.9rem', color: 'var(--text-strong)' }}>{s.v ?? '—'}</strong>
+                    </div>
                   ))}
                 </div>
+              ) : (
+                <p style={{ margin: '0 0 10px', fontSize: '0.79rem', color: 'var(--text-muted)', lineHeight: 1.55 }}>
+                  Upload a payroll CSV to benchmark your internal gender pay gap against live Eurostat data and activate the pay transparency simulation.
+                </p>
               )}
-            </section>
-          </div>
-        </div>
+              <div className="upload-dropzone">
+                <input type="file" accept=".csv" onChange={e => { const f = e.target.files?.[0]; if (f) uploadPayroll(f) }} aria-label="Upload Payroll CSV File" />
+                <Upload size={18} style={{ margin: '0 auto 5px', color: 'var(--text-muted)' }} />
+                <span style={{ fontSize: '0.79rem', fontWeight: 600, display: 'block', color: 'var(--text-strong)', marginBottom: 2 }}>
+                  {benchmarkAvail ? 'Replace payroll CSV' : 'Upload payroll CSV'}
+                </span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Drag & drop or click to browse</span>
+              </div>
+            </div>
 
-        {/* Global Compliance Quick Actions Bar */}
-        <section className="panel" style={{ minHeight: 'auto', padding: '20px 22px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
-          <div>
-            <h3 style={{ margin: '0 0 4px', fontSize: '1rem', fontWeight: 700, color: 'var(--text-strong)' }}>
-              Export Evidence Package
-            </h3>
-            <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-              Generate a verified JSON bundle of all active market datasets, compliance simulation states, and governance audit trails.
-            </p>
-          </div>
-          <button
-            className="filter-bar__button"
-            onClick={exportEvidencePack}
-            disabled={exporting}
-            style={{ display: 'inline-flex', gap: 8, alignItems: 'center', whiteSpace: 'nowrap' }}
-          >
-            <Download size={15} />
-            {exporting ? 'Preparing pack...' : 'Export evidence'}
-          </button>
-        </section>
+          </section>
+        </div>
 
       </DataState>
     </div>
