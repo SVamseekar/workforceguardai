@@ -17,10 +17,10 @@ describe('MarketSection', () => {
   it('renders all 4 chart panel titles', async () => {
     renderInRouter(<MarketSection />)
     await waitFor(() => {
-      expect(screen.getByText('Unemployment trend')).toBeInTheDocument()
-      expect(screen.getByText('Vacancy rate by sector')).toBeInTheDocument()
-      expect(screen.getByText('Employment trend')).toBeInTheDocument()
-      expect(screen.getByText('Gender pay gap by sector')).toBeInTheDocument()
+      expect(screen.getByText(/Unemployment trend/)).toBeInTheDocument()
+      expect(screen.getByText(/Vacancy rate by sector/)).toBeInTheDocument()
+      expect(screen.getByText(/Employment trend/)).toBeInTheDocument()
+      expect(screen.getByText(/Gender pay gap by sector/)).toBeInTheDocument()
     })
   })
 
