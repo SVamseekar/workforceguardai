@@ -29,7 +29,7 @@ export const MOCK_OVERVIEW = {
     recommendations: [{ title: 'Monitor manufacturing vacancies', priority: 'high', summary: 'Consider pipeline review.' }],
     watchlist: [{ label: 'Youth unemployment', tone: 'watch', summary: 'Elevated vs EU average.' }],
   },
-  brief: { headline: 'Labour market stable with vacancy pressure', summary: 'Overall conditions remain stable.' },
+  brief: { headline: 'Labour market stable with vacancy pressure', summary: { headline: 'Labour market stable with vacancy pressure', body: 'Overall conditions remain stable.' } },
   company_benchmark: { available: false, note: 'No company data loaded.' },
   internal_data: { available: false, note: 'No internal data.' },
   semantic_metrics: [],

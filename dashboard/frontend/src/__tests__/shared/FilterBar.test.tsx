@@ -14,6 +14,11 @@ const DEFAULT_FILTERS = {
 
 const DEFAULT_OPTIONS = {
   countries: [{ id: 'FR', label: 'France' }, { id: 'DE', label: 'Germany' }],
+  geography_options: [
+    { id: 'EU27_AVG', label: 'EU27 proxy market average' },
+    { id: 'FR', label: 'France', nuts_level: 0 },
+    { id: 'DE', label: 'Germany', nuts_level: 0 },
+  ],
   sectors: [{ id: 'C', label: 'Manufacturing' }],
   periods: [{ id: 'latest', label: 'Latest' }, { id: '2023', label: '2023' }],
   benchmark_geographies: [],

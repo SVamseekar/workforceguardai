@@ -75,7 +75,7 @@ export function HomeSection() {
   /* ── brief & deltas ─────────────────────────────────────────────────── */
   const briefRaw     = (ov.brief as AnyObj | undefined) ?? {}
   const briefSummary = (briefRaw.summary as AnyObj | undefined) ?? {}
-  const headline     = String(briefSummary.headline ?? briefRaw.title ?? '')
+  const headline     = String(briefRaw.headline ?? briefSummary.headline ?? briefRaw.title ?? '')
   const bodyText     = String(briefSummary.body ?? '')
   const confidence   = String(briefSummary.confidence ?? '')
   const whatChanged  = (briefRaw.what_changed as AnyObj | undefined) ?? {}

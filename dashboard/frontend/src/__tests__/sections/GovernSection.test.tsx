@@ -58,7 +58,8 @@ describe('GovernSection', () => {
         HttpResponse.json({
           ...MOCK_OVERVIEW,
           automation: {
-            scheduled_workflows: [{ id: 'wf-1', label: 'Weekly brief', status: 'active' }],
+            configured_schedules: [{ id: 'wf-1', label: 'Weekly brief', status: 'active', cadence: 'weekly' }],
+            scheduled_briefs: [],
             pending_handoffs: [],
           },
         }),
