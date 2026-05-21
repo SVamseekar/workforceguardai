@@ -276,11 +276,11 @@ async def upload_payroll(file: UploadFile = File(...)):
     result = guarded(repository.ingest_uploaded_payroll, content)
 
     # Trigger dbt rebuild of internal models in the background
-    analytics_dir = Path(__file__).resolve().parents[2] / "analytics"
+    analytics_dir = root_dir / "analytics"
     if analytics_dir.exists():
         try:
             subprocess.Popen(
-                ["dbt", "run", "--select", "tag:internal"],
+                ["dbt", "run", "--select", "tag:internal", "--profiles-dir", "."],
                 cwd=str(analytics_dir),
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
