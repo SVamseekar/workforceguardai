@@ -20,13 +20,15 @@ function SelectField({ label, value, options, onChange }: { label: string; value
 }
 
 export function FilterBar({ filters, options, onFilterChange, onAnalyse, children }: { filters: Filters; options: Record<string, unknown>; onFilterChange: (f: Filters) => void; onAnalyse?: () => void; children?: ReactNode }) {
-  // Support both old key names (countries/sectors/periods) and backend key names (country_options/sector_options/period_options)
-  const rawCountries = (options?.countries ?? options?.country_options) as SelectOption[] | undefined
+  const geoOptions = (options?.geography_options ?? options?.benchmark_geographies) as Array<{id: string; label: string; nuts_level?: number; country_code?: string}> | undefined
+  const rawCountries: SelectOption[] = geoOptions
+    ? geoOptions.filter(g => g.id === 'EU27_AVG' || g.nuts_level === 0).map(g => ({ id: g.id, label: g.label }))
+    : [{ id: 'ALL', label: 'All countries' }]
   const rawSectors = (options?.sectors ?? options?.sector_options) as SelectOption[] | undefined
   const rawPeriods = (options?.periods ?? options?.period_options) as SelectOption[] | undefined
   const rawBenchmarks = (options?.benchmark_geographies ?? options?.geography_options) as SelectOption[] | undefined
 
-  const countryOptions = rawCountries?.length ? rawCountries : [{ id: 'ALL', label: 'All countries' }]
+  const countryOptions = rawCountries.length ? rawCountries : [{ id: 'ALL', label: 'All countries' }]
   const sectorOptions = rawSectors?.length ? rawSectors : [{ id: 'ALL', label: 'All sectors' }]
   const periodOptions = rawPeriods ?? []
   const benchmarkOptions = rawBenchmarks ?? []
