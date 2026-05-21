@@ -10,6 +10,8 @@ import { PayAnalysisSection } from './components/sections/PayAnalysisSection'
 import { GovernSection } from './components/sections/GovernSection'
 import { CompareSection } from './components/sections/CompareSection'
 import { NoticeBar } from './components/shared/NoticeBar'
+import { SidebarContext } from './components/layout/SidebarContext'
+import { useOverviewData } from './hooks/useOverviewData'
 import './App.css'
 
 const queryClient = new QueryClient({
@@ -20,6 +22,30 @@ const queryClient = new QueryClient({
     },
   },
 })
+
+function SidebarProvider({ children }: { children: React.ReactNode }) {
+  const { overview } = useOverviewData()
+  const ov = (overview ?? {}) as Record<string, unknown>
+  const intel = (ov.intelligence as Record<string, unknown>) ?? {}
+  const signals = (intel.signals as Array<Record<string, unknown>>) ?? []
+  const govRaw = (ov.governance as Record<string, unknown>) ?? {}
+  const integrity = (govRaw.integrity as Record<string, unknown>) ?? {}
+  const appliedFilters = ((ov.filters as Record<string, unknown>)?.applied as Record<string, unknown>) ?? {}
+
+  const topSignal = signals[0]
+    ? { title: signals[0].title as string, tone: signals[0].tone as string, detail: (signals[0].summary as string) ?? '' }
+    : null
+
+  return (
+    <SidebarContext.Provider value={{
+      geographyLabel: (appliedFilters.geography_label as string) ?? '',
+      topSignal,
+      governanceEventCount: (integrity.event_count as number) ?? 0,
+    }}>
+      {children}
+    </SidebarContext.Provider>
+  )
+}
 
 function AppShell() {
   const [copilotOpen, setCopilotOpen] = useState(false)
@@ -40,16 +66,18 @@ function AppShell() {
     <div className="app-shell">
       <TopBar theme={theme} onToggleTheme={toggleTheme} />
       <div className="app-body">
-        <Sidebar onCopilotOpen={() => setCopilotOpen(true)} />
-        <main className="app-main">
-          <Routes>
-            <Route path="/" element={<HomeSection />} />
-            <Route path="/market" element={<MarketSection />} />
-            <Route path="/compare" element={<CompareSection />} />
-            <Route path="/pay-analysis" element={<PayAnalysisSection />} />
-            <Route path="/govern" element={<GovernSection />} />
-          </Routes>
-        </main>
+        <SidebarProvider>
+          <Sidebar onCopilotOpen={() => setCopilotOpen(true)} />
+          <main className="app-main">
+            <Routes>
+              <Route path="/" element={<HomeSection />} />
+              <Route path="/market" element={<MarketSection />} />
+              <Route path="/compare" element={<CompareSection />} />
+              <Route path="/pay-analysis" element={<PayAnalysisSection />} />
+              <Route path="/govern" element={<GovernSection />} />
+            </Routes>
+          </main>
+        </SidebarProvider>
       </div>
       {copilotOpen && <CopilotPanel onClose={() => setCopilotOpen(false)} />}
       <NoticeBar />
