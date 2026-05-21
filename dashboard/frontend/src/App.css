@@ -536,6 +536,25 @@
   color: var(--text-strong);
 }
 
+/* ── Benchmark Context Notice ──────────────────────────────────────────── */
+.benchmark-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  padding: 0 2px;
+}
+
+.benchmark-notice__basis {
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.benchmark-notice__summary {
+  color: var(--text-muted);
+}
+
 /* ── Intelligence & Signals ────────────────────────────────────────────── */
 .intelligence-section {
   display: grid;

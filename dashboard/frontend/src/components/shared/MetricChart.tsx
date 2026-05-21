@@ -1,6 +1,6 @@
 import {
   ResponsiveContainer, LineChart, Line, BarChart, Bar,
-  XAxis, YAxis, CartesianGrid, Tooltip,
+  XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine,
 } from 'recharts'
 
 type AnyObj = Record<string, unknown>
@@ -31,6 +31,8 @@ interface MetricChartProps {
   xKey?: string
   unit?: string
   color?: string
+  referenceValue?: number
+  referenceLabel?: string
 }
 
 export function MetricChart({
@@ -40,6 +42,8 @@ export function MetricChart({
   xKey = 'period',
   unit = '%',
   color = '#7ff4ea',
+  referenceValue,
+  referenceLabel,
 }: MetricChartProps) {
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -50,6 +54,15 @@ export function MetricChart({
           <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} unit={unit} />
           <Tooltip content={<ChartTooltip unit={unit} />} />
           <Line type="monotone" dataKey={dataKey} stroke={color} strokeWidth={2} dot={false} />
+          {referenceValue != null && (
+            <ReferenceLine
+              y={referenceValue}
+              stroke="var(--text-muted)"
+              strokeDasharray="4 4"
+              strokeWidth={1}
+              label={{ value: referenceLabel ?? `EU avg ${referenceValue.toFixed(1)}${unit}`, fill: 'var(--text-muted)', fontSize: 10, position: 'insideTopRight' }}
+            />
+          )}
         </LineChart>
       ) : (
         <BarChart data={data}>
@@ -58,6 +71,15 @@ export function MetricChart({
           <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} unit={unit} />
           <Tooltip content={<ChartTooltip unit={unit} />} />
           <Bar dataKey={dataKey} fill={color} radius={[4, 4, 0, 0]} />
+          {referenceValue != null && (
+            <ReferenceLine
+              y={referenceValue}
+              stroke="var(--text-muted)"
+              strokeDasharray="4 4"
+              strokeWidth={1}
+              label={{ value: referenceLabel ?? `EU avg ${referenceValue.toFixed(1)}${unit}`, fill: 'var(--text-muted)', fontSize: 10, position: 'insideTopRight' }}
+            />
+          )}
         </BarChart>
       )}
     </ResponsiveContainer>
