@@ -30,6 +30,8 @@ jobs:
              sudo systemctl restart workforceguard-api
              sleep 8
              curl -sf http://localhost:8080/health || (echo "Health check failed" && exit 1)
+             docker exec workforceguard-api sh -c "cd /app_root/analytics && dbt run --profiles-dir ."
+             curl -sf http://localhost:8080/health || (echo "Post-dbt health check failed" && exit 1)
              echo "Backend deployed successfully"'
 
   deploy-frontend:
