@@ -1,0 +1,8 @@
+[     642ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e5892365:20102
+[     765ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/api/overview?country=ALL&geography=EU27_AVG&sector=ALL&period=latest&benchmark_geography=&benchmark_sector=:0
+[    1772ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/api/overview?country=ALL&geography=EU27_AVG&sector=ALL&period=latest&benchmark_geography=&benchmark_sector=:0
+[    3774ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/api/overview?country=ALL&geography=EU27_AVG&sector=ALL&period=latest&benchmark_geography=&benchmark_sector=:0
+[   26173ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5173/@vite/client:864
+[   27458ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e5892365:20102
+[   31723ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5173/@vite/client:864
+[   34198ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:5173/node_modules/.vite/deps/react-dom_client.js?v=e5892365:20102

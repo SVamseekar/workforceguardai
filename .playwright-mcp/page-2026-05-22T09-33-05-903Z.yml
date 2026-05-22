@@ -1,0 +1,80 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - img "WorkforceGuard" [ref=e6]
+    - generic [ref=e7]: WorkforceGuard AI
+    - generic [ref=e8]:
+      - generic [ref=e10]: All countries · All sectors · Latest
+      - button "Toggle Theme" [ref=e11] [cursor=pointer]:
+        - img [ref=e12]
+  - generic [ref=e14]:
+    - navigation [ref=e15]:
+      - list [ref=e16]:
+        - listitem [ref=e17]:
+          - link "Home" [ref=e18] [cursor=pointer]:
+            - /url: /
+            - img [ref=e19]
+            - generic [ref=e22]: Home
+        - listitem [ref=e23]:
+          - link "Market Intelligence" [ref=e24] [cursor=pointer]:
+            - /url: /market
+            - img [ref=e25]
+            - generic [ref=e26]: Market Intelligence
+        - listitem [ref=e27]:
+          - link "Compare" [ref=e28] [cursor=pointer]:
+            - /url: /compare
+            - img [ref=e29]
+            - generic [ref=e34]: Compare
+        - listitem [ref=e35]:
+          - link "Pay Analysis" [ref=e36] [cursor=pointer]:
+            - /url: /pay-analysis
+            - img [ref=e37]
+            - generic [ref=e41]: Pay Analysis
+        - listitem [ref=e42]:
+          - link "Govern & Export" [ref=e43] [cursor=pointer]:
+            - /url: /govern
+            - img [ref=e44]
+            - generic [ref=e47]: Govern & Export
+      - button "AI Analyst" [ref=e49] [cursor=pointer]:
+        - img [ref=e50]
+        - generic [ref=e52]: AI Analyst
+    - main [ref=e53]:
+      - generic [ref=e54]:
+        - generic [ref=e55]:
+          - img [ref=e56]
+          - generic [ref=e59]: Loading data…
+        - paragraph [ref=e60]: Compare
+        - generic [ref=e61]:
+          - generic [ref=e62]:
+            - paragraph [ref=e63]: Primary view
+            - heading "EU27 Average" [level=3] [ref=e64]
+            - generic [ref=e66]:
+              - generic [ref=e67]:
+                - generic [ref=e68]: Country
+                - combobox "Country Country" [ref=e69]:
+                  - option "EU27 average" [selected]
+              - generic [ref=e70]:
+                - generic [ref=e71]: Sector
+                - combobox "Sector Sector" [ref=e72]:
+                  - option "All sectors" [selected]
+              - generic [ref=e73]:
+                - generic [ref=e74]: Period
+                - combobox "Period Period" [ref=e75]:
+                  - option "Latest" [selected]
+            - status "Loading data" [ref=e76]
+          - generic [ref=e103]:
+            - paragraph [ref=e104]: Comparator
+            - heading "FR" [level=3] [ref=e105]
+            - generic [ref=e107]:
+              - generic [ref=e108]:
+                - generic [ref=e109]: Country
+                - combobox [ref=e110]:
+                  - option "EU27 average" [selected]
+              - generic [ref=e111]:
+                - generic [ref=e112]: Sector
+                - combobox [ref=e113]:
+                  - option "All sectors" [selected]
+              - generic [ref=e114]:
+                - generic [ref=e115]: Period
+                - combobox [ref=e116]:
+                  - option "Latest" [selected]
+            - status "Loading data" [ref=e117]

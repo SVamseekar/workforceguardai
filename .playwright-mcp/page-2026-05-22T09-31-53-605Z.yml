@@ -1,0 +1,395 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - img "WorkforceGuard" [ref=e6]
+    - generic [ref=e7]: WorkforceGuard AI
+    - generic [ref=e8]:
+      - generic [ref=e10]: All countries · All sectors · Latest
+      - button "Toggle Theme" [ref=e11] [cursor=pointer]:
+        - img [ref=e12]
+  - generic [ref=e14]:
+    - navigation [ref=e15]:
+      - list [ref=e16]:
+        - listitem [ref=e17]:
+          - link "Home" [ref=e18] [cursor=pointer]:
+            - /url: /
+            - img [ref=e19]
+            - generic [ref=e22]: Home
+        - listitem [ref=e23]:
+          - link "Market Intelligence" [ref=e24] [cursor=pointer]:
+            - /url: /market
+            - img [ref=e25]
+            - generic [ref=e26]: Market Intelligence
+        - listitem [ref=e27]:
+          - link "Compare" [ref=e28] [cursor=pointer]:
+            - /url: /compare
+            - img [ref=e29]
+            - generic [ref=e34]: Compare
+        - listitem [ref=e35]:
+          - link "Pay Analysis" [ref=e36] [cursor=pointer]:
+            - /url: /pay-analysis
+            - img [ref=e37]
+            - generic [ref=e41]: Pay Analysis
+        - listitem [ref=e42]:
+          - link "Govern & Export 9" [ref=e100] [cursor=pointer]:
+            - /url: /govern
+            - img [ref=e44]
+            - generic [ref=e47]: Govern & Export
+            - generic [ref=e101]: "9"
+      - generic [ref=e102]:
+        - paragraph [ref=e103]: Viewing
+        - paragraph [ref=e104]: EU27 proxy market average
+        - generic [ref=e105]:
+          - generic [ref=e107]: Hiring pressure
+          - generic [ref=e108]: Neutral
+      - button "AI Analyst" [ref=e49] [cursor=pointer]:
+        - img [ref=e50]
+        - generic [ref=e52]: AI Analyst
+    - main [ref=e53]:
+      - generic [ref=e54]:
+        - generic [ref=e55]:
+          - paragraph [ref=e56]: Command Centre
+          - generic [ref=e57]:
+            - img [ref=e58]
+            - generic [ref=e61]: As of 22 May 2026, 09:31 UTC
+        - generic [ref=e63]:
+          - generic [ref=e64]:
+            - generic [ref=e65]: Country
+            - combobox "Country" [ref=e66]:
+              - option "EU27 proxy market average" [selected]
+              - option "Austria"
+              - option "Belgium"
+              - option "Bulgaria"
+              - option "Cyprus"
+              - option "Czechia"
+              - option "Germany"
+              - option "Denmark"
+              - option "Estonia"
+              - option "Greece"
+              - option "Spain"
+              - option "Finland"
+              - option "France"
+              - option "Croatia"
+              - option "Hungary"
+              - option "Ireland"
+              - option "Italy"
+              - option "Lithuania"
+              - option "Luxembourg"
+              - option "Latvia"
+              - option "Malta"
+              - option "Netherlands"
+              - option "Poland"
+              - option "Portugal"
+              - option "Romania"
+              - option "Sweden"
+              - option "Slovenia"
+              - option "Slovakia"
+          - generic [ref=e67]:
+            - generic [ref=e68]: Sector
+            - combobox "Sector" [ref=e69]:
+              - option "All sectors" [selected]
+              - option "Accommodation and food service activities"
+              - option "Administrative and support service activities"
+              - option "Agriculture, forestry and fishing"
+              - option "Arts, entertainment and recreation"
+              - option "Construction"
+              - option "Education"
+              - option "Electricity, gas, steam and air conditioning supply"
+              - option "Financial and insurance activities"
+              - option "Human health and social work activities"
+              - option "Information and communication"
+              - option "Manufacturing"
+              - option "Mining and quarrying"
+              - option "Other service activities"
+              - option "Professional, scientific and technical activities"
+              - option "Public administration and defence; compulsory social security"
+              - option "Real estate activities"
+              - option "Transportation and storage"
+              - option "Water supply; sewerage, waste management and remediation activities"
+              - option "Wholesale and retail trade; repair of motor vehicles and motorcycles"
+          - generic [ref=e70]:
+            - generic [ref=e71]: Period
+            - combobox "Period" [ref=e72]:
+              - option "Latest available" [selected]
+              - option "2024"
+              - option "2023"
+              - option "2022"
+              - option "2021"
+              - option "2020"
+              - option "2019"
+          - generic [ref=e109]:
+            - generic [ref=e110]: Compare against
+            - combobox "Compare against" [ref=e111]:
+              - option "EU27 proxy market average" [selected]
+              - option "Austria"
+              - option "Belgium"
+              - option "Bulgaria"
+              - option "Cyprus"
+              - option "Czechia"
+              - option "Germany"
+              - option "Denmark"
+              - option "Estonia"
+              - option "Greece"
+              - option "Spain"
+              - option "Finland"
+              - option "France"
+              - option "Croatia"
+              - option "Hungary"
+              - option "Ireland"
+              - option "Italy"
+              - option "Lithuania"
+              - option "Luxembourg"
+              - option "Latvia"
+              - option "Malta"
+              - option "Netherlands"
+              - option "Poland"
+              - option "Portugal"
+              - option "Romania"
+              - option "Sweden"
+              - option "Slovenia"
+              - option "Slovakia"
+        - generic [ref=e112]:
+          - generic [ref=e113]:
+            - generic [ref=e114]:
+              - generic [ref=e115]: Hiring pressure index
+              - generic [ref=e116]: 64/100
+            - paragraph [ref=e119]: Measures how difficult it is to hire in a region and sector using vacancy intensity, labour slack, and candidate movement signals.
+          - generic [ref=e120]:
+            - generic [ref=e121]:
+              - generic [ref=e122]: Labour resilience
+              - generic [ref=e123]: 79/100
+            - paragraph [ref=e126]: Summarizes labour-market strength using employment, unemployment, and workforce participation pressure.
+          - generic [ref=e127]:
+            - generic [ref=e128]:
+              - generic [ref=e129]: Equity risk score
+              - generic [ref=e130]: 50/100
+            - paragraph [ref=e133]: Signals likely pay-equity or representation pressure using pay-gap and workforce-balance inputs.
+          - generic [ref=e134]:
+            - generic [ref=e135]:
+              - generic [ref=e136]: Transition readiness
+              - generic [ref=e137]: 75/100
+            - paragraph [ref=e140]: Signals how prepared a region or company is for green and digital workforce shifts.
+        - generic [ref=e141]:
+          - generic [ref=e142]:
+            - paragraph [ref=e143]: Executive Brief
+            - generic [ref=e145]:
+              - img [ref=e146]
+              - text: "Benchmark: Prior period"
+          - heading "Conditions are stable overall, with a few hotspots worth acting on first." [level=1] [ref=e149]
+          - generic [ref=e150]:
+            - generic [ref=e151]: Sources
+            - generic [ref=e152]: Eurostat Job Vacancy Statistics
+            - generic [ref=e153]: Eurostat Labour Force Survey
+        - generic [ref=e154]:
+          - paragraph [ref=e155]: Live Market Indicators
+          - generic [ref=e156]:
+            - article [ref=e157] [cursor=pointer]:
+              - paragraph [ref=e159]: Average job vacancy rate
+              - paragraph [ref=e160]: 1.7%
+              - paragraph [ref=e161]: 0.1 pts below · Prior period
+              - generic [ref=e164]: Neutral
+            - article [ref=e165] [cursor=pointer]:
+              - paragraph [ref=e167]: Unemployment rate
+              - paragraph [ref=e168]: 5.8%
+              - paragraph [ref=e169]: In line · Prior period
+              - generic [ref=e172]: Neutral
+            - article [ref=e173] [cursor=pointer]:
+              - paragraph [ref=e175]: Employment rate
+              - paragraph [ref=e176]: 77.3%
+              - paragraph [ref=e177]: 0.5 pts above · Prior period
+              - generic [ref=e180]: Good
+            - article [ref=e181] [cursor=pointer]:
+              - paragraph [ref=e183]: Gender pay gap
+              - paragraph [ref=e184]: 11.1%
+              - paragraph [ref=e185]: 0.4 pts below · Prior period
+              - generic [ref=e188]: Good
+        - generic [ref=e189]:
+          - paragraph [ref=e190]: Analyst Recommendations
+          - generic [ref=e191]:
+            - button "medium Use Prior period as the benchmark check Employment rate is 0.5 pts above Prior period. Treat that as the first external benchmark check before changing hiring, mobility, or pay decisions. Take action" [ref=e192] [cursor=pointer]:
+              - generic [ref=e194]: medium
+              - strong [ref=e195]: Use Prior period as the benchmark check
+              - paragraph [ref=e196]: Employment rate is 0.5 pts above Prior period. Treat that as the first external benchmark check before changing hiring, mobility, or pay decisions.
+              - generic [ref=e197]:
+                - generic [ref=e198]: Take action
+                - img [ref=e199]
+            - button "medium Review required Focus hiring analysis on Administrative and support service activities Administrative and support service activities has the strongest vacancy signal at 3.0%. Investigate talent supply, compensation competitiveness, and channel mix there first. Take action" [ref=e201] [cursor=pointer]:
+              - generic [ref=e202]:
+                - generic [ref=e203]: medium
+                - generic [ref=e204]:
+                  - img [ref=e205]
+                  - text: Review required
+              - strong [ref=e207]: Focus hiring analysis on Administrative and support service activities
+              - paragraph [ref=e208]: Administrative and support service activities has the strongest vacancy signal at 3.0%. Investigate talent supply, compensation competitiveness, and channel mix there first.
+              - generic [ref=e209]:
+                - generic [ref=e210]: Take action
+                - img [ref=e211]
+            - button "medium Review required Review pay-equity risk in Financial and insurance activities Financial and insurance activities shows the widest market pay gap at 24.3%. Use this as a benchmark for internal pay-review readiness. Take action" [ref=e213] [cursor=pointer]:
+              - generic [ref=e214]:
+                - generic [ref=e215]: medium
+                - generic [ref=e216]:
+                  - img [ref=e217]
+                  - text: Review required
+              - strong [ref=e219]: Review pay-equity risk in Financial and insurance activities
+              - paragraph [ref=e220]: Financial and insurance activities shows the widest market pay gap at 24.3%. Use this as a benchmark for internal pay-review readiness.
+              - generic [ref=e221]:
+                - generic [ref=e222]: Take action
+                - img [ref=e223]
+        - generic [ref=e225]:
+          - paragraph [ref=e226]: Sector Spotlight — ranked by market signal intensity
+          - generic [ref=e227]:
+            - generic [ref=e228]:
+              - generic [ref=e229]:
+                - img [ref=e231]
+                - generic [ref=e234]:
+                  - paragraph [ref=e235]: Hiring Pressure
+                  - heading "Tightest talent markets" [level=3] [ref=e236]
+              - generic [ref=e237]:
+                - generic [ref=e239]:
+                  - generic [ref=e240]:
+                    - generic [ref=e241]: "#1"
+                    - generic [ref=e242]: Admin & Support Services
+                    - generic [ref=e243]: Hotspot
+                  - generic [ref=e244]: 3.0%
+                - generic [ref=e248]:
+                  - generic [ref=e249]:
+                    - generic [ref=e250]: "#2"
+                    - generic [ref=e251]: Construction
+                  - generic [ref=e252]: 2.5%
+                - generic [ref=e256]:
+                  - generic [ref=e257]:
+                    - generic [ref=e258]: "#3"
+                    - generic [ref=e259]: Accommodation & Food
+                  - generic [ref=e260]: 2.3%
+                - generic [ref=e264]:
+                  - generic [ref=e265]:
+                    - generic [ref=e266]: "#4"
+                    - generic [ref=e267]: Professional & Technical
+                  - generic [ref=e268]: 2.2%
+                - generic [ref=e272]:
+                  - generic [ref=e273]:
+                    - generic [ref=e274]: "#5"
+                    - generic [ref=e275]: Information & Communication
+                  - generic [ref=e276]: 2.2%
+              - paragraph [ref=e279]: Vacancy rate by sector · 2025-Q3 · Higher = harder to fill roles
+              - button "Explore vacancy trends" [ref=e280] [cursor=pointer]:
+                - img [ref=e281]
+                - text: Explore vacancy trends
+            - generic [ref=e282]:
+              - generic [ref=e283]:
+                - img [ref=e285]
+                - generic [ref=e287]:
+                  - paragraph [ref=e288]: Pay Equity Exposure
+                  - heading "Widest market pay gaps" [level=3] [ref=e289]
+              - generic [ref=e290]:
+                - generic [ref=e292]:
+                  - generic [ref=e293]:
+                    - generic [ref=e294]: "#1"
+                    - generic [ref=e295]: Finance & Insurance
+                    - generic [ref=e296]: Widest
+                  - generic [ref=e297]: 24.3%
+                - generic [ref=e301]:
+                  - generic [ref=e302]:
+                    - generic [ref=e303]: "#2"
+                    - generic [ref=e304]: Information & Communication
+                  - generic [ref=e305]: 19.7%
+                - generic [ref=e309]:
+                  - generic [ref=e310]:
+                    - generic [ref=e311]: "#3"
+                    - generic [ref=e312]: Wholesale & Retail Trade
+                  - generic [ref=e313]: 17.9%
+                - generic [ref=e317]:
+                  - generic [ref=e318]:
+                    - generic [ref=e319]: "#4"
+                    - generic [ref=e320]: Health & Social Work
+                  - generic [ref=e321]: 16.9%
+                - generic [ref=e325]:
+                  - generic [ref=e326]:
+                    - generic [ref=e327]: "#5"
+                    - generic [ref=e328]: Arts & Recreation
+                  - generic [ref=e329]: 16.5%
+              - paragraph [ref=e332]: Market gender pay gap by sector · 2023 · Internal exposure varies by headcount
+              - button "Open pay analysis" [ref=e333] [cursor=pointer]:
+                - img [ref=e334]
+                - text: Open pay analysis
+        - generic [ref=e338]:
+          - paragraph [ref=e339]: Needs Attention
+          - generic [ref=e340]:
+            - 'button "Tightest hiring market: 3.0% vacancy rate in the latest quarter." [ref=e341] [cursor=pointer]':
+              - img [ref=e342]
+              - generic [ref=e344]: "Tightest hiring market: 3.0% vacancy rate in the latest quarter."
+            - 'button "Largest pay-gap hotspot: 24.3% gap in the latest annual release." [ref=e345] [cursor=pointer]':
+              - img [ref=e346]
+              - generic [ref=e348]: "Largest pay-gap hotspot: 24.3% gap in the latest annual release."
+        - generic [ref=e349]:
+          - paragraph [ref=e350]: What to do next
+          - generic [ref=e351]:
+            - button "Generate executive brief AI-written narrative ready for leadership distribution." [ref=e352] [cursor=pointer]:
+              - img [ref=e354]
+              - generic [ref=e357]:
+                - strong [ref=e358]: Generate executive brief
+                - paragraph [ref=e359]: AI-written narrative ready for leadership distribution.
+              - img [ref=e360]
+            - button "Export evidence pack Hash-chained bundle for legal & regulatory filing." [ref=e362] [cursor=pointer]:
+              - img [ref=e364]
+              - generic [ref=e367]:
+                - strong [ref=e368]: Export evidence pack
+                - paragraph [ref=e369]: Hash-chained bundle for legal & regulatory filing.
+              - img [ref=e370]
+            - button "Route sensitive review items Pay-transparency simulation currently requires a country-level scope such as DE or FR. Locked" [disabled] [ref=e372]:
+              - img [ref=e374]
+              - generic [ref=e377]:
+                - strong [ref=e378]: Route sensitive review items
+                - paragraph [ref=e379]: Pay-transparency simulation currently requires a country-level scope such as DE or FR.
+              - generic [ref=e380]: Locked
+            - generic [ref=e381]:
+              - img [ref=e383]
+              - generic [ref=e387]:
+                - strong [ref=e388]: Unlock Pay Transparency Simulation
+                - paragraph [ref=e389]:
+                  - text: Select a country above —
+                  - strong [ref=e390]: France (FR)
+                  - text: ","
+                  - strong [ref=e391]: Germany (DE)
+                  - text: or
+                  - strong [ref=e392]: Ireland (IE)
+                  - text: — to simulate EU Pay Transparency Directive compliance against your internal pay categories.
+        - generic [ref=e393]:
+          - generic [ref=e394]:
+            - generic [ref=e396]:
+              - paragraph [ref=e397]: Pay Transparency
+              - heading "EU Directive simulation" [level=2] [ref=e398]
+            - generic [ref=e399]:
+              - img [ref=e401]
+              - generic [ref=e404]:
+                - paragraph [ref=e405]: Pay-transparency simulation currently requires a country-level scope such as DE or FR.
+                - paragraph [ref=e406]: "→ Try: France (FR), Germany (DE) or Ireland (IE)"
+          - generic [ref=e407]:
+            - generic [ref=e408]:
+              - paragraph [ref=e409]: Compliance Export
+              - heading "Evidence pack" [level=2] [ref=e410]
+              - paragraph [ref=e411]: A cryptographically-hashed JSON bundle containing all market data, pay simulation states, and your full governance audit trail (9 events) — ready for legal or regulatory review.
+              - generic [ref=e412]:
+                - generic [ref=e413]:
+                  - img [ref=e414]
+                  - text: Live Eurostat market snapshots (LFS, JVS)
+                - generic [ref=e417]:
+                  - img [ref=e418]
+                  - text: Pay transparency simulation results
+                - generic [ref=e421]:
+                  - img [ref=e422]
+                  - text: Governance audit log (9 events, SHA-256 hash-chained)
+                - generic [ref=e425]:
+                  - img [ref=e426]
+                  - text: Benchmark basis & provenance metadata
+              - button "Export evidence pack" [ref=e429] [cursor=pointer]:
+                - img [ref=e430]
+                - text: Export evidence pack
+            - generic [ref=e433]:
+              - paragraph [ref=e434]: Internal Payroll
+              - heading "Connect your data" [level=2] [ref=e435]
+              - paragraph [ref=e436]: Upload a payroll CSV to benchmark your internal gender pay gap against live Eurostat data and activate the pay transparency simulation.
+              - generic [ref=e437] [cursor=pointer]:
+                - button "Upload Payroll CSV File" [ref=e438]
+                - img [ref=e439]
+                - generic [ref=e442]: Upload payroll CSV
+                - text: Drag & drop or click to browse
