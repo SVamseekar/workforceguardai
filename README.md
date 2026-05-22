@@ -6,6 +6,14 @@ Live at → **[workforceguard-ai.vercel.app](https://workforceguard-ai.vercel.ap
 
 ---
 
+## Demo
+
+**Command Centre — filter by country and sector, scores and brief update in real time**
+
+![WorkforceGuard Home Demo](docs/demos/home.gif)
+
+---
+
 ## What it does
 
 WorkforceGuard turns public EU labour-market data and internal company payroll into decision-ready intelligence — with a full compliance audit trail built in.
