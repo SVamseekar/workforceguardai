@@ -39,3 +39,10 @@ data/internal_meta/*
 data/internal_raw/*
 !data/internal_raw/.gitkeep
 deploy/.env.production
+
+# AI tooling — local only, never on GitHub
+.claude/
+.gemini/
+CLAUDE.md
+GEMINI.md
+AGENTS.md
