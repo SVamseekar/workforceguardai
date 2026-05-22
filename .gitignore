@@ -40,3 +40,5 @@ data/internal_raw/*
 !data/internal_raw/.gitkeep
 deploy/.env.production
 
+.playwright-mcp/
+screenshot-*.png
