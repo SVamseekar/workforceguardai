@@ -77,7 +77,7 @@ Eurostat API  ──►  Python ingestion  ──►  DuckDB  ──►  dbt mod
 
 ```bash
 # Clone
-git clone https://github.com/your-username/WorkforceGuard-AI.git
+git clone https://github.com/SVamseekar/workforceguardai.git
 cd WorkforceGuard-AI
 
 # Backend
