@@ -1,0 +1,181 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - img "WorkforceGuard" [ref=e6]
+    - generic [ref=e7]: WorkforceGuard AI
+    - generic [ref=e8]:
+      - generic [ref=e10]: All countries · All sectors · Latest
+      - button "Toggle Theme" [ref=e11] [cursor=pointer]:
+        - img [ref=e12]
+  - generic [ref=e14]:
+    - navigation [ref=e15]:
+      - list [ref=e16]:
+        - listitem [ref=e17]:
+          - link "Home" [ref=e18] [cursor=pointer]:
+            - /url: /
+            - img [ref=e19]
+            - generic [ref=e22]: Home
+        - listitem [ref=e23]:
+          - link "Market Intelligence" [ref=e24] [cursor=pointer]:
+            - /url: /market
+            - img [ref=e25]
+            - generic [ref=e26]: Market Intelligence
+        - listitem [ref=e27]:
+          - link "Compare" [ref=e28] [cursor=pointer]:
+            - /url: /compare
+            - img [ref=e29]
+            - generic [ref=e34]: Compare
+        - listitem [ref=e35]:
+          - link "Pay Analysis" [ref=e36] [cursor=pointer]:
+            - /url: /pay-analysis
+            - img [ref=e37]
+            - generic [ref=e41]: Pay Analysis
+        - listitem [ref=e42]:
+          - link "Govern & Export 9" [ref=e87] [cursor=pointer]:
+            - /url: /govern
+            - img [ref=e44]
+            - generic [ref=e47]: Govern & Export
+            - generic [ref=e88]: "9"
+      - generic [ref=e89]:
+        - paragraph [ref=e90]: Viewing
+        - paragraph [ref=e91]: EU27 proxy market average
+        - generic [ref=e92]:
+          - generic [ref=e94]: Hiring pressure
+          - generic [ref=e95]: Neutral
+      - button "AI Analyst" [ref=e49] [cursor=pointer]:
+        - img [ref=e50]
+        - generic [ref=e52]: AI Analyst
+    - main [ref=e53]:
+      - generic [ref=e54]:
+        - generic [ref=e55]:
+          - img [ref=e56]
+          - generic [ref=e59]: As of 22 May 2026, 09:40 UTC
+        - paragraph [ref=e96]: Govern & Export
+        - generic [ref=e98]:
+          - img [ref=e99]
+          - generic [ref=e102]: Chain intact
+          - generic [ref=e103]: ·
+          - generic [ref=e104]: 9 events
+          - generic [ref=e105]: ·
+          - generic [ref=e106]: "SHA-256: 840a02bd…"
+        - generic [ref=e108]:
+          - paragraph [ref=e109]: Governance Log
+          - heading "Decision history" [level=2] [ref=e110]
+          - table [ref=e111]:
+            - rowgroup [ref=e112]:
+              - row "Action Category Reviewed by Date" [ref=e113]:
+                - columnheader "Action" [ref=e114]
+                - columnheader "Category" [ref=e115]
+                - columnheader "Reviewed by" [ref=e116]
+                - columnheader "Date" [ref=e117]
+            - rowgroup [ref=e118]:
+              - row "Approved Weekly Executive Update dashboard-user 11 May 2026, 22:23" [ref=e119]:
+                - cell "Approved" [ref=e120]
+                - cell "Weekly Executive Update" [ref=e121]
+                - cell "dashboard-user" [ref=e122]
+                - cell "11 May 2026, 22:23" [ref=e123]
+              - row "Approved Weekly Executive Update dashboard-user 11 May 2026, 22:22" [ref=e124]:
+                - cell "Approved" [ref=e125]
+                - cell "Weekly Executive Update" [ref=e126]
+                - cell "dashboard-user" [ref=e127]
+                - cell "11 May 2026, 22:22" [ref=e128]
+              - row "Approved Weekly Executive Update dashboard-user 11 May 2026, 22:22" [ref=e129]:
+                - cell "Approved" [ref=e130]
+                - cell "Weekly Executive Update" [ref=e131]
+                - cell "dashboard-user" [ref=e132]
+                - cell "11 May 2026, 22:22" [ref=e133]
+              - row "Approved Weekly Executive Update dashboard-user 11 May 2026, 22:20" [ref=e134]:
+                - cell "Approved" [ref=e135]
+                - cell "Weekly Executive Update" [ref=e136]
+                - cell "dashboard-user" [ref=e137]
+                - cell "11 May 2026, 22:20" [ref=e138]
+              - row "Approved Weekly Executive Update dashboard-user 11 May 2026, 22:19" [ref=e139]:
+                - cell "Approved" [ref=e140]
+                - cell "Weekly Executive Update" [ref=e141]
+                - cell "dashboard-user" [ref=e142]
+                - cell "11 May 2026, 22:19" [ref=e143]
+              - row "Evidence pack exported Evidence pack dashboard-user 11 May 2026, 22:17" [ref=e144]:
+                - cell "Evidence pack exported" [ref=e145]
+                - cell "Evidence pack" [ref=e146]
+                - cell "dashboard-user" [ref=e147]
+                - cell "11 May 2026, 22:17" [ref=e148]
+              - row "Human review required Eng senior dashboard-user 11 May 2026, 22:09" [ref=e149]:
+                - cell "Human review required" [ref=e150]
+                - cell "Eng senior" [ref=e151]
+                - cell "dashboard-user" [ref=e152]
+                - cell "11 May 2026, 22:09" [ref=e153]
+              - row "Human review required Eng ic dashboard-user 11 May 2026, 22:09" [ref=e154]:
+                - cell "Human review required" [ref=e155]
+                - cell "Eng ic" [ref=e156]
+                - cell "dashboard-user" [ref=e157]
+                - cell "11 May 2026, 22:09" [ref=e158]
+              - row "Approved Weekly Executive Update dashboard-user 11 May 2026, 17:45" [ref=e159]:
+                - cell "Approved" [ref=e160]
+                - cell "Weekly Executive Update" [ref=e161]
+                - cell "dashboard-user" [ref=e162]
+                - cell "11 May 2026, 17:45" [ref=e163]
+        - generic [ref=e165]:
+          - paragraph [ref=e166]: Evidence Pack
+          - heading "Download compliance evidence" [level=2] [ref=e167]
+          - paragraph [ref=e168]: A cryptographically hash-chained JSON bundle containing all market data, pay simulation states, and 9 governance decisions — ready for legal or regulatory review.
+          - generic [ref=e169]:
+            - generic [ref=e170]:
+              - generic [ref=e171]: ✓
+              - generic [ref=e172]: Market metrics with source citations (Eurostat LFS, JVS)
+            - generic [ref=e173]:
+              - generic [ref=e174]: ✓
+              - generic [ref=e175]: Benchmark comparisons with methodology notes
+            - generic [ref=e176]:
+              - generic [ref=e177]: ✓
+              - generic [ref=e178]: Pay transparency review items and decisions
+            - generic [ref=e179]:
+              - generic [ref=e180]: ✓
+              - generic [ref=e181]: Governance decision log with timestamps (9 events, SHA-256 hash-chained)
+            - generic [ref=e182]:
+              - generic [ref=e183]: ✓
+              - generic [ref=e184]: Data vintage and methodology versions
+          - button "Download Evidence Pack" [ref=e185] [cursor=pointer]:
+            - img [ref=e186]
+            - text: Download Evidence Pack
+        - generic [ref=e190]:
+          - paragraph [ref=e191]: Workflow Automation
+          - heading "Scheduled workflows" [level=2] [ref=e192]
+          - generic [ref=e194]:
+            - generic [ref=e195]:
+              - strong [ref=e196]: Weekly executive update
+              - generic [ref=e197]: "Weekly · Auto-runs · Status: active"
+            - button "Run now" [ref=e198] [cursor=pointer]:
+              - img [ref=e199]
+              - text: Run now
+          - paragraph [ref=e201]: Available templates
+          - generic [ref=e202]:
+            - generic [ref=e203]:
+              - generic [ref=e204]:
+                - strong [ref=e205]: Weekly executive update
+                - generic [ref=e206]: Weekly · Auto-runs
+              - button "Schedule" [ref=e207] [cursor=pointer]:
+                - img [ref=e208]
+                - text: Schedule
+            - generic [ref=e210]:
+              - generic [ref=e211]:
+                - strong [ref=e212]: Monthly compliance evidence pack
+                - generic [ref=e213]: Monthly · Requires approval
+              - button "Schedule" [ref=e214] [cursor=pointer]:
+                - img [ref=e215]
+                - text: Schedule
+          - paragraph [ref=e217]: Actions required
+          - generic [ref=e218]:
+            - generic [ref=e220]:
+              - generic [ref=e221]:
+                - heading "Generate executive brief" [level=3] [ref=e222]
+                - paragraph [ref=e223]: Executive leadership
+              - text: Ready
+            - generic [ref=e225]:
+              - generic [ref=e226]:
+                - heading "Export evidence pack" [level=3] [ref=e227]
+                - paragraph [ref=e228]: People analytics & compliance
+              - text: Ready
+            - generic [ref=e230]:
+              - generic [ref=e231]:
+                - heading "Route sensitive review items" [level=3] [ref=e232]
+                - paragraph [ref=e233]: Legal & compliance review
+              - text: Blocked
