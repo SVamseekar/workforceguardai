@@ -8,7 +8,7 @@ Live at → **[workforceguard-ai.vercel.app](https://workforceguard-ai.vercel.ap
 
 ## Demo
 
-<video src="docs/demos/home.mp4" autoplay loop muted playsinline width="100%"></video>
+![WorkforceGuard Demo](docs/demos/home.gif)
 
 ---
 
