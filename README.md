@@ -8,7 +8,14 @@ Live at → **[workforceguard-ai.vercel.app](https://workforceguard-ai.vercel.ap
 
 ## Demo
 
-![WorkforceGuard Demo](docs/demos/home.gif)
+| | |
+|---|---|
+| **Command Centre** — signal scores, executive brief, live market indicators | **Market Intelligence** — unemployment trend, vacancy by sector, gender pay gap charts |
+| ![Home](docs/demos/home.gif) | ![Market Intelligence](docs/demos/market.gif) |
+| **Compare** — side-by-side country and sector benchmarking | **Pay Analysis** — company vs market pay gap with derived scores |
+| ![Compare](docs/demos/compare.gif) | ![Pay Analysis](docs/demos/pay-analysis.gif) |
+| **Govern & Export** — hash-chained audit log and compliance evidence pack | **AI Analyst** — natural language questions with grounded evidence |
+| ![Govern & Export](docs/demos/govern.gif) | ![AI Analyst](docs/demos/ai-analyst.gif) |
 
 ---
 
