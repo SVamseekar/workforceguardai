@@ -1,7 +1,20 @@
 # WorkforceGuard AI
 
 **EU workforce intelligence and pay-transparency compliance platform for HR, people analytics, and strategy teams.**
+## Research Paper
 
+This system is described in:
+
+> Vamseekar, M.S. (2026). *Why Tight Labour Markets Do Not Close Gender 
+> Pay Gaps: Evidence from a 20-Country Eurostat Panel.*  
+> Independent Researcher. May 2026.  
+> SSRN: [under review] | MPRA: [under review] | Zenodo: [under review]
+
+**Live dashboard:** https://workforceguard-ai.vercel.app  
+**Keywords:** gender pay gap · pay transparency · EU Pay Transparency Directive · 
+labour market tightness · Eurostat · composite indicators
+
+---
 Live at → **[workforceguard-ai.vercel.app](https://workforceguard-ai.vercel.app)**
 
 ---
