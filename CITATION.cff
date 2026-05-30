@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software or research, please cite it as below."
+authors:
+  - family-names: Vamseekar
+    given-names: Marti Soura
+    orcid: "https://orcid.org/0009-0005-4884-1292"
+title: "Why Tight Labour Markets Do Not Close Gender Pay Gaps: Evidence from a 20-Country Eurostat Panel"
+version: 3
+date-released: 2026-05-25
+url: "https://github.com/SVamseekar/workforceguardai"
+repository-code: "https://github.com/SVamseekar/workforceguardai"
+license: CC-BY-NC-4.0
+keywords:
+  - gender pay gap
+  - pay transparency
+  - EU Pay Transparency Directive
+  - labour market tightness
+  - composite indicators
+  - Eurostat
+  - open-source analytics
