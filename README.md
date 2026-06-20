@@ -5,10 +5,10 @@
 
 This system is described in:
 
-> Vamseekar, M.S. (2026). *Why Tight Labour Markets Do Not Close Gender 
+> Marti, S. V. (2026). *Why Tight Labour Markets Do Not Close Gender 
 > Pay Gaps: Evidence from a 20-Country Eurostat Panel.*  
 > Independent Researcher. May 2026.  
-> SSRN: [under review] | MPRA: [under review] | Zenodo: [under review]
+> SSRN: [ssrn.com/abstract=6826361](https://ssrn.com/abstract=6826361) | Zenodo: [doi.org/10.5281/zenodo.20455974](https://doi.org/10.5281/zenodo.20455974)
 
 **Live dashboard:** https://workforceguard-ai.vercel.app  
 **Keywords:** gender pay gap · pay transparency · EU Pay Transparency Directive · 
