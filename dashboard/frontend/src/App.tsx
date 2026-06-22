@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { HelmetProvider } from 'react-helmet-async'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Sidebar } from './components/layout/Sidebar'
 import { TopBar } from './components/layout/TopBar'
@@ -9,6 +10,10 @@ import { MarketSection } from './components/sections/MarketSection'
 import { PayAnalysisSection } from './components/sections/PayAnalysisSection'
 import { GovernSection } from './components/sections/GovernSection'
 import { CompareSection } from './components/sections/CompareSection'
+import { LandingPage } from './components/landing/LandingPage'
+import { AuthProvider } from './contexts/AuthContext'
+import { useAuth } from './hooks/useAuth'
+import { LoginScreen } from './components/auth/LoginScreen'
 import { NoticeBar } from './components/shared/NoticeBar'
 import { SidebarContext } from './components/layout/SidebarContext'
 import { useOverviewData } from './hooks/useOverviewData'
@@ -47,7 +52,14 @@ function SidebarProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-function AppShell() {
+function AuthGate() {
+  const { user, loading } = useAuth()
+  if (loading) return <div className="auth-loading">Loading…</div>
+  if (!user) return <LoginScreen />
+  return <DashboardShell />
+}
+
+function DashboardShell() {
   const [copilotOpen, setCopilotOpen] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('theme')
@@ -87,10 +99,22 @@ function AppShell() {
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AppShell />
-      </BrowserRouter>
-    </QueryClientProvider>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route
+              path="/app/*"
+              element={
+                <AuthProvider>
+                  <AuthGate />
+                </AuthProvider>
+              }
+            />
+          </Routes>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </HelmetProvider>
   )
 }
