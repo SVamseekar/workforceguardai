@@ -2,14 +2,22 @@ import io
 import os
 import subprocess
 import tempfile
+import uuid
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel
+from starlette.middleware.sessions import SessionMiddleware
 
+from auth import db as auth_db
+from auth import sessions as auth_sessions
+from auth.dependencies import AuthContext, require_session
+from auth.oauth import get_oauth_client, parse_provider_profile
+from auth.repository import AuthRepository
 from service import AnalyticsRepository
 
 
@@ -49,6 +57,8 @@ repository = AnalyticsRepository(root_dir)
 
 app = FastAPI(title="WorkforceGuard Analytics API")
 
+app.add_middleware(SessionMiddleware, secret_key=os.environ["SESSION_SECRET"])
+
 _raw_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000")
 _allowed_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
 
@@ -70,6 +80,79 @@ def guarded(callable_fn, *args, **kwargs):
         raise HTTPException(status_code=400, detail=str(error)) from error
     except Exception as error:  # pragma: no cover - safety net for runtime issues
         raise HTTPException(status_code=500, detail=str(error)) from error
+
+
+@app.get("/api/auth/login/{provider}")
+async def auth_login(provider: str, request: Request):
+    client = get_oauth_client(provider)
+    redirect_uri = f"{os.environ['OAUTH_REDIRECT_BASE_URL']}/api/auth/callback/{provider}"
+    return await client.authorize_redirect(request, redirect_uri)
+
+
+@app.get("/api/auth/callback/{provider}")
+async def auth_callback(provider: str, request: Request):
+    client = get_oauth_client(provider)
+    token = await client.authorize_access_token(request)
+    userinfo = token.get("userinfo") or await client.userinfo(token=token)
+    provider_subject, email, display_name = parse_provider_profile(provider, userinfo)
+
+    pool = await auth_db.get_pool()
+    repo = AuthRepository(pool)
+
+    user = await repo.find_user_by_oauth(provider, provider_subject)
+    if user is None:
+        user = await repo.find_or_create_user(email, display_name)
+        await repo.link_oauth_identity(user.id, provider, provider_subject)
+
+    memberships = await repo.list_memberships_for_user(user.id)
+    if not memberships:
+        slug = email.split("@")[1].split(".")[0] + "-" + str(uuid.uuid4())[:8]
+        tenant = await repo.create_tenant_with_admin(name=email.split("@")[1], slug=slug, user_id=user.id)
+        tenant_id = tenant.id
+    else:
+        tenant_id = memberships[0].tenant_id
+
+    session_id = str(uuid.uuid4())
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+    async with pool.acquire() as conn:
+        await conn.execute(
+            "insert into sessions (id, user_id, tenant_id, expires_at) values ($1, $2, $3, $4)",
+            session_id,
+            user.id,
+            tenant_id,
+            expires_at,
+        )
+
+    response = RedirectResponse(url=os.environ.get("FRONTEND_URL", "/"))
+    token_value = auth_sessions.create_session_token(session_id, expires_at)
+    response.set_cookie(
+        key=auth_sessions.SESSION_COOKIE_NAME,
+        value=token_value,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=int((expires_at - datetime.now(timezone.utc)).total_seconds()),
+    )
+    return response
+
+
+@app.post("/api/auth/logout")
+async def auth_logout(request: Request):
+    token = request.cookies.get(auth_sessions.SESSION_COOKIE_NAME)
+    if token is not None:
+        session_id = auth_sessions.verify_session_token(token)
+        if session_id is not None:
+            pool = await auth_db.get_pool()
+            async with pool.acquire() as conn:
+                await conn.execute("delete from sessions where id = $1", session_id)
+    response = JSONResponse({"status": "logged_out"})
+    response.delete_cookie(auth_sessions.SESSION_COOKIE_NAME)
+    return response
+
+
+@app.get("/api/auth/me")
+async def auth_me(ctx: AuthContext = Depends(require_session)):
+    return {"user_id": ctx.user_id, "tenant_id": ctx.tenant_id, "role": ctx.role}
 
 
 @app.get("/")
