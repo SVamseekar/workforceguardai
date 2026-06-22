@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=domains.env
+source "$SCRIPT_DIR/domains.env"
+
 echo "=== WorkforceGuard VM Bootstrap ==="
 
 # Update system
@@ -34,24 +38,16 @@ sudo usermod -aG docker "$USER"
 
 sudo apt-get install -y nginx certbot python3-certbot-nginx
 
-sudo tee /etc/nginx/sites-available/workforceguard-api > /dev/null <<'NGINX_CONF'
-server {
-    listen 80;
-    server_name api.workforceguard.example;
-
-    location / {
-        proxy_pass http://127.0.0.1:8080;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
-NGINX_CONF
-
-sudo ln -sf /etc/nginx/sites-available/workforceguard-api /etc/nginx/sites-enabled/workforceguard-api
-sudo nginx -t && sudo systemctl reload nginx
-sudo certbot --nginx -d api.workforceguard.example --non-interactive --agree-tos -m ops@workforceguard.example
-
 echo ""
 echo "=== Bootstrap complete ==="
 echo "Log out and back in for docker group to take effect."
-echo "Then run: bash deploy/install-service.sh"
+echo ""
+echo "Next steps:"
+echo "  1. In Porkbun DNS, add an A record:"
+echo "       ${API_HOST}  ->  <this VM's public IP>"
+echo "  2. bash deploy/install-service.sh"
+echo "  3. cp deploy/.env.production.example deploy/.env.production  # fill in secrets"
+echo "  4. bash deploy/sync-production-env.sh"
+echo "  5. sudo systemctl start workforceguard-api"
+echo "  6. bash deploy/configure-api-nginx.sh"
+echo "  7. bash deploy/verify-production.sh"

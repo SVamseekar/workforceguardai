@@ -25,7 +25,9 @@ jobs:
           ssh -o StrictHostKeyChecking=no "${VM_USER}@${VM_IP}" \
             'set -euo pipefail
              cd ~/WorkforceGuard-AI
-             git pull origin main
+             git fetch origin main
+             git reset --hard origin/main
+             bash deploy/sync-production-env.sh || true
              docker build -t workforceguard-api:latest -f dashboard/backend/Dockerfile .
              sudo systemctl restart workforceguard-api
              sleep 8
