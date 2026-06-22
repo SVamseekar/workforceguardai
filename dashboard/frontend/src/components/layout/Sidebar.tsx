@@ -3,11 +3,11 @@ import { BarChart2, Home, Scale, ShieldCheck, MessageSquare, GitCompare } from '
 import { useSidebarData } from './SidebarContext'
 
 const NAV_ITEMS = [
-  { to: '/', label: 'Home', Icon: Home, end: true },
-  { to: '/market', label: 'Market Intelligence', Icon: BarChart2 },
-  { to: '/compare', label: 'Compare', Icon: GitCompare },
-  { to: '/pay-analysis', label: 'Pay Analysis', Icon: Scale },
-  { to: '/govern', label: 'Govern & Export', Icon: ShieldCheck },
+  { to: '/app', label: 'Home', Icon: Home, end: true },
+  { to: '/app/market', label: 'Market Intelligence', Icon: BarChart2 },
+  { to: '/app/compare', label: 'Compare', Icon: GitCompare },
+  { to: '/app/pay-analysis', label: 'Pay Analysis', Icon: Scale },
+  { to: '/app/govern', label: 'Govern & Export', Icon: ShieldCheck },
 ]
 
 const TONE_DOT: Record<string, string> = {
@@ -33,7 +33,7 @@ export function Sidebar({ onCopilotOpen }: { onCopilotOpen: () => void }) {
             >
               <Icon size={18} />
               <span>{label}</span>
-              {to === '/govern' && governanceEventCount > 0 && (
+              {to === '/app/govern' && governanceEventCount > 0 && (
                 <span className="sidebar__badge">{governanceEventCount}</span>
               )}
             </NavLink>

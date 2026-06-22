@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://api.workforceguard.example/api/:path*"
+      "destination": "https://api.workforceguardai.souravamseekar.com/api/:path*"
     },
     {
       "source": "/((?!api/.*|.*\\..*).*)",

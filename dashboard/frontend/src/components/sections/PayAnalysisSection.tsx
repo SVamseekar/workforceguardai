@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useOverviewData } from '../../hooks/useOverviewData'
+import { useAuth } from '../../hooks/useAuth'
 import { FreshnessPill } from '../primitives/FreshnessPill'
 import { ToneChip } from '../primitives/ToneChip'
 import { EvidenceDrawer } from '../shared/EvidenceDrawer'
@@ -28,6 +29,7 @@ function formatValue(value: unknown, unit = '%') {
 
 export function PayAnalysisSection() {
   const { overview, filters, setFilters, loading, error, recordGovernanceAction, actionLoading, uploadPayroll } = useOverviewData()
+  const { isAdmin } = useAuth()
   const [selectedEvidence, setSelectedEvidence] = useState<unknown>(null)
 
   // Pay Analysis needs geography=country to activate company benchmarking.
@@ -301,18 +303,24 @@ export function PayAnalysisSection() {
                         Internal gap is {Math.abs(diff!).toFixed(1)} pts {diff! > 0 ? 'above' : 'below'} the market benchmark — justification required under Article 9 of the EU Pay Transparency Directive.
                       </p>
                     )}
-                    <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
-                      {availableActions.map((action) => (
-                        <button
-                          key={action.code as string}
-                          className={`governance-button governance-button--${action.code}`}
-                          disabled={actionLoading}
-                          onClick={() => recordGovernanceAction(action.code as string, 'pay_category', cat.id as string)}
-                        >
-                          {action.label as string}
-                        </button>
-                      ))}
-                    </div>
+                    {isAdmin ? (
+                      <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
+                        {availableActions.map((action) => (
+                          <button
+                            key={action.code as string}
+                            className={`governance-button governance-button--${action.code}`}
+                            disabled={actionLoading}
+                            onClick={() => recordGovernanceAction(action.code as string, 'pay_category', cat.id as string)}
+                          >
+                            {action.label as string}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="admin-only-hint" style={{ marginTop: 8 }}>
+                        Governance decisions require an admin account.
+                      </p>
+                    )}
                   </div>
                 )
               })}
@@ -351,18 +359,22 @@ export function PayAnalysisSection() {
             <strong>Representative example</strong>
             <p>This analysis uses illustrative data based on 2025 public aggregates. Upload your company data to see your real numbers.</p>
           </div>
-          <label className="panel__action" style={{ cursor: 'pointer' }}>
-            Upload your data →
-            <input
-              type="file"
-              accept=".csv"
-              style={{ display: 'none' }}
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file && uploadPayroll) uploadPayroll(file)
-              }}
-            />
-          </label>
+          {isAdmin ? (
+            <label className="panel__action" style={{ cursor: 'pointer' }}>
+              Upload your data →
+              <input
+                type="file"
+                accept=".csv"
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file && uploadPayroll) uploadPayroll(file)
+                }}
+              />
+            </label>
+          ) : (
+            <span className="admin-only-hint">Payroll upload requires an admin account.</span>
+          )}
         </div>
       )}
 

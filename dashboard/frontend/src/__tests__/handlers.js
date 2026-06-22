@@ -41,6 +41,12 @@ export const MOCK_OVERVIEW = {
 }
 
 export const handlers = [
+  http.get('/api/auth/me', () =>
+    HttpResponse.json({ user_id: 'test-user', tenant_id: 'test-tenant', role: 'admin' }),
+  ),
+
+  http.post('/api/auth/logout', () => HttpResponse.json({ status: 'logged_out' })),
+
   http.get('/api/overview', () => HttpResponse.json(MOCK_OVERVIEW)),
 
   http.post('/api/ask', () =>

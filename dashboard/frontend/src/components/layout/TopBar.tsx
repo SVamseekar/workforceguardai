@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router-dom'
-import { Sun, Moon } from 'lucide-react'
-import logo from '../../assets/logos/workforceguard_logo_letters_1773817682347.png'
+import { Sun, Moon, LogOut } from 'lucide-react'
+import { LogoMark } from '../shared/LogoMark'
+import { useAuth } from '../../hooks/useAuth'
 
 interface TopBarProps {
   theme: 'light' | 'dark'
@@ -9,6 +10,7 @@ interface TopBarProps {
 
 export function TopBar({ theme, onToggleTheme }: TopBarProps) {
   const [searchParams] = useSearchParams()
+  const { user, logout, isAdmin } = useAuth()
 
   const country = searchParams.get('country') ?? 'All countries'
   const sector = searchParams.get('sector') ?? 'All sectors'
@@ -19,7 +21,7 @@ export function TopBar({ theme, onToggleTheme }: TopBarProps) {
   return (
     <header className="topbar">
       <div className="topbar__brand">
-        <img src={logo} alt="WorkforceGuard" className="topbar__logo" />
+        <LogoMark size={24} className="topbar__logo" title="WorkforceGuard" />
       </div>
       <div className="topbar__company">
         <span className="topbar__company-name">WorkforceGuard AI</span>
@@ -28,9 +30,20 @@ export function TopBar({ theme, onToggleTheme }: TopBarProps) {
         <div className="topbar__context">
           <span className="topbar__context-label">{context}</span>
         </div>
+        {user && (
+          <span className="topbar__role" title={`Tenant ${user.tenantId}`}>
+            {isAdmin ? 'Admin' : 'Member'}
+          </span>
+        )}
         <button className="theme-toggle-btn" onClick={onToggleTheme} aria-label="Toggle Theme">
           {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
         </button>
+        {user && (
+          <button className="topbar__logout" onClick={() => logout()} aria-label="Sign out">
+            <LogOut size={16} />
+            <span>Sign out</span>
+          </button>
+        )}
       </div>
     </header>
   )

@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
+import { api } from '../lib/api'
 import { normalizeOverview } from '../lib/normalizeOverview'
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
+import { useAuth } from './useAuth'
 
 export interface Filters {
   country: string
@@ -32,16 +32,14 @@ function buildQueryParams(filters: Filters) {
 }
 
 async function fetchOverview(filters: Filters): Promise<unknown> {
-  const response = await axios.get(`${API_BASE}/overview`, {
-    params: buildQueryParams(filters),
-    withCredentials: true,
-  })
+  const response = await api.get('/overview', { params: buildQueryParams(filters) })
   return normalizeOverview(response.data)
 }
 
 export function useOverviewData() {
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
+  const { isAdmin } = useAuth()
 
   const [filters, setFilters] = useState<Filters>({
     country: searchParams.get('country') ?? 'ALL',
@@ -122,10 +120,7 @@ export function useOverviewData() {
 
   const exportMutation = useMutation({
     mutationFn: async () => {
-      const response = await axios.get(`${API_BASE}/evidence-pack`, {
-        params: buildQueryParams(filters),
-        withCredentials: true,
-      })
+      const response = await api.get('/evidence-pack', { params: buildQueryParams(filters) })
       const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -133,12 +128,14 @@ export function useOverviewData() {
       link.download = `workforceguard-evidence-${filters.country}-${filters.period}.json`
       link.click()
       URL.revokeObjectURL(url)
-      await axios.post(`${API_BASE}/governance-events`, {
-        action_code: 'exported',
-        target_type: 'evidence_pack',
-        target_id: `${filters.country}-${filters.period}`,
-        actor: 'dashboard-user',
-      }, { withCredentials: true })
+      if (isAdmin) {
+        await api.post('/governance-events', {
+          action_code: 'exported',
+          target_type: 'evidence_pack',
+          target_id: `${filters.country}-${filters.period}`,
+          actor: 'dashboard-user',
+        })
+      }
     },
     onError: () => setNotice({ type: 'error', message: 'Evidence pack export failed.' }),
   })
@@ -150,42 +147,53 @@ export function useOverviewData() {
       targetId: string
       reason?: string
     }) => {
-      await axios.post(`${API_BASE}/governance-events`, {
+      await api.post('/governance-events', {
         action_code: actionCode,
         target_type: targetType,
         target_id: targetId,
         actor: 'dashboard-user',
         reason: reason ?? null,
-      }, { withCredentials: true })
+      })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['overview'] })
       setNotice({ type: 'success', message: 'Decision recorded.' })
     },
-    onError: () => setNotice({ type: 'error', message: 'Failed to record decision.' }),
+    onError: (err) => {
+      const forbidden = axios.isAxiosError(err) && err.response?.status === 403
+      setNotice({
+        type: 'error',
+        message: forbidden ? 'Only admins can record governance decisions.' : 'Failed to record decision.',
+      })
+    },
   })
 
   const scheduleMutation = useMutation({
     mutationFn: async (template: { id: string; label: string }) => {
-      const response = await axios.post(`${API_BASE}/automation/schedules`, {
+      const response = await api.post('/automation/schedules', {
         template_id: template.id,
         ...buildQueryParams(filters),
         approved: false,
         actor: 'dashboard-user',
-      }, { withCredentials: true })
+      })
       return { data: response.data, label: template.label }
     },
     onSuccess: ({ label }) => setNotice({ type: 'success', message: `Workflow "${label}" scheduled.` }),
-    onError: () => setNotice({ type: 'error', message: 'Failed to schedule workflow.' }),
+    onError: (err) => {
+      const forbidden = axios.isAxiosError(err) && err.response?.status === 403
+      setNotice({
+        type: 'error',
+        message: forbidden ? 'Only admins can configure automation schedules.' : 'Failed to schedule workflow.',
+      })
+    },
   })
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData()
       formData.append('file', file)
-      const response = await axios.post(`${API_BASE}/upload/payroll`, formData, {
+      const response = await api.post('/upload/payroll', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-        withCredentials: true,
       })
       return response.data as { record_count: number }
     },
@@ -194,6 +202,10 @@ export function useOverviewData() {
       setNotice({ type: 'success', message: `Upload accepted — ${data.record_count} employees loaded.` })
     },
     onError: (err) => {
+      if (axios.isAxiosError(err) && err.response?.status === 403) {
+        setNotice({ type: 'error', message: 'Only admins can upload payroll data.' })
+        return
+      }
       const detail = axios.isAxiosError(err)
         ? (err.response?.data?.detail ?? 'Upload failed. Check the file format and try again.')
         : 'Upload failed. Check the file format and try again.'
