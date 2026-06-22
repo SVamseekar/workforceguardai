@@ -103,7 +103,7 @@ const FAQS = [
   },
   {
     q: 'How do I request a demo?',
-    a: 'Use Request a demo anywhere on this page. We follow up within one business day with a walkthrough tailored to your reporting obligations, payroll countries in scope, and team setup.',
+    a: 'Use the Request a demo button in the header or at the bottom of this page. We follow up within one business day with a walkthrough tailored to your reporting obligations, payroll countries in scope, and team setup.',
   },
   {
     q: 'Can I open the dashboard without a demo?',
@@ -381,7 +381,7 @@ export function LandingPage() {
               </a>
             </div>
             <p className="landing-hero__action-note">
-              New here? Request a demo. Already provisioned? Sign in with your organisation account.
+              Organisation sign-in is for provisioned teams only. New to WorkforceGuard? Start with a demo above.
             </p>
             <div className="landing-hero__trust">
               <span><Database size={14} /> EU27 · 13 NACE sectors · 2019–2024</span>
@@ -603,7 +603,6 @@ export function LandingPage() {
                 <a href="#compliance">Compliance mapping</a>
                 <a href="#research">Research</a>
                 <a href="#faq">FAQ</a>
-                <button type="button" className="landing-footer__link-btn" onClick={openDemo}>Request a demo</button>
                 <a href="https://github.com/SVamseekar/workforceguardai" target="_blank" rel="noreferrer">GitHub</a>
               </nav>
             </div>
