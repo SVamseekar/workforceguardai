@@ -32,6 +32,9 @@ dashboard/frontend/dist/
 data/governance_events.json
 data/governance_events.sqlite
 data/governance_events.sqlite-*
+data/automation_schedules.json
+data/tenants/*
+!data/tenants/.gitkeep
 data/internal/*
 !data/internal/.gitkeep
 data/internal_meta/*

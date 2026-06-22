@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from fastapi import HTTPException, Request
+from fastapi import Depends, HTTPException, Request
 
 from . import db, sessions
 from .repository import AuthRepository
@@ -43,7 +43,7 @@ async def require_session(request: Request) -> AuthContext:
 
 
 def require_role(min_role: str):
-    async def dependency(ctx: AuthContext) -> AuthContext:
+    async def dependency(ctx: AuthContext = Depends(require_session)) -> AuthContext:
         if _ROLE_RANK[ctx.role] < _ROLE_RANK[min_role]:
             raise HTTPException(status_code=403, detail=f"Requires {min_role} role")
         return ctx

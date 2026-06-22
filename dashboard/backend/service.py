@@ -5430,6 +5430,7 @@ class RepositoryRegistry:
     def get_for_tenant(self, tenant_id: str) -> "AnalyticsRepository":
         if tenant_id not in self._repositories:
             tenant_dir = self.root_dir / "data" / "tenants" / tenant_id
+            (tenant_dir / "internal").mkdir(parents=True, exist_ok=True)
             self._repositories[tenant_id] = AnalyticsRepository(
                 root_dir=self.root_dir,
                 governance_events_path=tenant_dir / "governance_events.sqlite",
