@@ -1,24 +1,16 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../lib/api'
 import {
   ShieldCheck, Scale, BarChart2, GitCompare, MessageSquare,
-  CheckCircle2, Sun, Moon, ArrowRight, Lock, Database, FileCheck2,
-  Menu, X, ChevronRight, Sparkles,
+  CheckCircle2, ArrowRight, Lock, Database, FileCheck2,
+  ChevronRight, Sparkles,
 } from 'lucide-react'
-import { LogoMark } from '../shared/LogoMark'
-import { DemoRequestModal } from './DemoRequestModal'
+import { LandingShell, useLandingDemo } from './LandingShell'
+import { SITE_URL } from './site'
+import { useScrollReveal } from './useScrollReveal'
 import './landing.css'
-
-const SITE_URL = 'https://workforceguardai.souravamseekar.com'
-
-const NAV_LINKS = [
-  { href: '#product', label: 'Product' },
-  { href: '#compliance', label: 'Compliance' },
-  { href: '#research', label: 'Research' },
-  { href: '#faq', label: 'FAQ' },
-]
 
 const STATS = [
   { value: '11.1%', label: 'EU27 average unadjusted gender pay gap', detail: 'Most employers have not quantified their position against it.' },
@@ -152,28 +144,6 @@ const JSON_LD = {
   ],
 }
 
-function useScrollReveal() {
-  useEffect(() => {
-    const nodes = document.querySelectorAll('.landing-reveal')
-    if (!nodes.length) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible')
-            observer.unobserve(entry.target)
-          }
-        })
-      },
-      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' },
-    )
-
-    nodes.forEach((node) => observer.observe(node))
-    return () => observer.disconnect()
-  }, [])
-}
-
 function ProductShowcase() {
   return (
     <div className="landing-showcase">
@@ -200,52 +170,12 @@ function ProductShowcase() {
   )
 }
 
-export function LandingPage() {
-  const navigate = useNavigate()
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const saved = localStorage.getItem('theme')
-    if (saved === 'light' || saved === 'dark') return saved
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-  })
-  const [navOpen, setNavOpen] = useState(false)
-  const [demoOpen, setDemoOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
-  const navRef = useRef<HTMLElement>(null)
-
+function LandingHomeContent() {
+  const { openDemo } = useLandingDemo()
   useScrollReveal()
 
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-    localStorage.setItem('theme', theme)
-  }, [theme])
-
-  useEffect(() => {
-    api.get('/auth/me')
-      .then(() => navigate('/app', { replace: true }))
-      .catch(() => {})
-  }, [navigate])
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24)
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
-  useEffect(() => {
-    document.body.style.overflow = navOpen ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
-  }, [navOpen])
-
-  const toggleTheme = () => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
-  const closeNav = () => setNavOpen(false)
-  const openDemo = () => {
-    closeNav()
-    setDemoOpen(true)
-  }
-
   return (
-    <div className="landing">
+    <>
       <Helmet>
         <title>WorkforceGuard AI — EU Pay Transparency Compliance & Workforce Intelligence</title>
         <meta
@@ -274,73 +204,6 @@ export function LandingPage() {
 
         <script type="application/ld+json">{JSON.stringify(JSON_LD)}</script>
       </Helmet>
-
-      <div className="landing-bg" aria-hidden="true">
-        <div className="landing-bg__mesh" />
-        <div className="landing-bg__grid" />
-      </div>
-
-      <header ref={navRef} className={`landing-nav ${scrolled ? 'is-scrolled' : ''}`}>
-        <div className="landing-nav__inner">
-          <div className="landing-nav__brand">
-            <LogoMark size={38} className="landing-nav__logo" />
-            <span className="landing-nav__wordmark">WorkforceGuard AI</span>
-          </div>
-
-          <nav className="landing-nav__links" aria-label="Primary">
-            {NAV_LINKS.map((link) => (
-              <a key={link.href} href={link.href}>{link.label}</a>
-            ))}
-          </nav>
-
-          <div className="landing-nav__actions">
-            <button className="theme-toggle-btn" onClick={toggleTheme} aria-label="Toggle theme">
-              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-            </button>
-            <Link
-              to="/app"
-              className="landing-cta landing-nav__cta landing-nav__cta--signin"
-              title="Organisation sign-in via Google or Microsoft"
-            >
-              Sign in
-            </Link>
-            <button
-              type="button"
-              className="landing-cta landing-cta--primary landing-nav__cta"
-              onClick={openDemo}
-            >
-              Request a demo
-            </button>
-            <button
-              className="landing-nav__menu-btn"
-              onClick={() => setNavOpen((v) => !v)}
-              aria-label={navOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={navOpen}
-            >
-              {navOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <div className={`landing-mobile-nav ${navOpen ? 'is-open' : ''}`} aria-hidden={!navOpen}>
-        <nav aria-label="Mobile">
-          {NAV_LINKS.map((link) => (
-            <a key={link.href} href={link.href} onClick={closeNav}>{link.label}</a>
-          ))}
-          <Link
-            to="/app"
-            className="landing-cta landing-nav__cta--signin"
-            onClick={closeNav}
-            title="Organisation sign-in via Google or Microsoft"
-          >
-            Sign in to dashboard
-          </Link>
-          <button type="button" className="landing-cta landing-cta--primary" onClick={openDemo}>
-            Request a demo
-          </button>
-        </nav>
-      </div>
 
       <section className="landing-hero">
         <div className="landing-hero__inner">
@@ -576,45 +439,22 @@ export function LandingPage() {
         </div>
       </section>
 
-      <DemoRequestModal open={demoOpen} onClose={() => setDemoOpen(false)} />
+    </>
+  )
+}
 
-      <footer className="landing-footer">
-        <div className="landing-footer__inner">
-          <div className="landing-footer__brand">
-            <div className="landing-nav__brand">
-              <LogoMark size={28} className="landing-nav__logo" />
-              <span>WorkforceGuard AI</span>
-            </div>
-            <p>EU workforce intelligence and pay-transparency compliance for HR, people analytics, and compliance teams.</p>
-          </div>
-          <div className="landing-footer__cols">
-            <div>
-              <h4>Product</h4>
-              <nav>
-                <Link to="/app">Dashboard</Link>
-                <Link to="/app/market">Market Intelligence</Link>
-                <Link to="/app/pay-analysis">Pay Analysis</Link>
-                <Link to="/app/govern">Governance</Link>
-              </nav>
-            </div>
-            <div>
-              <h4>Resources</h4>
-              <nav>
-                <a href="#compliance">Compliance mapping</a>
-                <a href="#research">Research</a>
-                <a href="#faq">FAQ</a>
-                <a href="https://github.com/SVamseekar/workforceguardai" target="_blank" rel="noreferrer">GitHub</a>
-              </nav>
-            </div>
-          </div>
-        </div>
-        <div className="landing-footer__legal">
-          <p>
-            WorkforceGuard AI is an analytics and evidence platform. It does not provide legal advice;
-            consult qualified counsel for compliance determinations under Directive (EU) 2023/970.
-          </p>
-        </div>
-      </footer>
-    </div>
+export function LandingPage() {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    api.get('/auth/me')
+      .then(() => navigate('/app', { replace: true }))
+      .catch(() => {})
+  }, [navigate])
+
+  return (
+    <LandingShell>
+      <LandingHomeContent />
+    </LandingShell>
   )
 }
