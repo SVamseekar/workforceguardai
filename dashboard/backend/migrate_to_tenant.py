@@ -15,10 +15,12 @@ async def migrate(root_dir: Path, admin_email: str, admin_display_name: str, ten
     slug = tenant_name.lower().replace(" ", "-")
     existing = await repo.get_tenant_by_slug(slug)
     if existing is not None:
-        return existing.id
+        tenant_id = existing.id
+    else:
+        tenant = await repo.create_tenant_with_admin(name=tenant_name, slug=slug, user_id=user.id)
+        tenant_id = tenant.id
 
-    tenant = await repo.create_tenant_with_admin(name=tenant_name, slug=slug, user_id=user.id)
-    tenant_dir = root_dir / "data" / "tenants" / tenant.id
+    tenant_dir = root_dir / "data" / "tenants" / tenant_id
     tenant_dir.mkdir(parents=True, exist_ok=True)
 
     legacy_internal = root_dir / "data" / "internal"
@@ -33,7 +35,7 @@ async def migrate(root_dir: Path, admin_email: str, admin_display_name: str, ten
     if legacy_automation.exists():
         shutil.move(str(legacy_automation), str(tenant_dir / "automation_schedules.json"))
 
-    return tenant.id
+    return tenant_id
 
 
 if __name__ == "__main__":
