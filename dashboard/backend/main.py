@@ -15,10 +15,10 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from auth import db as auth_db
 from auth import sessions as auth_sessions
-from auth.dependencies import AuthContext, require_session
+from auth.dependencies import AuthContext, require_role, require_session
 from auth.oauth import get_oauth_client, parse_provider_profile
 from auth.repository import AuthRepository
-from service import AnalyticsRepository
+from service import AnalyticsRepository, RepositoryRegistry
 
 
 class AskRequest(BaseModel):
@@ -53,7 +53,11 @@ class AutomationScheduleRequest(BaseModel):
 
 _here = Path(__file__).resolve().parent
 root_dir = Path(os.environ.get("WORKFORCEGUARD_ROOT", str(_here.parents[1] if len(_here.parents) > 1 else _here)))
-repository = AnalyticsRepository(root_dir)
+repository_registry = RepositoryRegistry(root_dir)
+
+
+def get_repository(ctx: AuthContext = Depends(require_session)) -> AnalyticsRepository:
+    return repository_registry.get_for_tenant(ctx.tenant_id)
 
 app = FastAPI(title="WorkforceGuard Analytics API")
 
@@ -157,13 +161,14 @@ async def auth_me(ctx: AuthContext = Depends(require_session)):
 
 @app.get("/")
 def read_root():
-    _, options = guarded(repository.resolve_filters)
+    public_repo = AnalyticsRepository(root_dir)
+    _, options = guarded(public_repo.resolve_filters)
     return {
         "status": "ok",
         "service": "WorkforceGuard Analytics API",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "supported_grains": options["supported_grains"],
-        "available_actions": guarded(repository.build_governance_payload)["available_actions"],
+        "available_actions": guarded(public_repo.build_governance_payload)["available_actions"],
     }
 
 
@@ -184,9 +189,10 @@ def get_overview(
     period: str = "latest",
     benchmark_geography: Optional[str] = None,
     benchmark_sector: Optional[str] = None,
+    repo: AnalyticsRepository = Depends(get_repository),
 ):
     return guarded(
-        repository.build_overview,
+        repo.build_overview,
         country=country,
         geography=geography,
         sector=sector,
@@ -197,9 +203,12 @@ def get_overview(
 
 
 @app.post("/api/ask")
-def ask_dashboard(request: AskRequest):
+def ask_dashboard(
+    request: AskRequest,
+    repo: AnalyticsRepository = Depends(get_repository),
+):
     return guarded(
-        repository.answer_question,
+        repo.answer_question,
         question=request.question,
         country=request.country,
         geography=request.geography,
@@ -218,9 +227,10 @@ def get_evidence_pack(
     period: str = "latest",
     benchmark_geography: Optional[str] = None,
     benchmark_sector: Optional[str] = None,
+    repo: AnalyticsRepository = Depends(get_repository),
 ):
     return guarded(
-        repository.build_evidence_pack,
+        repo.build_evidence_pack,
         country=country,
         geography=geography,
         sector=sector,
@@ -238,9 +248,10 @@ def get_executive_brief(
     period: str = "latest",
     benchmark_geography: Optional[str] = None,
     benchmark_sector: Optional[str] = None,
+    repo: AnalyticsRepository = Depends(get_repository),
 ):
     overview = guarded(
-        repository.build_overview,
+        repo.build_overview,
         country=country,
         geography=geography,
         sector=sector,
@@ -259,9 +270,10 @@ def get_automation_center(
     period: str = "latest",
     benchmark_geography: Optional[str] = None,
     benchmark_sector: Optional[str] = None,
+    repo: AnalyticsRepository = Depends(get_repository),
 ):
     overview = guarded(
-        repository.build_overview,
+        repo.build_overview,
         country=country,
         geography=geography,
         sector=sector,
@@ -273,31 +285,55 @@ def get_automation_center(
 
 
 @app.post("/api/automation/schedules")
-def create_automation_schedule(request: AutomationScheduleRequest):
-    return guarded(repository.configure_automation_schedule, request.model_dump())
+def create_automation_schedule(
+    request: AutomationScheduleRequest,
+    repo: AnalyticsRepository = Depends(get_repository),
+    ctx: AuthContext = Depends(require_role("admin")),
+):
+    payload = request.model_dump()
+    payload["actor"] = ctx.user_id
+    return guarded(repo.configure_automation_schedule, payload)
 
 
 @app.get("/api/automation/schedules/{schedule_id}/run")
-def get_scheduled_output(schedule_id: str):
-    return guarded(repository.build_scheduled_output, schedule_id)
+def get_scheduled_output(
+    schedule_id: str,
+    repo: AnalyticsRepository = Depends(get_repository),
+):
+    return guarded(repo.build_scheduled_output, schedule_id)
 
 
 @app.post("/api/governance-events")
-def create_governance_event(request: GovernanceEventRequest):
-    return guarded(repository.record_governance_event, request.model_dump())
+def post_governance_event(
+    request: GovernanceEventRequest,
+    repo: AnalyticsRepository = Depends(get_repository),
+    ctx: AuthContext = Depends(require_role("admin")),
+):
+    return guarded(
+        repo.record_governance_event,
+        {
+            "action_code": request.action_code,
+            "target_type": request.target_type,
+            "target_id": request.target_id,
+            "actor": ctx.user_id,
+            "reason": request.reason,
+            "context": request.context,
+        },
+    )
 
 
 @app.get("/api/governance-events")
-def list_governance_events():
-    return guarded(repository.build_governance_payload)
+def list_governance_events(repo: AnalyticsRepository = Depends(get_repository)):
+    return guarded(repo.build_governance_payload)
 
 
 @app.get("/api/unemployment")
 def get_unemployment(
     geography: str = "EU27_AVG",
     period: str = "latest",
+    repo: AnalyticsRepository = Depends(get_repository),
 ):
-    overview = guarded(repository.build_overview, geography=geography, period=period)
+    overview = guarded(repo.build_overview, geography=geography, period=period)
     return overview["charts"]["unemployment_trend"]["series"]
 
 
@@ -305,8 +341,9 @@ def get_unemployment(
 def get_employment(
     geography: str = "EU27_AVG",
     period: str = "latest",
+    repo: AnalyticsRepository = Depends(get_repository),
 ):
-    overview = guarded(repository.build_overview, geography=geography, period=period)
+    overview = guarded(repo.build_overview, geography=geography, period=period)
     return overview["charts"]["employment_trend"]["series"]
 
 
@@ -315,8 +352,9 @@ def get_vacancies(
     geography: str = "EU27_AVG",
     sector: str = "ALL",
     period: str = "latest",
+    repo: AnalyticsRepository = Depends(get_repository),
 ):
-    overview = guarded(repository.build_overview, geography=geography, sector=sector, period=period)
+    overview = guarded(repo.build_overview, geography=geography, sector=sector, period=period)
     return overview["charts"]["vacancy_by_sector"]["series"]
 
 
@@ -325,8 +363,9 @@ def get_gender_pay_gap(
     geography: str = "EU27_AVG",
     sector: str = "ALL",
     period: str = "latest",
+    repo: AnalyticsRepository = Depends(get_repository),
 ):
-    overview = guarded(repository.build_overview, geography=geography, sector=sector, period=period)
+    overview = guarded(repo.build_overview, geography=geography, sector=sector, period=period)
     return overview["charts"]["pay_gap_by_sector"]["series"]
 
 
@@ -336,13 +375,18 @@ def get_egapro_benchmark(
     sector: str = "J",
     size_band: Optional[str] = None,
     year: Optional[int] = None,
+    repo: AnalyticsRepository = Depends(get_repository),
 ):
-    filters, _ = guarded(repository.resolve_filters, country, "EU27_AVG", sector, "latest")
-    return guarded(repository._build_egapro_peer_benchmark, filters)
+    filters, _ = guarded(repo.resolve_filters, country, "EU27_AVG", sector, "latest")
+    return guarded(repo._build_egapro_peer_benchmark, filters)
 
 
 @app.post("/api/upload/payroll")
-async def upload_payroll(file: UploadFile = File(...)):
+async def upload_payroll(
+    file: UploadFile = File(...),
+    repo: AnalyticsRepository = Depends(get_repository),
+    ctx: AuthContext = Depends(require_role("admin")),
+):
     if file.content_type not in ("text/csv", "application/csv", "text/plain"):
         raise HTTPException(
             status_code=400,
@@ -356,7 +400,7 @@ async def upload_payroll(file: UploadFile = File(...)):
             detail="File too large. Maximum upload size is 10MB.",
         )
 
-    result = guarded(repository.ingest_uploaded_payroll, content)
+    result = guarded(repo.ingest_uploaded_payroll, content)
 
     # Trigger dbt rebuild of internal models in the background
     analytics_dir = root_dir / "analytics"
