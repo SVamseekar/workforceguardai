@@ -105,6 +105,10 @@ const FAQS = [
     q: 'How do I request a demo?',
     a: 'Use Request a demo anywhere on this page. We follow up within one business day with a walkthrough tailored to your reporting obligations, payroll countries in scope, and team setup.',
   },
+  {
+    q: 'Can I open the dashboard without a demo?',
+    a: 'If your organisation already has access, sign in with Google or Microsoft to open the dashboard. New teams should request a demo first so we can provision the right tenant and walk you through pay transparency workflows.',
+  },
 ]
 
 const FEATURES = [
@@ -293,16 +297,20 @@ export function LandingPage() {
             <button className="theme-toggle-btn" onClick={toggleTheme} aria-label="Toggle theme">
               {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             </button>
+            <Link
+              to="/app"
+              className="landing-cta landing-nav__cta landing-nav__cta--signin"
+              title="Organisation sign-in via Google or Microsoft"
+            >
+              Sign in
+            </Link>
             <button
               type="button"
-              className="landing-cta landing-nav__cta landing-nav__cta--demo"
+              className="landing-cta landing-cta--primary landing-nav__cta"
               onClick={openDemo}
             >
               Request a demo
             </button>
-            <Link to="/app" className="landing-cta landing-cta--primary landing-nav__cta">
-              Open dashboard <ArrowRight size={15} />
-            </Link>
             <button
               className="landing-nav__menu-btn"
               onClick={() => setNavOpen((v) => !v)}
@@ -320,12 +328,17 @@ export function LandingPage() {
           {NAV_LINKS.map((link) => (
             <a key={link.href} href={link.href} onClick={closeNav}>{link.label}</a>
           ))}
-          <button type="button" className="landing-cta landing-nav__cta--demo" onClick={openDemo}>
+          <Link
+            to="/app"
+            className="landing-cta landing-nav__cta--signin"
+            onClick={closeNav}
+            title="Organisation sign-in via Google or Microsoft"
+          >
+            Sign in to dashboard
+          </Link>
+          <button type="button" className="landing-cta landing-cta--primary" onClick={openDemo}>
             Request a demo
           </button>
-          <Link to="/app" className="landing-cta landing-cta--primary" onClick={closeNav}>
-            Open dashboard <ArrowRight size={16} />
-          </Link>
         </nav>
       </div>
 
@@ -356,13 +369,20 @@ export function LandingPage() {
               >
                 Request a demo <ArrowRight size={18} />
               </button>
-              <Link to="/app" className="landing-cta landing-cta--secondary landing-cta--large">
-                Open the live dashboard
+              <Link
+                to="/app"
+                className="landing-cta landing-cta--secondary landing-cta--large"
+                title="Organisation sign-in via Google or Microsoft"
+              >
+                Sign in to dashboard
               </Link>
               <a href="#compliance" className="landing-cta landing-cta--ghost landing-cta--large">
                 See compliance mapping
               </a>
             </div>
+            <p className="landing-hero__action-note">
+              New here? Request a demo. Already provisioned? Sign in with your organisation account.
+            </p>
             <div className="landing-hero__trust">
               <span><Database size={14} /> EU27 · 13 NACE sectors · 2019–2024</span>
               <span><Lock size={14} /> SHA-256 governance log</span>
@@ -534,8 +554,8 @@ export function LandingPage() {
           <MessageSquare size={28} />
           <h2>See where your organisation stands</h2>
           <p>
-            Book a tailored walkthrough for your compliance team, or explore live EU labour-market
-            data, pay transparency review, and evidence export in the dashboard — no sign-up required.
+            Book a tailored walkthrough for your compliance team, or sign in to explore EU labour-market
+            data, pay transparency review, and evidence export if your organisation already has access.
           </p>
           <div className="landing-cta-section__actions">
             <button
@@ -545,8 +565,12 @@ export function LandingPage() {
             >
               Request a demo <ArrowRight size={18} />
             </button>
-            <Link to="/app" className="landing-cta landing-cta--ghost landing-cta--large">
-              Open the live dashboard
+            <Link
+              to="/app"
+              className="landing-cta landing-cta--ghost landing-cta--large"
+              title="Organisation sign-in via Google or Microsoft"
+            >
+              Sign in to dashboard
             </Link>
           </div>
         </div>
