@@ -5,9 +5,8 @@ import axios from 'axios'
 import { FreshnessPill } from '../primitives/FreshnessPill'
 import { DataState } from '../shared/DataState'
 import { ToneChip } from '../primitives/ToneChip'
+import { api } from '../../lib/api'
 import { normalizeOverview } from '../../lib/normalizeOverview'
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
 
 type AnyObj = Record<string, unknown>
 
@@ -73,7 +72,7 @@ function makeFilters(country: string, sector = 'ALL', period = 'latest'): PanelF
 }
 
 async function fetchOverview(filters: PanelFilters): Promise<unknown> {
-  const r = await axios.get(`${API_BASE}/overview`, { params: filters, withCredentials: true })
+  const r = await api.get('/overview', { params: filters })
   return normalizeOverview(r.data)
 }
 

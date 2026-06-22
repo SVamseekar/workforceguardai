@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useOverviewData } from '../../hooks/useOverviewData'
+import { useAuth } from '../../hooks/useAuth'
 import { MetricCard } from '../primitives/MetricCard'
 import { FreshnessPill } from '../primitives/FreshnessPill'
 import { DataState } from '../shared/DataState'
@@ -52,9 +53,9 @@ const SIGNAL_META: Record<string, { icon: typeof BarChart2; metricId: string; ct
 }
 
 const HANDOFF_META: Record<string, { icon: typeof FileText; desc: string; route: string }> = {
-  handoff_executive_brief:   { icon: FileText, desc: 'AI-written narrative ready for leadership distribution.', route: '/market' },
-  handoff_evidence_pack:     { icon: Download, desc: 'Hash-chained bundle for legal & regulatory filing.',       route: '/govern' },
-  handoff_compliance_review: { icon: Scale,    desc: 'Route pay-equity items to legal for approval or override.', route: '/pay-analysis' },
+  handoff_executive_brief:   { icon: FileText, desc: 'AI-written narrative ready for leadership distribution.', route: '/app/market' },
+  handoff_evidence_pack:     { icon: Download, desc: 'Hash-chained bundle for legal & regulatory filing.',       route: '/app/govern' },
+  handoff_compliance_review: { icon: Scale,    desc: 'Route pay-equity items to legal for approval or override.', route: '/app/pay-analysis' },
 }
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -65,6 +66,7 @@ export function HomeSection() {
     overview, filters, setFilters, loading, error,
     exporting, uploadPayroll, exportEvidencePack,
   } = useOverviewData()
+  const { isAdmin } = useAuth()
   const navigate = useNavigate()
 
   const ov      = (overview ?? {}) as AnyObj
@@ -128,10 +130,10 @@ export function HomeSection() {
 
   /* ── needs-attention items ──────────────────────────────────────────── */
   const urgentItems = [
-    ...watchSignals.slice(0, 2).map(s => ({ text: s.title as string, route: '/market', type: 'signal' as const })),
-    ...watchlist.slice(0, 2).map(w => ({ text: `${w.label as string}: ${w.detail as string}`, route: '/market', type: 'watch' as const })),
+    ...watchSignals.slice(0, 2).map(s => ({ text: s.title as string, route: '/app/market', type: 'signal' as const })),
+    ...watchlist.slice(0, 2).map(w => ({ text: `${w.label as string}: ${w.detail as string}`, route: '/app/market', type: 'watch' as const })),
     ...(unresolvedCount > 0
-      ? [{ text: `${unresolvedCount} pay transparency ${unresolvedCount === 1 ? 'category needs' : 'categories need'} review`, route: '/pay-analysis', type: 'signal' as const }]
+      ? [{ text: `${unresolvedCount} pay transparency ${unresolvedCount === 1 ? 'category needs' : 'categories need'} review`, route: '/app/pay-analysis', type: 'signal' as const }]
       : []),
   ]
 
@@ -238,7 +240,7 @@ export function HomeSection() {
             <p className="panel__eyebrow" style={{ marginBottom: 10 }}>Live Market Indicators</p>
             <div className="metric-grid">
               {metrics.map(m => (
-                <MetricCard key={m.id as string} metric={m} onClick={() => navigate('/market')} />
+                <MetricCard key={m.id as string} metric={m} onClick={() => navigate('/app/market')} />
               ))}
             </div>
           </section>
@@ -256,9 +258,9 @@ export function HomeSection() {
               {recommendations.map((rec, i) => {
                 const priority = String(rec.priority)
                 const needsReview = Boolean(rec.review_required)
-                const route = (rec.id as string)?.includes('hiring') ? '/market'
-                  : (rec.id as string)?.includes('equity') ? '/pay-analysis'
-                  : '/market'
+                const route = (rec.id as string)?.includes('hiring') ? '/app/market'
+                  : (rec.id as string)?.includes('equity') ? '/app/pay-analysis'
+                  : '/app/market'
                 return (
                   <button
                     key={i}
@@ -348,7 +350,7 @@ export function HomeSection() {
                   <p style={{ margin: '14px 0 0', fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
                     Vacancy rate by sector · {topVacancy[0]?.period as string} · Higher = harder to fill roles
                   </p>
-                  <button className="panel__action" onClick={() => navigate('/market')} style={{ marginTop: 10 }}>
+                  <button className="panel__action" onClick={() => navigate('/app/market')} style={{ marginTop: 10 }}>
                     <BarChart2 size={13} /> Explore vacancy trends
                   </button>
                 </div>
@@ -405,7 +407,7 @@ export function HomeSection() {
                   <p style={{ margin: '14px 0 0', fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
                     Market gender pay gap by sector · {topPayGap[0]?.period as string} · Internal exposure varies by headcount
                   </p>
-                  <button className="panel__action" onClick={() => navigate('/pay-analysis')} style={{ marginTop: 10 }}>
+                  <button className="panel__action" onClick={() => navigate('/app/pay-analysis')} style={{ marginTop: 10 }}>
                     <Scale size={13} /> Open pay analysis
                   </button>
                 </div>
@@ -451,10 +453,10 @@ export function HomeSection() {
                 <div
                   key={hid}
                   className={`workflow-card${isBlocked ? ' workflow-card--blocked' : ''}`}
-                  onClick={() => !isBlocked && navigate(meta?.route ?? '/')}
+                  onClick={() => !isBlocked && navigate(meta?.route ?? '/app')}
                   role="button"
                   tabIndex={isBlocked ? -1 : 0}
-                  onKeyDown={e => e.key === 'Enter' && !isBlocked && navigate(meta?.route ?? '/')}
+                  onKeyDown={e => e.key === 'Enter' && !isBlocked && navigate(meta?.route ?? '/app')}
                   aria-disabled={isBlocked}
                 >
                   <div className="workflow-card__icon">
@@ -552,7 +554,7 @@ export function HomeSection() {
                   )
                 })}
 
-                <button className="panel__action" onClick={() => navigate('/pay-analysis')} style={{ marginTop: 8 }}>
+                <button className="panel__action" onClick={() => navigate('/app/pay-analysis')} style={{ marginTop: 8 }}>
                   <Scale size={13} /> Review all {ptSummary.category_count as number} categories
                 </button>
               </>
@@ -629,14 +631,20 @@ export function HomeSection() {
                   Upload a payroll CSV to benchmark your internal gender pay gap against live Eurostat data and activate the pay transparency simulation.
                 </p>
               )}
-              <div className="upload-dropzone">
-                <input type="file" accept=".csv" onChange={e => { const f = e.target.files?.[0]; if (f) uploadPayroll(f) }} aria-label="Upload Payroll CSV File" />
-                <Upload size={18} style={{ margin: '0 auto 5px', color: 'var(--text-muted)' }} />
-                <span style={{ fontSize: '0.79rem', fontWeight: 600, display: 'block', color: 'var(--text-strong)', marginBottom: 2 }}>
-                  {benchmarkAvail ? 'Replace payroll CSV' : 'Upload payroll CSV'}
-                </span>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Drag & drop or click to browse</span>
-              </div>
+              {isAdmin ? (
+                <div className="upload-dropzone">
+                  <input type="file" accept=".csv" onChange={e => { const f = e.target.files?.[0]; if (f) uploadPayroll(f) }} aria-label="Upload Payroll CSV File" />
+                  <Upload size={18} style={{ margin: '0 auto 5px', color: 'var(--text-muted)' }} />
+                  <span style={{ fontSize: '0.79rem', fontWeight: 600, display: 'block', color: 'var(--text-strong)', marginBottom: 2 }}>
+                    {benchmarkAvail ? 'Replace payroll CSV' : 'Upload payroll CSV'}
+                  </span>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Drag & drop or click to browse</span>
+                </div>
+              ) : (
+                <p className="admin-only-hint" style={{ margin: 0 }}>
+                  Payroll upload requires an admin account. Contact your workspace admin to connect company data.
+                </p>
+              )}
             </div>
 
           </section>

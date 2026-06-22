@@ -1,9 +1,7 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import axios from 'axios'
 import { X, Send } from 'lucide-react'
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
+import { api } from '../../lib/api'
 
 const SUGGESTED_QUESTIONS = [
   'How does this market compare to the EU average?',
@@ -39,7 +37,7 @@ export function CopilotPanel({ onClose }: { onClose: () => void }) {
     if (!prompt || asking) return
     setAsking(true)
     try {
-      const result = await axios.post(`${API_BASE}/ask`, { question: prompt, ...filterContext }, { withCredentials: true })
+      const result = await api.post('/ask', { question: prompt, ...filterContext })
       setResponse(result.data as CopilotResponse)
     } catch {
       setResponse({ answer: 'Could not get a response. Please try again.' })

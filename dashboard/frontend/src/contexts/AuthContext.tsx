@@ -1,7 +1,5 @@
-import { createContext, useEffect, useState, type ReactNode } from 'react'
-import axios from 'axios'
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
+import { createContext, useCallback, useEffect, useState, type ReactNode } from 'react'
+import { api, setOnUnauthorized } from '../lib/api'
 
 export interface AuthUser {
   id: string
@@ -13,22 +11,24 @@ export interface AuthContextValue {
   user: AuthUser | null
   loading: boolean
   refresh: () => Promise<void>
+  logout: () => Promise<void>
 }
 
 export const AuthContext = createContext<AuthContextValue>({
   user: null,
   loading: true,
   refresh: async () => {},
+  logout: async () => {},
 })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     setLoading(true)
     try {
-      const response = await axios.get(`${API_BASE}/auth/me`, { withCredentials: true })
+      const response = await api.get('/auth/me')
       setUser({
         id: response.data.user_id,
         tenantId: response.data.tenant_id,
@@ -39,11 +39,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }
-
-  useEffect(() => {
-    refresh()
   }, [])
 
-  return <AuthContext.Provider value={{ user, loading, refresh }}>{children}</AuthContext.Provider>
+  const logout = useCallback(async () => {
+    try {
+      await api.post('/auth/logout')
+    } catch {
+      // Clear local state even if the server call fails
+    }
+    setUser(null)
+  }, [])
+
+  useEffect(() => {
+    setOnUnauthorized(() => setUser(null))
+    refresh()
+  }, [refresh])
+
+  return (
+    <AuthContext.Provider value={{ user, loading, refresh, logout }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }

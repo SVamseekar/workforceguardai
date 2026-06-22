@@ -1,4 +1,5 @@
 import { useOverviewData } from '../../hooks/useOverviewData'
+import { useAuth } from '../../hooks/useAuth'
 import { FreshnessPill } from '../primitives/FreshnessPill'
 import { Download, Play, CheckCircle, XCircle } from 'lucide-react'
 import { DataState } from '../shared/DataState'
@@ -31,6 +32,7 @@ function formatDate(val: unknown): string {
 
 export function GovernSection() {
   const { overview, loading, error, exporting, scheduleLoading, exportEvidencePack, scheduleBrief } = useOverviewData()
+  const { isAdmin } = useAuth()
 
   const ov = (overview ?? {}) as AnyObj
   const governance = (ov.governance as AnyObj) ?? {}
@@ -181,14 +183,18 @@ export function GovernSection() {
                         {CADENCE_LABELS[wf.cadence as string] ?? (wf.cadence as string)} · {wf.approval_required ? 'Requires approval' : 'Auto-runs'} · Status: {wf.status as string}
                       </span>
                     </div>
-                    <button
-                      className="governance-button governance-button--approve"
-                      onClick={() => scheduleBrief(wf as { id: string; label: string })}
-                      disabled={scheduleLoading}
-                      style={{ display: 'flex', gap: 6, alignItems: 'center' }}
-                    >
-                      <Play size={14} /> Run now
-                    </button>
+                    {isAdmin ? (
+                      <button
+                        className="governance-button governance-button--approve"
+                        onClick={() => scheduleBrief(wf as { id: string; label: string })}
+                        disabled={scheduleLoading}
+                        style={{ display: 'flex', gap: 6, alignItems: 'center' }}
+                      >
+                        <Play size={14} /> Run now
+                      </button>
+                    ) : (
+                      <span className="admin-only-hint">Admin only</span>
+                    )}
                   </div>
                 ))}
               </div>
@@ -210,14 +216,18 @@ export function GovernSection() {
                           {CADENCE_LABELS[brief.cadence as string] ?? brief.cadence as string} · {brief.approval_required ? 'Requires approval' : 'Auto-runs'}
                         </span>
                       </div>
-                      <button
-                        className="governance-button governance-button--approve"
-                        onClick={() => scheduleBrief(brief as { id: string; label: string })}
-                        disabled={scheduleLoading}
-                        style={{ display: 'flex', gap: 6, alignItems: 'center' }}
-                      >
-                        <Play size={14} /> Schedule
-                      </button>
+                      {isAdmin ? (
+                        <button
+                          className="governance-button governance-button--approve"
+                          onClick={() => scheduleBrief(brief as { id: string; label: string })}
+                          disabled={scheduleLoading}
+                          style={{ display: 'flex', gap: 6, alignItems: 'center' }}
+                        >
+                          <Play size={14} /> Schedule
+                        </button>
+                      ) : (
+                        <span className="admin-only-hint">Admin only</span>
+                      )}
                     </div>
                   ))}
                 </div>
