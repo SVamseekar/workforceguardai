@@ -9,3 +9,4 @@ dbt-duckdb>=1.8,<2
 asyncpg
 itsdangerous
 authlib
+httpx

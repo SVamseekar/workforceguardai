@@ -28,6 +28,7 @@ jobs:
              git fetch origin main
              git reset --hard origin/main
              bash deploy/sync-production-env.sh || true
+             bash deploy/install-service.sh
              docker build -t workforceguard-api:latest -f dashboard/backend/Dockerfile .
              sudo systemctl restart workforceguard-api
              sleep 8
