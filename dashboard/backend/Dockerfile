@@ -7,6 +7,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY dashboard/backend/ .
 
+RUN useradd --create-home --shell /bin/bash appuser \
+    && chown -R appuser:appuser /app
+USER appuser
+
 ENV WORKFORCEGUARD_ROOT=/data
 ENV PORT=8080
 
