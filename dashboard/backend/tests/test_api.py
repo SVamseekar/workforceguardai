@@ -140,7 +140,9 @@ def _drop_shared_client_tenant_schema() -> None:
 
     import duckdb
 
-    schema = "tenant_" + tenant_id.replace("-", "_")
+    from service import tenant_schema_name
+
+    schema = tenant_schema_name(tenant_id)
     for _ in range(20):
         try:
             with duckdb.connect(database=str(ANALYTICS_DB_PATH)) as conn:
