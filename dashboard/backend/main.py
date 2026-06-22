@@ -166,14 +166,13 @@ async def auth_me(ctx: AuthContext = Depends(require_session)):
 
 @app.get("/")
 def read_root():
-    public_repo = AnalyticsRepository(root_dir)
-    _, options = guarded(public_repo.resolve_filters)
+    _, options = guarded(repository_registry.public_repository.resolve_filters)
     return {
         "status": "ok",
         "service": "WorkforceGuard Analytics API",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "supported_grains": options["supported_grains"],
-        "available_actions": guarded(public_repo.build_governance_payload)["available_actions"],
+        "available_actions": list(repository_registry.public_repository.governance_actions.values()),
     }
 
 
@@ -304,6 +303,7 @@ def create_automation_schedule(
 def get_scheduled_output(
     schedule_id: str,
     repo: AnalyticsRepository = Depends(get_repository),
+    ctx: AuthContext = Depends(require_role("admin")),
 ):
     return guarded(repo.build_scheduled_output, schedule_id)
 

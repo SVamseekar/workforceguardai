@@ -5426,6 +5426,7 @@ class RepositoryRegistry:
     def __init__(self, root_dir: Path):
         self.root_dir = root_dir
         self._repositories: Dict[str, "AnalyticsRepository"] = {}
+        self._public_repository: Optional["AnalyticsRepository"] = None
 
     def get_for_tenant(self, tenant_id: str) -> "AnalyticsRepository":
         if tenant_id not in self._repositories:
@@ -5438,3 +5439,20 @@ class RepositoryRegistry:
                 internal_data_dir=tenant_dir / "internal",
             )
         return self._repositories[tenant_id]
+
+    @property
+    def public_repository(self) -> "AnalyticsRepository":
+        """A repository scoped to no tenant — only used for static/global lookups
+        (e.g. the governance action catalog, supported filter grains) that are
+        identical across every tenant. Never call methods that read tenant-scoped
+        data (governance events, automation schedules, internal payroll) on this
+        instance; it does not point at any real tenant's storage."""
+        if self._public_repository is None:
+            public_dir = self.root_dir / "data" / "tenants" / "_public"
+            self._public_repository = AnalyticsRepository(
+                root_dir=self.root_dir,
+                governance_events_path=public_dir / "governance_events.sqlite",
+                automation_schedules_path=public_dir / "automation_schedules.json",
+                internal_data_dir=public_dir / "internal",
+            )
+        return self._public_repository
