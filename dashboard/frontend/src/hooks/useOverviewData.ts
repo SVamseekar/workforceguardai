@@ -34,6 +34,7 @@ function buildQueryParams(filters: Filters) {
 async function fetchOverview(filters: Filters): Promise<unknown> {
   const response = await axios.get(`${API_BASE}/overview`, {
     params: buildQueryParams(filters),
+    withCredentials: true,
   })
   return normalizeOverview(response.data)
 }
@@ -123,6 +124,7 @@ export function useOverviewData() {
     mutationFn: async () => {
       const response = await axios.get(`${API_BASE}/evidence-pack`, {
         params: buildQueryParams(filters),
+        withCredentials: true,
       })
       const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
@@ -136,7 +138,7 @@ export function useOverviewData() {
         target_type: 'evidence_pack',
         target_id: `${filters.country}-${filters.period}`,
         actor: 'dashboard-user',
-      })
+      }, { withCredentials: true })
     },
     onError: () => setNotice({ type: 'error', message: 'Evidence pack export failed.' }),
   })
@@ -154,7 +156,7 @@ export function useOverviewData() {
         target_id: targetId,
         actor: 'dashboard-user',
         reason: reason ?? null,
-      })
+      }, { withCredentials: true })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['overview'] })
@@ -170,7 +172,7 @@ export function useOverviewData() {
         ...buildQueryParams(filters),
         approved: false,
         actor: 'dashboard-user',
-      })
+      }, { withCredentials: true })
       return { data: response.data, label: template.label }
     },
     onSuccess: ({ label }) => setNotice({ type: 'success', message: `Workflow "${label}" scheduled.` }),
@@ -183,6 +185,7 @@ export function useOverviewData() {
       formData.append('file', file)
       const response = await axios.post(`${API_BASE}/upload/payroll`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        withCredentials: true,
       })
       return response.data as { record_count: number }
     },

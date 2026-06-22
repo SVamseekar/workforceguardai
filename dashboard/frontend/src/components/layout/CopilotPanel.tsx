@@ -39,7 +39,7 @@ export function CopilotPanel({ onClose }: { onClose: () => void }) {
     if (!prompt || asking) return
     setAsking(true)
     try {
-      const result = await axios.post(`${API_BASE}/ask`, { question: prompt, ...filterContext })
+      const result = await axios.post(`${API_BASE}/ask`, { question: prompt, ...filterContext }, { withCredentials: true })
       setResponse(result.data as CopilotResponse)
     } catch {
       setResponse({ answer: 'Could not get a response. Please try again.' })

@@ -73,7 +73,7 @@ function makeFilters(country: string, sector = 'ALL', period = 'latest'): PanelF
 }
 
 async function fetchOverview(filters: PanelFilters): Promise<unknown> {
-  const r = await axios.get(`${API_BASE}/overview`, { params: filters })
+  const r = await axios.get(`${API_BASE}/overview`, { params: filters, withCredentials: true })
   return normalizeOverview(r.data)
 }
 
