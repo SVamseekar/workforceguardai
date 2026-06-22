@@ -18,6 +18,7 @@ from auth import db as auth_db
 from auth import sessions as auth_sessions
 from auth.dependencies import AuthContext, require_role, require_session
 from auth.oauth import get_oauth_client, parse_provider_profile
+from auth.redirects import frontend_login_redirect
 from auth.repository import AuthRepository
 from service import AnalyticsRepository, RepositoryRegistry
 
@@ -145,56 +146,76 @@ def guarded(callable_fn, *args, **kwargs):
 
 @app.get("/api/auth/login/{provider}")
 async def auth_login(provider: str, request: Request):
-    client = get_oauth_client(provider)
-    redirect_uri = f"{os.environ['OAUTH_REDIRECT_BASE_URL']}/api/auth/callback/{provider}"
-    return await client.authorize_redirect(request, redirect_uri)
+    if provider not in ("google", "microsoft"):
+        return RedirectResponse(url=frontend_login_redirect("unsupported_provider"))
+    try:
+        client = get_oauth_client(provider)
+        redirect_uri = f"{os.environ['OAUTH_REDIRECT_BASE_URL']}/api/auth/callback/{provider}"
+        return await client.authorize_redirect(request, redirect_uri)
+    except ValueError:
+        return RedirectResponse(url=frontend_login_redirect("unsupported_provider"))
+    except Exception:  # pragma: no cover - OAuth misconfiguration or upstream outage
+        return RedirectResponse(url=frontend_login_redirect("sign_in_unavailable"))
 
 
 @app.get("/api/auth/callback/{provider}")
 async def auth_callback(provider: str, request: Request):
-    client = get_oauth_client(provider)
-    token = await client.authorize_access_token(request)
-    userinfo = token.get("userinfo") or await client.userinfo(token=token)
-    provider_subject, email, display_name = parse_provider_profile(provider, userinfo)
+    if provider not in ("google", "microsoft"):
+        return RedirectResponse(url=frontend_login_redirect("unsupported_provider"))
 
-    pool = await auth_db.get_pool()
-    repo = AuthRepository(pool)
+    oauth_error = request.query_params.get("error")
+    if oauth_error:
+        error_code = "cancelled" if oauth_error == "access_denied" else "sign_in_failed"
+        return RedirectResponse(url=frontend_login_redirect(error_code))
 
-    user = await repo.find_user_by_oauth(provider, provider_subject)
-    if user is None:
-        user = await repo.find_or_create_user(email, display_name)
-        await repo.link_oauth_identity(user.id, provider, provider_subject)
+    try:
+        client = get_oauth_client(provider)
+        token = await client.authorize_access_token(request)
+        userinfo = token.get("userinfo") or await client.userinfo(token=token)
+        provider_subject, email, display_name = parse_provider_profile(provider, userinfo)
 
-    memberships = await repo.list_memberships_for_user(user.id)
-    if not memberships:
-        slug = email.split("@")[1].split(".")[0] + "-" + str(uuid.uuid4())[:8]
-        tenant = await repo.create_tenant_with_admin(name=email.split("@")[1], slug=slug, user_id=user.id)
-        tenant_id = tenant.id
-    else:
-        tenant_id = memberships[0].tenant_id
+        pool = await auth_db.get_pool()
+        repo = AuthRepository(pool)
 
-    session_id = str(uuid.uuid4())
-    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
-    async with pool.acquire() as conn:
-        await conn.execute(
-            "insert into sessions (id, user_id, tenant_id, expires_at) values ($1, $2, $3, $4)",
-            session_id,
-            user.id,
-            tenant_id,
-            expires_at,
+        user = await repo.find_user_by_oauth(provider, provider_subject)
+        if user is None:
+            user = await repo.find_or_create_user(email, display_name)
+            await repo.link_oauth_identity(user.id, provider, provider_subject)
+
+        memberships = await repo.list_memberships_for_user(user.id)
+        if not memberships:
+            slug = email.split("@")[1].split(".")[0] + "-" + str(uuid.uuid4())[:8]
+            tenant = await repo.create_tenant_with_admin(
+                name=email.split("@")[1], slug=slug, user_id=user.id
+            )
+            tenant_id = tenant.id
+        else:
+            tenant_id = memberships[0].tenant_id
+
+        session_id = str(uuid.uuid4())
+        expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+        async with pool.acquire() as conn:
+            await conn.execute(
+                "insert into sessions (id, user_id, tenant_id, expires_at) values ($1, $2, $3, $4)",
+                session_id,
+                user.id,
+                tenant_id,
+                expires_at,
+            )
+
+        response = RedirectResponse(url=frontend_login_redirect())
+        token_value = auth_sessions.create_session_token(session_id, expires_at)
+        response.set_cookie(
+            key=auth_sessions.SESSION_COOKIE_NAME,
+            value=token_value,
+            httponly=True,
+            secure=True,
+            samesite="lax",
+            max_age=int((expires_at - datetime.now(timezone.utc)).total_seconds()),
         )
-
-    response = RedirectResponse(url=os.environ.get("FRONTEND_URL", "/"))
-    token_value = auth_sessions.create_session_token(session_id, expires_at)
-    response.set_cookie(
-        key=auth_sessions.SESSION_COOKIE_NAME,
-        value=token_value,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=int((expires_at - datetime.now(timezone.utc)).total_seconds()),
-    )
-    return response
+        return response
+    except Exception:  # pragma: no cover - token exchange or persistence failure
+        return RedirectResponse(url=frontend_login_redirect("sign_in_failed"))
 
 
 @app.post("/api/auth/logout")
