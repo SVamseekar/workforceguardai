@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { DemoRequestForm } from './DemoRequestForm'
 
@@ -31,7 +32,7 @@ export function DemoRequestModal({ open, onClose }: DemoRequestModalProps) {
 
   if (!open) return null
 
-  return (
+  return createPortal(
     <div className="demo-modal" role="presentation" onClick={onClose}>
       <div
         ref={dialogRef}
@@ -60,6 +61,7 @@ export function DemoRequestModal({ open, onClose }: DemoRequestModalProps) {
           <DemoRequestForm />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
