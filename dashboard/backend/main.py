@@ -1,5 +1,6 @@
 import io
 import os
+import re
 import subprocess
 import tempfile
 import uuid
@@ -53,6 +54,43 @@ class AutomationScheduleRequest(BaseModel):
 
 _here = Path(__file__).resolve().parent
 root_dir = Path(os.environ.get("WORKFORCEGUARD_ROOT", str(_here.parents[1] if len(_here.parents) > 1 else _here)))
+
+
+def _legacy_internal_dir_has_real_files(internal_dir: Path) -> bool:
+    if not internal_dir.is_dir():
+        return False
+    return any(child.name != ".gitkeep" for child in internal_dir.iterdir())
+
+
+def _assert_legacy_data_already_migrated(root_dir: Path) -> None:
+    """Refuse to start if pre-multi-tenant data still sits at the legacy
+    global paths. migrate_to_tenant.py must move it under data/tenants/{id}/
+    before this app can serve it correctly — RepositoryRegistry never reads
+    these paths, so leaving them in place means real data silently goes
+    unserved with no error, while the app appears to start up fine."""
+    found = []
+
+    internal_dir = root_dir / "data" / "internal"
+    if _legacy_internal_dir_has_real_files(internal_dir):
+        found.append(str(internal_dir))
+
+    for relative_path in ("data/governance_events.sqlite", "data/automation_schedules.json"):
+        path = root_dir / relative_path
+        if path.exists():
+            found.append(str(path))
+
+    if found:
+        raise RuntimeError(
+            "Found pre-migration data at legacy global path(s): "
+            + ", ".join(found)
+            + ". Run `python migrate_to_tenant.py <admin_email> <admin_display_name> "
+            "<tenant_name>` to move it into a tenant before starting the app."
+        )
+
+
+if os.environ.get("WORKFORCEGUARD_SKIP_MIGRATION_CHECK") != "1":
+    _assert_legacy_data_already_migrated(root_dir)
+
 repository_registry = RepositoryRegistry(root_dir)
 
 
@@ -68,8 +106,19 @@ _raw_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:5173,htt
 _configured_origins = {o.strip() for o in _raw_origins.split(",") if o.strip()}
 _allowed_origins = sorted(_configured_origins | _KNOWN_PRODUCTION_ORIGINS)
 
-if "*" in _allowed_origins:
-    raise RuntimeError("CORS_ALLOWED_ORIGINS must not contain '*' when allow_credentials=True")
+_VALID_ORIGIN_PATTERN = re.compile(
+    r"^https://[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?)*$"
+    r"|^http://localhost(?::\d+)?$"
+)
+
+_invalid_origins = [origin for origin in _allowed_origins if not _VALID_ORIGIN_PATTERN.match(origin)]
+if _invalid_origins:
+    raise RuntimeError(
+        "CORS_ALLOWED_ORIGINS contains invalid entries: "
+        + ", ".join(_invalid_origins)
+        + ". Each origin must be an exact https:// origin with no wildcards "
+        "(or http://localhost[:port] for local development)."
+    )
 
 app.add_middleware(
     CORSMiddleware,
