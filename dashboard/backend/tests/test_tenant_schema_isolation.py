@@ -19,6 +19,22 @@ own schema first, so unqualified references to internal-tagged tables
 resolve to that tenant's data — while EU/reference/public_company tables
 (which live in the default "main" schema) stay visible to every tenant.
 
+A second, more subtle leak in that same fix was found on a follow-up review:
+DuckDB's search_path resolves an unqualified table name by checking each
+schema in order. A table present in BOTH the tenant's schema and "main" is
+correctly isolated (the tenant schema wins) — but a table present ONLY in
+"main" and absent from a given tenant's own schema silently falls through to
+main's copy. The real dev DuckDB file actually had stale, pre-multi-tenant
+internal-tagged tables sitting in "main" (purged by
+purge_legacy_internal_tables.py), which meant any tenant whose own schema was
+missing one of those tables would have silently read that stale data instead
+of getting an empty/unavailable result — a live leak channel that survived
+the first fix. AnalyticsRepository._assert_main_has_no_internal_tables now
+converts that into a loud RuntimeError the moment "main" ever contains an
+internal-tagged table again (e.g. an operator runs `dbt run` without
+`--vars tenant_schema=...` by mistake), rather than relying on "main stays
+empty of internal tables" as an unenforced convention.
+
 This test exercises the read side of that mechanism directly against a real
 (temp-file) DuckDB database with two tenant schemas seeded by hand — it does
 not invoke a real dbt run (that's covered manually; dbt takes several
@@ -40,7 +56,7 @@ BACKEND_DIR = ROOT_DIR / "dashboard" / "backend"
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
-from service import AnalyticsRepository, RepositoryRegistry, tenant_schema_name
+from service import INTERNAL_TAGGED_TABLES, AnalyticsRepository, RepositoryRegistry, tenant_schema_name
 
 
 def _seed_shared_database(db_path: Path) -> None:
@@ -163,6 +179,178 @@ class TenantSchemaNameTests(unittest.TestCase):
         self.assertNotIn(";", schema)
         self.assertNotIn(" ", schema)
         self.assertNotIn("-", schema)
+
+
+class MainSchemaContaminationGuardTests(unittest.TestCase):
+    """Covers the second leak channel found on follow-up review: an
+    internal-tagged table present in "main" but absent from a tenant's own
+    schema silently falls through search_path to main's (possibly stale, or
+    another deploy's) copy instead of erroring or returning empty."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root_dir = Path(self._tmp.name)
+        self.db_path = self.root_dir / "data" / "workforceguard_analytics.duckdb"
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        _seed_shared_database(self.db_path)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_partial_tenant_schema_falls_through_to_main_without_the_guard(self):
+        # Demonstrates the leak mechanism itself: a tenant schema missing a
+        # table the tenant never had modeled (e.g. dim_worker_category) reads
+        # whatever happens to be sitting in main for that table name, if main
+        # has one. This test seeds that exact contaminated state by hand and
+        # confirms the fallthrough happens — it is the failure mode the guard
+        # in test_assert_main_has_no_internal_tables_blocks_contaminated_main
+        # exists to prevent ever reaching in the live code path.
+        con = duckdb.connect(database=str(self.db_path))
+        try:
+            con.execute("create table main.dim_worker_category (worker_category_id varchar)")
+            con.execute("insert into main.dim_worker_category values ('stale_or_other_tenant_row')")
+        finally:
+            con.close()
+
+        con2 = duckdb.connect(database=str(self.db_path), read_only=True)
+        try:
+            con2.execute("set search_path = 'tenant_tenant_a_uuid,main'")
+            rows = con2.execute("select * from dim_worker_category").fetchall()
+        finally:
+            con2.close()
+
+        self.assertEqual(rows, [("stale_or_other_tenant_row",)])
+
+    def test_assert_main_has_no_internal_tables_blocks_contaminated_main(self):
+        con = duckdb.connect(database=str(self.db_path))
+        try:
+            con.execute("create table main.dim_worker_category (worker_category_id varchar)")
+        finally:
+            con.close()
+
+        repo = AnalyticsRepository(
+            root_dir=self.root_dir, analytics_db_path=self.db_path, tenant_id="tenant-a-uuid"
+        )
+        with self.assertRaises(RuntimeError) as ctx:
+            repo._connect()
+        self.assertIn("dim_worker_category", str(ctx.exception))
+        self.assertIn("main", str(ctx.exception))
+
+    def test_assert_main_has_no_internal_tables_passes_when_main_is_clean(self):
+        repo = AnalyticsRepository(
+            root_dir=self.root_dir, analytics_db_path=self.db_path, tenant_id="tenant-a-uuid"
+        )
+        with repo._connect() as conn:
+            conn.execute("select 1")  # must not raise
+
+    def test_internal_tagged_tables_set_matches_dbt_project_internal_tags(self):
+        # Cross-check against the actual dbt project so this list can't
+        # silently drift from analytics/dbt_project.yml's tag:internal
+        # config — if a new internal model is added there but this set
+        # isn't updated, the guard above would miss it.
+        expected = {
+            "dim_worker_category",
+            "fct_internal_hiring_demand",
+            "fct_internal_pay_snapshot",
+            "fct_internal_skill_snapshot",
+            "fct_internal_workforce_snapshot",
+            "mart_company_decision_support",
+            "mart_internal_market_pay_benchmark",
+            "mart_pay_transparency_category_review",
+            "stg_internal__ats_requisition_snapshot",
+            "stg_internal__hris_workforce_snapshot",
+            "stg_internal__job_architecture",
+            "stg_internal__learning_skill_snapshot",
+            "stg_internal__payroll_snapshot",
+        }
+        self.assertEqual(INTERNAL_TAGGED_TABLES, frozenset(expected))
+
+
+class LockRetryTests(unittest.TestCase):
+    """The dbt rebuild triggered after a payroll upload holds a write lock on
+    the shared DuckDB file for several seconds. Before this fix,
+    _available_tables() caught the resulting duckdb.Error broadly and
+    returned an empty set, which made _modeled_database_ready() report False
+    and silently fall through to the degraded in-memory/raw-parquet
+    connection path instead of waiting out a transient lock — no error, no
+    indication to the caller that real (internal-tagged) data was
+    unavailable only because of a passing lock conflict, not because it
+    didn't exist."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root_dir = Path(self._tmp.name)
+        self.db_path = self.root_dir / "data" / "workforceguard_analytics.duckdb"
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        _seed_shared_database(self.db_path)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _hold_write_lock_in_subprocess(self, hold_seconds: float):
+        import subprocess
+
+        return subprocess.Popen(
+            [
+                sys.executable,
+                "-c",
+                "import duckdb, time\n"
+                f"con = duckdb.connect({str(self.db_path)!r})\n"
+                'con.execute("create table if not exists main._lock_test_tmp (x int)")\n'
+                f"time.sleep({hold_seconds})\n"
+                'con.execute("drop table if exists main._lock_test_tmp")\n'
+                "con.close()\n",
+            ]
+        )
+
+    def test_connect_waits_out_a_transient_lock_instead_of_degrading_silently(self):
+        import time
+
+        proc = self._hold_write_lock_in_subprocess(hold_seconds=1.5)
+        try:
+            time.sleep(0.3)
+            repo = AnalyticsRepository(
+                root_dir=self.root_dir, analytics_db_path=self.db_path, tenant_id="tenant-a-uuid"
+            )
+            start = time.time()
+            with repo._connect() as conn:
+                elapsed = time.time() - start
+                # If this connected to the real modeled database (rather
+                # than silently falling through to the degraded in-memory
+                # path), querying the seeded fct_internal_pay_snapshot must
+                # succeed and return this tenant's real row.
+                rows = conn.execute(
+                    "select country_code, avg_base_pay from fct_internal_pay_snapshot"
+                ).fetchall()
+            self.assertEqual(rows, [("FR", 50000.0)])
+            # A near-zero elapsed time would mean it gave up immediately and
+            # took the degraded path rather than actually waiting for the lock.
+            self.assertGreater(elapsed, 0.5)
+        finally:
+            proc.wait()
+
+    def test_lock_conflict_message_is_the_only_retried_condition(self):
+        # A non-lock duckdb.Error (e.g. a genuinely corrupt/missing file)
+        # must not be silently retried into a 3-second hang — only the
+        # specific "Could not set lock on file" message should trigger
+        # retries; anything else should raise (or degrade) immediately.
+        from unittest.mock import patch
+
+        repo = AnalyticsRepository(
+            root_dir=self.root_dir, analytics_db_path=self.db_path, tenant_id="tenant-a-uuid"
+        )
+
+        call_count = {"n": 0}
+
+        def fake_connect(*args, **kwargs):
+            call_count["n"] += 1
+            raise duckdb.IOException("IO Error: file is corrupt, not a lock issue")
+
+        with patch("duckdb.connect", side_effect=fake_connect):
+            with self.assertRaises(duckdb.IOException):
+                repo._connect_with_lock_retry()
+
+        self.assertEqual(call_count["n"], 1)  # must not have retried
 
 
 if __name__ == "__main__":

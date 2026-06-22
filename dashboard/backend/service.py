@@ -6,6 +6,7 @@ import json
 import math
 import re
 import sqlite3
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -161,6 +162,35 @@ def tenant_schema_name(tenant_id: str) -> str:
     accepts unquoted but is safer to normalize to a single identifier shape."""
     safe = re.sub(r"[^a-zA-Z0-9_]", "_", tenant_id).lower()
     return f"tenant_{safe}"
+
+
+# Every dbt model tagged "internal" (analytics/dbt_project.yml). Mirrors
+# `dbt list --select tag:internal --resource-type model`. These must only
+# ever exist inside a tenant's own schema (tenant_<id>), never in the shared
+# default "main" schema — relying on DuckDB's search_path to put a tenant
+# schema ahead of "main" only isolates tables that exist in BOTH places; a
+# table present in "main" but absent from a given tenant's schema silently
+# falls through to whatever main has, which could be stale or, if main is
+# ever accidentally repopulated by a dbt run without `tenant_schema` set,
+# genuinely another tenant's modeled data. _assert_main_has_no_internal_tables
+# converts that into a loud failure instead of a silent leak.
+INTERNAL_TAGGED_TABLES = frozenset(
+    {
+        "dim_worker_category",
+        "fct_internal_hiring_demand",
+        "fct_internal_pay_snapshot",
+        "fct_internal_skill_snapshot",
+        "fct_internal_workforce_snapshot",
+        "mart_company_decision_support",
+        "mart_internal_market_pay_benchmark",
+        "mart_pay_transparency_category_review",
+        "stg_internal__ats_requisition_snapshot",
+        "stg_internal__hris_workforce_snapshot",
+        "stg_internal__job_architecture",
+        "stg_internal__learning_skill_snapshot",
+        "stg_internal__payroll_snapshot",
+    }
+)
 
 
 class AnalyticsRepository:
@@ -464,26 +494,62 @@ class AnalyticsRepository:
 
     def _connect(self) -> duckdb.DuckDBPyConnection:
         if self._modeled_database_ready():
-            connection = duckdb.connect(database=str(self.analytics_db_path), read_only=True)
-            if self.tenant_schema is not None and self._tenant_schema_exists(connection):
-                # internal-tagged dbt models are materialized into this
-                # tenant's own schema (see generate_schema_name in
-                # analytics/macros/tenant_schema.sql); everything else
-                # (EU/reference/public_company marts) lives in the default
-                # "main" schema and stays visible to every tenant. Listing
-                # the tenant schema first means unqualified references to
-                # internal-tagged tables (fct_internal_pay_snapshot, etc.)
-                # resolve to this tenant's data, never another tenant's.
-                # A tenant with no schema yet (no payroll uploaded/modeled)
-                # simply falls back to "main", which holds no internal-tagged
-                # tables — the existing "internal data unavailable" handling
-                # in _build_internal_data_status covers that case correctly.
-                connection.execute(f"set search_path = '{self.tenant_schema},main'")
+            connection = self._connect_with_lock_retry()
+            if self.tenant_schema is not None:
+                # DuckDB's search_path resolves an unqualified table name by
+                # checking each schema in order — a table that exists in BOTH
+                # the tenant schema and "main" is correctly isolated, but a
+                # table that's only in "main" (and missing from this
+                # tenant's own schema) would silently fall through to
+                # main's copy. That's only safe if "main" never contains an
+                # internal-tagged table at all, so assert that here rather
+                # than trust it as an invariant nobody re-checks: a stray
+                # dbt run without tenant_schema set (operator error, a
+                # forgotten --vars flag, a manual `dbt run` with no
+                # tenant_schema) would otherwise silently leak whatever it
+                # just modeled into main to every tenant via this fallback.
+                self._assert_main_has_no_internal_tables(connection)
+                if self._tenant_schema_exists(connection):
+                    connection.execute(f"set search_path = '{self.tenant_schema},main'")
             return connection
 
         connection = duckdb.connect(database=":memory:")
         self._prepare_connection(connection)
         return connection
+
+    def _connect_with_lock_retry(self) -> duckdb.DuckDBPyConnection:
+        """The dbt rebuild triggered after a payroll upload (main.py's
+        upload_payroll route, migrate_to_tenant.py) holds a write lock on
+        this shared DuckDB file for the several seconds it runs. A read
+        landing in that window would otherwise fail outright with a raw
+        IOException; retry briefly rather than surfacing a 500 for what is
+        normally a sub-10-second window."""
+        attempts = 10
+        delay_seconds = 0.3
+        for attempt in range(attempts):
+            try:
+                return duckdb.connect(database=str(self.analytics_db_path), read_only=True)
+            except duckdb.IOException as error:
+                if "Could not set lock on file" not in str(error) or attempt == attempts - 1:
+                    raise
+                time.sleep(delay_seconds)
+        raise AssertionError("unreachable")  # pragma: no cover
+
+    def _assert_main_has_no_internal_tables(self, connection: duckdb.DuckDBPyConnection) -> None:
+        rows = connection.execute(
+            "select table_name from information_schema.tables where table_schema = 'main'"
+        ).fetchall()
+        contaminated = INTERNAL_TAGGED_TABLES.intersection({row[0] for row in rows})
+        if contaminated:
+            raise RuntimeError(
+                "Internal-tagged table(s) found in the shared 'main' schema: "
+                + ", ".join(sorted(contaminated))
+                + ". These must only exist inside a tenant's own schema "
+                "(tenant_<id>) — finding them in 'main' means a dbt run was "
+                "executed without the tenant_schema var set, which would leak "
+                "that data to every tenant. Drop them from 'main' and re-run "
+                "dbt with --vars '{\"tenant_schema\": \"<the correct tenant schema>\"}'."
+            )
 
     def _tenant_schema_exists(self, connection: duckdb.DuckDBPyConnection) -> bool:
         if self.tenant_schema is None:
@@ -509,7 +575,7 @@ class AnalyticsRepository:
             return set()
 
         try:
-            with duckdb.connect(database=str(self.analytics_db_path), read_only=True) as connection:
+            with self._connect_with_lock_retry() as connection:
                 rows = connection.execute("show tables").fetchall()
         except duckdb.Error:
             return set()
