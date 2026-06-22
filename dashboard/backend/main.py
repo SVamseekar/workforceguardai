@@ -456,13 +456,29 @@ async def upload_payroll(
 
     result = guarded(repo.ingest_uploaded_payroll, content)
 
-    # Trigger dbt rebuild of internal models in the background
+    # Trigger dbt rebuild of this tenant's internal models in the background.
+    # internal_path and tenant_schema must both point at this tenant's own
+    # data/schema — otherwise the rebuild would model another tenant's (or
+    # nobody's) data, or land tables in the shared default schema where every
+    # tenant's dashboard would read them. See AnalyticsRepository._connect()
+    # and analytics/macros/tenant_schema.sql for the read-side of this.
     analytics_dir = root_dir / "analytics"
-    if analytics_dir.exists():
+    if analytics_dir.exists() and repo.tenant_schema is not None:
         try:
+            dbt_env = {**os.environ, "WORKFORCEGUARD_INTERNAL_PATH": str(repo.internal_data_dir)}
             subprocess.Popen(
-                ["dbt", "run", "--select", "tag:internal", "--profiles-dir", "."],
+                [
+                    "dbt",
+                    "run",
+                    "--select",
+                    "tag:internal",
+                    "--vars",
+                    f'{{"tenant_schema": "{repo.tenant_schema}"}}',
+                    "--profiles-dir",
+                    ".",
+                ],
                 cwd=str(analytics_dir),
+                env=dbt_env,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )

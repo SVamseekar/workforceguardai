@@ -23,13 +23,23 @@ vars:
   reference_path: "{{ env_var('WORKFORCEGUARD_REFERENCE_PATH', '/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/reference') }}"
   public_company_path: "{{ env_var('WORKFORCEGUARD_PUBLIC_COMPANY_PATH', '/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/public_company') }}"
   metric_registry_seed_version: "2026.03"
+  # Set per dbt invocation (see RepositoryRegistry.tenant_schema_name and
+  # main.py's upload_payroll route) to route internal-tagged models into a
+  # tenant-specific DuckDB schema instead of the shared default schema.
+  # Left unset, internal models fall back to the default schema — only
+  # correct for a single-tenant/dev run.
+  tenant_schema: null
 
 models:
   workforceguard_analytics:
     staging:
       +materialized: view
+      internal:
+        +tags: ["internal"]
     marts:
       +materialized: table
+      internal:
+        +tags: ["internal"]
 
 seeds:
   workforceguard_analytics:

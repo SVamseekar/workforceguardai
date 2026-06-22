@@ -39,10 +39,13 @@ def authed_client(app, role: str = "admin") -> TestClient:
                 tenant.id,
                 expires_at,
             )
-        return session_id, expires_at
+        return session_id, expires_at, tenant.id
 
-    session_id, expires_at = asyncio.run(_seed())
+    session_id, expires_at, tenant_id = asyncio.run(_seed())
     token = sessions.create_session_token(session_id, expires_at)
     client = TestClient(app)
     client.cookies.set(sessions.SESSION_COOKIE_NAME, token)
+    # Exposed so tests that trigger tenant-scoped side effects (e.g. the dbt
+    # run after a payroll upload) can identify and clean up after themselves.
+    client.tenant_id = tenant_id
     return client

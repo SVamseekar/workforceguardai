@@ -4,6 +4,7 @@ import csv
 import hashlib
 import json
 import math
+import re
 import sqlite3
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -154,6 +155,14 @@ class FilterState:
     period: str
 
 
+def tenant_schema_name(tenant_id: str) -> str:
+    """DuckDB schema name for a tenant's internal-tagged dbt models. Sanitized
+    to [a-z0-9_] since tenant_id may be a UUID with hyphens, which DuckDB
+    accepts unquoted but is safer to normalize to a single identifier shape."""
+    safe = re.sub(r"[^a-zA-Z0-9_]", "_", tenant_id).lower()
+    return f"tenant_{safe}"
+
+
 class AnalyticsRepository:
     def __init__(
         self,
@@ -162,8 +171,11 @@ class AnalyticsRepository:
         automation_schedules_path: Optional[Path] = None,
         internal_data_dir: Optional[Path] = None,
         analytics_db_path: Optional[Path] = None,
+        tenant_id: Optional[str] = None,
     ):
         self.root_dir = root_dir
+        self.tenant_id = tenant_id
+        self.tenant_schema = tenant_schema_name(tenant_id) if tenant_id is not None else None
         self.data_dir = (root_dir / "data" / "eu_raw").resolve()
         self.analytics_db_path = (
             analytics_db_path.resolve()
@@ -452,11 +464,35 @@ class AnalyticsRepository:
 
     def _connect(self) -> duckdb.DuckDBPyConnection:
         if self._modeled_database_ready():
-            return duckdb.connect(database=str(self.analytics_db_path), read_only=True)
+            connection = duckdb.connect(database=str(self.analytics_db_path), read_only=True)
+            if self.tenant_schema is not None and self._tenant_schema_exists(connection):
+                # internal-tagged dbt models are materialized into this
+                # tenant's own schema (see generate_schema_name in
+                # analytics/macros/tenant_schema.sql); everything else
+                # (EU/reference/public_company marts) lives in the default
+                # "main" schema and stays visible to every tenant. Listing
+                # the tenant schema first means unqualified references to
+                # internal-tagged tables (fct_internal_pay_snapshot, etc.)
+                # resolve to this tenant's data, never another tenant's.
+                # A tenant with no schema yet (no payroll uploaded/modeled)
+                # simply falls back to "main", which holds no internal-tagged
+                # tables — the existing "internal data unavailable" handling
+                # in _build_internal_data_status covers that case correctly.
+                connection.execute(f"set search_path = '{self.tenant_schema},main'")
+            return connection
 
         connection = duckdb.connect(database=":memory:")
         self._prepare_connection(connection)
         return connection
+
+    def _tenant_schema_exists(self, connection: duckdb.DuckDBPyConnection) -> bool:
+        if self.tenant_schema is None:
+            return False
+        row = connection.execute(
+            "select 1 from information_schema.schemata where schema_name = ?",
+            [self.tenant_schema],
+        ).fetchone()
+        return row is not None
 
     def _modeled_database_ready(self) -> bool:
         required_tables = {
@@ -5437,6 +5473,7 @@ class RepositoryRegistry:
                 governance_events_path=tenant_dir / "governance_events.sqlite",
                 automation_schedules_path=tenant_dir / "automation_schedules.json",
                 internal_data_dir=tenant_dir / "internal",
+                tenant_id=tenant_id,
             )
         return self._repositories[tenant_id]
 

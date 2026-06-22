@@ -123,6 +123,38 @@ class EgaproBenchmarkRouteTests(unittest.TestCase):
         self.assertEqual(resp.json()["source_id"], "egapro")
 
 
+def _drop_shared_client_tenant_schema() -> None:
+    """Successful uploads via the shared module-level _client trigger a real
+    (fire-and-forget) dbt run that creates that tenant's schema in the shared
+    dev DuckDB file at ANALYTICS_DB_PATH. UploadPayrollRouteTests and
+    OverviewEgaproBenchmarkIntegrationTests both rely on _client's tenant
+    still having that modeled data, so this can only run once every test in
+    this module is done — see tearDownModule below, not a per-class
+    tearDown. The dbt subprocess holds a write lock while running, so retry
+    briefly rather than failing the test run if it's still in flight."""
+    tenant_id = getattr(_client, "tenant_id", None)
+    if tenant_id is None:
+        return
+
+    import time
+
+    import duckdb
+
+    schema = "tenant_" + tenant_id.replace("-", "_")
+    for _ in range(20):
+        try:
+            with duckdb.connect(database=str(ANALYTICS_DB_PATH)) as conn:
+                conn.execute(f'drop schema if exists "{schema}" cascade')
+            return
+        except duckdb.IOException:
+            time.sleep(0.5)
+
+
+def tearDownModule():
+    if not _SKIP:
+        _drop_shared_client_tenant_schema()
+
+
 @unittest.skipIf(_SKIP, f"FastAPI app or httpx unavailable: {_SKIP_REASON}")
 class UploadPayrollRouteTests(unittest.TestCase):
     """POST /api/upload/payroll"""
