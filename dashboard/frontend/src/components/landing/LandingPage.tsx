@@ -101,6 +101,10 @@ const FAQS = [
     q: 'Is the methodology published?',
     a: 'Yes. The underlying composite indices (Hiring Pressure Index, Labour Resilience, Equity Risk Score) are documented in an open research paper covering a 20-country, 6-year Eurostat panel, available for review alongside the open-source codebase.',
   },
+  {
+    q: 'How do I request a demo?',
+    a: 'Use Request a demo anywhere on this page. We follow up within one business day with a walkthrough tailored to your reporting obligations, payroll countries in scope, and team setup.',
+  },
 ]
 
 const FEATURES = [
@@ -294,7 +298,7 @@ export function LandingPage() {
               className="landing-cta landing-nav__cta landing-nav__cta--demo"
               onClick={openDemo}
             >
-              Request demo
+              Request a demo
             </button>
             <Link to="/app" className="landing-cta landing-cta--primary landing-nav__cta">
               Open dashboard <ArrowRight size={15} />
@@ -317,7 +321,7 @@ export function LandingPage() {
             <a key={link.href} href={link.href} onClick={closeNav}>{link.label}</a>
           ))}
           <button type="button" className="landing-cta landing-nav__cta--demo" onClick={openDemo}>
-            Request demo
+            Request a demo
           </button>
           <Link to="/app" className="landing-cta landing-cta--primary" onClick={closeNav}>
             Open dashboard <ArrowRight size={16} />
@@ -530,8 +534,8 @@ export function LandingPage() {
           <MessageSquare size={28} />
           <h2>See where your organisation stands</h2>
           <p>
-            Explore live EU labour-market data, run a pay transparency review,
-            and export an evidence pack — no sign-up required.
+            Book a tailored walkthrough for your compliance team, or explore live EU labour-market
+            data, pay transparency review, and evidence export in the dashboard — no sign-up required.
           </p>
           <div className="landing-cta-section__actions">
             <button
@@ -575,7 +579,7 @@ export function LandingPage() {
                 <a href="#compliance">Compliance mapping</a>
                 <a href="#research">Research</a>
                 <a href="#faq">FAQ</a>
-                <button type="button" className="landing-footer__link-btn" onClick={openDemo}>Request demo</button>
+                <button type="button" className="landing-footer__link-btn" onClick={openDemo}>Request a demo</button>
                 <a href="https://github.com/SVamseekar/workforceguardai" target="_blank" rel="noreferrer">GitHub</a>
               </nav>
             </div>
