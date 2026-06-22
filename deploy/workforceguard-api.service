@@ -16,7 +16,8 @@ ExecStart=/usr/bin/docker run \
   -e PORT=8080 \
   -e WORKFORCEGUARD_ROOT=/app_root \
   --env-file /home/REPLACE_USER/WorkforceGuard-AI/deploy/.env.production \
-  -v /home/REPLACE_USER/WorkforceGuard-AI:/app_root \
+  -v /home/REPLACE_USER/WorkforceGuard-AI/data:/app_root/data \
+  -v /home/REPLACE_USER/WorkforceGuard-AI/analytics:/app_root/analytics \
   workforceguard-api:latest
 ExecStop=/usr/bin/docker stop workforceguard-api
 Restart=always
