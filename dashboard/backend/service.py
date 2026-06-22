@@ -5420,3 +5420,20 @@ class AnalyticsRepository:
             "recommendations": overview["intelligence"]["recommendations"],
             "governance": overview["governance"],
         }
+
+
+class RepositoryRegistry:
+    def __init__(self, root_dir: Path):
+        self.root_dir = root_dir
+        self._repositories: Dict[str, "AnalyticsRepository"] = {}
+
+    def get_for_tenant(self, tenant_id: str) -> "AnalyticsRepository":
+        if tenant_id not in self._repositories:
+            tenant_dir = self.root_dir / "data" / "tenants" / tenant_id
+            self._repositories[tenant_id] = AnalyticsRepository(
+                root_dir=self.root_dir,
+                governance_events_path=tenant_dir / "governance_events.sqlite",
+                automation_schedules_path=tenant_dir / "automation_schedules.json",
+                internal_data_dir=tenant_dir / "internal",
+            )
+        return self._repositories[tenant_id]
