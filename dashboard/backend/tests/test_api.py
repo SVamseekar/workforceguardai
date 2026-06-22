@@ -6,12 +6,16 @@ Covers:
   - POST /api/upload/payroll  (MIME rejection, size limit, validation errors, happy path)
 
 Runs with the backend .venv which has fastapi, duckdb, pandas, httpx, pyarrow.
+
+Requires DATABASE_URL — authenticated test client seeds a Postgres session directly
+(bypassing OAuth). Tests skip when DATABASE_URL is unset.
 """
 from __future__ import annotations
 
 import csv
 import io
 import json
+import os
 import shutil
 import sys
 import tempfile
@@ -26,9 +30,14 @@ if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
 try:
-    from fastapi.testclient import TestClient
     import main as app_module
-    _client = TestClient(app_module.app)
+    from auth_test_helpers import authed_client
+
+    if "DATABASE_URL" not in os.environ:
+        raise RuntimeError("DATABASE_URL not set; required for authenticated test client")
+
+    os.environ.setdefault("SESSION_SECRET", "test-secret-not-for-production-use-only")
+    _client = authed_client(app_module.app)
     _SKIP = False
     _SKIP_REASON = ""
 except Exception as exc:  # pragma: no cover
