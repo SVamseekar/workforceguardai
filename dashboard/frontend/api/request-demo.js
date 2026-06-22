@@ -1,3 +1,6 @@
+import { createRequire } from 'node:module'
+
+const require = createRequire(import.meta.url)
 const nodemailer = require('nodemailer')
 
 const DEFAULT_TO = 'martisoura@gmail.com'
@@ -131,7 +134,7 @@ function buildEmailText(payload, meta) {
 async function sendDemoRequestEmail(payload, meta) {
   const to = process.env.DEMO_REQUEST_TO || DEFAULT_TO
   const from = process.env.DEMO_REQUEST_FROM
-    || (process.env.SMTP_USER ? `WorkforceGuard AI <${process.env.SMTP_USER}>` : `WorkforceGuard AI <${process.env.SMTP_USER || to}>`)
+    || `WorkforceGuard AI <${process.env.SMTP_USER || to}>`
 
   const subject = `[Demo request] ${payload.companyName} — ${payload.firstName} ${payload.lastName}`
   const text = buildEmailText(payload, meta)
@@ -180,7 +183,7 @@ function isRateLimited(ip) {
   return entry.count > RATE_LIMIT_MAX
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
