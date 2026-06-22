@@ -63,8 +63,13 @@ app = FastAPI(title="WorkforceGuard Analytics API")
 
 app.add_middleware(SessionMiddleware, secret_key=os.environ["SESSION_SECRET"])
 
+_KNOWN_PRODUCTION_ORIGINS = {"https://workforceguard-ai.vercel.app"}
 _raw_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000")
-_allowed_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+_configured_origins = {o.strip() for o in _raw_origins.split(",") if o.strip()}
+_allowed_origins = sorted(_configured_origins | _KNOWN_PRODUCTION_ORIGINS)
+
+if "*" in _allowed_origins:
+    raise RuntimeError("CORS_ALLOWED_ORIGINS must not contain '*' when allow_credentials=True")
 
 app.add_middleware(
     CORSMiddleware,
