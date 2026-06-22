@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/request-demo",
+      "destination": "/api/request-demo"
+    },
+    {
       "source": "/api/:path((?!request-demo$).*)",
       "destination": "https://api.workforceguardai.souravamseekar.com/api/:path*"
     },

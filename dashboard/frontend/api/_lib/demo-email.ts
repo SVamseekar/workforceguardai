@@ -1,4 +1,3 @@
-import nodemailer from 'nodemailer'
 import type { DemoRequestMeta, DemoRequestPayload } from './demo-types'
 
 const DEFAULT_TO = 'martisoura@gmail.com'
@@ -142,7 +141,9 @@ async function sendViaSmtp(
     throw new Error('SMTP_USER and SMTP_PASS are required when RESEND_API_KEY is not set')
   }
 
-  const transporter = nodemailer.createTransport({
+  const nodemailer = await import('nodemailer')
+  const transport = nodemailer.default ?? nodemailer
+  const transporter = transport.createTransport({
     host,
     port,
     secure: port === 465,

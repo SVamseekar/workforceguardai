@@ -1,12 +1,41 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { sendDemoRequestEmail } from './_lib/demo-email'
 import { validateDemoRequest } from './_lib/demo-validate'
+
+type ApiRequest = {
+  method?: string
+  headers: Record<string, string | string[] | undefined>
+  body?: unknown
+  socket?: { remoteAddress?: string }
+}
+
+type ApiResponse = {
+  status: (code: number) => ApiResponse
+  json: (body: unknown) => void
+  end: () => void
+  setHeader: (name: string, value: string) => void
+}
+
+export const config = {
+  runtime: 'nodejs',
+  maxDuration: 30,
+}
 
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000
 const RATE_LIMIT_MAX = 5
 const ipHits = new Map<string, { count: number; resetAt: number }>()
 
-function getClientIp(req: VercelRequest): string | undefined {
+function parseBody(body: unknown): unknown {
+  if (typeof body === 'string') {
+    try {
+      return JSON.parse(body)
+    } catch {
+      return body
+    }
+  }
+  return body
+}
+
+function getClientIp(req: ApiRequest): string | undefined {
   const forwarded = req.headers['x-forwarded-for']
   if (typeof forwarded === 'string') return forwarded.split(',')[0]?.trim()
   if (Array.isArray(forwarded)) return forwarded[0]
@@ -27,7 +56,7 @@ function isRateLimited(ip: string | undefined): boolean {
   return entry.count > RATE_LIMIT_MAX
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -44,7 +73,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(429).json({ error: 'Too many requests. Please try again later.' })
   }
 
-  const parsed = validateDemoRequest(req.body)
+  const parsed = validateDemoRequest(parseBody(req.body))
   if (!parsed.ok) {
     return res.status(400).json({ error: parsed.error })
   }
