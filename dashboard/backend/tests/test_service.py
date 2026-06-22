@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import os
 import shutil
 import sys
 import tempfile
 import unittest
 import json
 from pathlib import Path
+
+os.environ.setdefault("SESSION_SECRET", "test-secret-not-for-production-use-only")
 
 import duckdb
 import pandas as pd
@@ -1157,8 +1160,12 @@ class MainContractTests(unittest.TestCase):
         self.assertEqual(payload["service"], "WorkforceGuard Analytics API")
 
     def test_overview_and_ask_endpoint_functions_return_dicts(self):
-        overview = main.get_overview()
-        answer = main.ask_dashboard(main.AskRequest(question="Which sector has the widest pay gap?"))
+        repo = main.repository_registry.get_for_tenant("test-contract-tenant")
+        overview = main.get_overview(repo=repo)
+        answer = main.ask_dashboard(
+            main.AskRequest(question="Which sector has the widest pay gap?"),
+            repo=repo,
+        )
 
         self.assertIn("filters", overview)
         self.assertIn("category", answer)
