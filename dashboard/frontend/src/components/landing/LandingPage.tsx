@@ -8,6 +8,7 @@ import {
   Menu, X, ChevronRight, Sparkles,
 } from 'lucide-react'
 import { LogoMark } from '../shared/LogoMark'
+import { DemoRequestModal } from './DemoRequestModal'
 import './landing.css'
 
 const SITE_URL = 'https://workforceguardai.souravamseekar.com'
@@ -199,6 +200,7 @@ export function LandingPage() {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   })
   const [navOpen, setNavOpen] = useState(false)
+  const [demoOpen, setDemoOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const navRef = useRef<HTMLElement>(null)
 
@@ -229,6 +231,10 @@ export function LandingPage() {
 
   const toggleTheme = () => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
   const closeNav = () => setNavOpen(false)
+  const openDemo = () => {
+    closeNav()
+    setDemoOpen(true)
+  }
 
   return (
     <div className="landing">
@@ -283,6 +289,13 @@ export function LandingPage() {
             <button className="theme-toggle-btn" onClick={toggleTheme} aria-label="Toggle theme">
               {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             </button>
+            <button
+              type="button"
+              className="landing-cta landing-nav__cta landing-nav__cta--demo"
+              onClick={openDemo}
+            >
+              Request demo
+            </button>
             <Link to="/app" className="landing-cta landing-cta--primary landing-nav__cta">
               Open dashboard <ArrowRight size={15} />
             </Link>
@@ -303,6 +316,9 @@ export function LandingPage() {
           {NAV_LINKS.map((link) => (
             <a key={link.href} href={link.href} onClick={closeNav}>{link.label}</a>
           ))}
+          <button type="button" className="landing-cta landing-nav__cta--demo" onClick={openDemo}>
+            Request demo
+          </button>
           <Link to="/app" className="landing-cta landing-cta--primary" onClick={closeNav}>
             Open dashboard <ArrowRight size={16} />
           </Link>
@@ -329,8 +345,15 @@ export function LandingPage() {
               and evidence packs ready for regulators.
             </p>
             <div className="landing-hero__actions">
-              <Link to="/app" className="landing-cta landing-cta--primary landing-cta--large">
-                Open the live dashboard <ArrowRight size={18} />
+              <button
+                type="button"
+                className="landing-cta landing-cta--primary landing-cta--large"
+                onClick={openDemo}
+              >
+                Request a demo <ArrowRight size={18} />
+              </button>
+              <Link to="/app" className="landing-cta landing-cta--secondary landing-cta--large">
+                Open the live dashboard
               </Link>
               <a href="#compliance" className="landing-cta landing-cta--ghost landing-cta--large">
                 See compliance mapping
@@ -510,11 +533,22 @@ export function LandingPage() {
             Explore live EU labour-market data, run a pay transparency review,
             and export an evidence pack — no sign-up required.
           </p>
-          <Link to="/app" className="landing-cta landing-cta--primary landing-cta--large">
-            Open the live dashboard <ArrowRight size={18} />
-          </Link>
+          <div className="landing-cta-section__actions">
+            <button
+              type="button"
+              className="landing-cta landing-cta--primary landing-cta--large"
+              onClick={openDemo}
+            >
+              Request a demo <ArrowRight size={18} />
+            </button>
+            <Link to="/app" className="landing-cta landing-cta--ghost landing-cta--large">
+              Open the live dashboard
+            </Link>
+          </div>
         </div>
       </section>
+
+      <DemoRequestModal open={demoOpen} onClose={() => setDemoOpen(false)} />
 
       <footer className="landing-footer">
         <div className="landing-footer__inner">
@@ -541,6 +575,7 @@ export function LandingPage() {
                 <a href="#compliance">Compliance mapping</a>
                 <a href="#research">Research</a>
                 <a href="#faq">FAQ</a>
+                <button type="button" className="landing-footer__link-btn" onClick={openDemo}>Request demo</button>
                 <a href="https://github.com/SVamseekar/workforceguardai" target="_blank" rel="noreferrer">GitHub</a>
               </nav>
             </div>
