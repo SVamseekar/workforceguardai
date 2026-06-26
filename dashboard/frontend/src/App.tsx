@@ -18,6 +18,7 @@ import { LoginScreen } from './components/auth/LoginScreen'
 import { NoticeBar } from './components/shared/NoticeBar'
 import { SidebarContext } from './components/layout/SidebarContext'
 import { useOverviewData } from './hooks/useOverviewData'
+import { GoogleAnalytics } from './components/GoogleAnalytics'
 import './App.css'
 
 const queryClient = new QueryClient({
@@ -116,6 +117,7 @@ export default function App() {
             />
           </Routes>
         </BrowserRouter>
+        <GoogleAnalytics />
       </QueryClientProvider>
     </HelmetProvider>
   )
