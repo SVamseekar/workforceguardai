@@ -19,6 +19,7 @@ import { NoticeBar } from './components/shared/NoticeBar'
 import { SidebarContext } from './components/layout/SidebarContext'
 import { useOverviewData } from './hooks/useOverviewData'
 import { GoogleAnalytics } from './components/GoogleAnalytics'
+import { PrivateAppSeo } from './components/seo/PrivateAppSeo'
 import './App.css'
 
 const queryClient = new QueryClient({
@@ -111,6 +112,7 @@ export default function App() {
               path="/app/*"
               element={
                 <AuthProvider>
+                  <PrivateAppSeo />
                   <AuthGate />
                 </AuthProvider>
               }

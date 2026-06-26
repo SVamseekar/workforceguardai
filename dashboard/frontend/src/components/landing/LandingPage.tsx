@@ -1,5 +1,4 @@
 import { useEffect } from 'react'
-import { Helmet } from 'react-helmet-async'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../lib/api'
 import {
@@ -7,8 +6,9 @@ import {
   CheckCircle2, ArrowRight, Lock, Database, FileCheck2,
   ChevronRight, Sparkles,
 } from 'lucide-react'
+import { Seo } from '../seo/Seo'
+import { buildHomeJsonLd, DEFAULT_DESCRIPTION, DEFAULT_TITLE } from '../../lib/seo'
 import { LandingShell, useLandingDemo } from './LandingShell'
-import { SITE_URL } from './site'
 import { useScrollReveal } from './useScrollReveal'
 import './landing.css'
 
@@ -119,31 +119,6 @@ const TRUST_ITEMS = [
   { icon: ShieldCheck, title: 'Hash-chained governance log', body: 'Every approve, override, reverse, and export action is written to a SHA-256 hash-chained event log with live integrity checks.' },
 ]
 
-const JSON_LD = {
-  '@context': 'https://schema.org',
-  '@graph': [
-    {
-      '@type': 'Organization',
-      name: 'WorkforceGuard AI',
-      url: SITE_URL,
-      logo: `${SITE_URL}/og-image.png`,
-    },
-    {
-      '@type': 'SoftwareApplication',
-      name: 'WorkforceGuard AI',
-      applicationCategory: 'BusinessApplication',
-      operatingSystem: 'Web',
-      description: 'EU workforce intelligence and pay-transparency compliance platform for HR, people analytics, and compliance teams, built around the EU Pay Transparency Directive (2023/970).',
-      url: SITE_URL,
-      offers: {
-        '@type': 'Offer',
-        price: '0',
-        priceCurrency: 'EUR',
-      },
-    },
-  ],
-}
-
 function ProductShowcase() {
   return (
     <div className="landing-showcase">
@@ -176,34 +151,12 @@ function LandingHomeContent() {
 
   return (
     <>
-      <Helmet>
-        <title>WorkforceGuard AI — EU Pay Transparency Compliance & Workforce Intelligence</title>
-        <meta
-          name="description"
-          content="WorkforceGuard AI helps EU employers prepare for Directive (EU) 2023/970 with gender pay gap benchmarking across the EU27, payroll-aware compliance review, and a hash-chained audit log ready for regulators."
-        />
-        <link rel="canonical" href={SITE_URL + '/'} />
-        <meta name="robots" content="index, follow" />
-
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={SITE_URL + '/'} />
-        <meta property="og:title" content="WorkforceGuard AI — EU Pay Transparency Compliance & Workforce Intelligence" />
-        <meta
-          property="og:description"
-          content="Benchmark gender pay gaps across the EU27, run payroll-aware compliance reviews under Directive (EU) 2023/970, and export audit-ready evidence packs."
-        />
-        <meta property="og:image" content={SITE_URL + '/og-image.png'} />
-
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="WorkforceGuard AI — EU Pay Transparency Compliance & Workforce Intelligence" />
-        <meta
-          name="twitter:description"
-          content="Benchmark gender pay gaps across the EU27, run payroll-aware compliance reviews under Directive (EU) 2023/970, and export audit-ready evidence packs."
-        />
-        <meta name="twitter:image" content={SITE_URL + '/og-image.png'} />
-
-        <script type="application/ld+json">{JSON.stringify(JSON_LD)}</script>
-      </Helmet>
+      <Seo
+        title={DEFAULT_TITLE}
+        description={DEFAULT_DESCRIPTION}
+        path="/"
+        jsonLd={buildHomeJsonLd(FAQS)}
+      />
 
       <section className="landing-hero">
         <div className="landing-hero__inner">

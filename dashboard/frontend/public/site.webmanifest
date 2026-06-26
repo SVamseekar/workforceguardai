@@ -1,0 +1,22 @@
+{
+  "name": "WorkforceGuard AI",
+  "short_name": "WorkforceGuard",
+  "description": "EU pay transparency compliance and workforce intelligence platform.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
+  "lang": "en-GB",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}

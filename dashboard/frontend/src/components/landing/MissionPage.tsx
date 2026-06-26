@@ -1,4 +1,3 @@
-import { Helmet } from 'react-helmet-async'
 import { Link } from 'react-router-dom'
 import {
   ArrowRight,
@@ -10,8 +9,13 @@ import {
   ShieldCheck,
   Sparkles,
 } from 'lucide-react'
+import { Seo } from '../seo/Seo'
+import {
+  buildOrganizationSchema,
+  buildWebPageSchema,
+  buildWebSiteSchema,
+} from '../../lib/seo'
 import { LandingShell, useLandingDemo } from './LandingShell'
-import { SITE_URL } from './site'
 import { useScrollReveal } from './useScrollReveal'
 import './landing.css'
 
@@ -61,27 +65,30 @@ const COMMITMENTS = [
   },
 ]
 
+const MISSION_TITLE = 'Our Mission — WorkforceGuard AI'
+const MISSION_DESCRIPTION =
+  'WorkforceGuard AI exists to make EU pay transparency operational: provable benchmarks, payroll-aware review workflows, and audit-ready evidence under Directive (EU) 2023/970.'
+
 function MissionContent() {
   const { openDemo } = useLandingDemo()
   useScrollReveal()
 
   return (
     <>
-      <Helmet>
-        <title>Our Mission — WorkforceGuard AI</title>
-        <meta
-          name="description"
-          content="WorkforceGuard AI exists to make EU pay transparency operational: provable benchmarks, payroll-aware review workflows, and audit-ready evidence under Directive (EU) 2023/970."
-        />
-        <link rel="canonical" href={`${SITE_URL}/mission`} />
-        <meta property="og:url" content={`${SITE_URL}/mission`} />
-        <meta property="og:title" content="Our Mission — WorkforceGuard AI" />
-        <meta
-          property="og:description"
-          content="Making pay transparency enforceable — with provenance on every figure and integrity you can verify."
-        />
-        <meta property="og:image" content={`${SITE_URL}/og-image.png`} />
-      </Helmet>
+      <Seo
+        title={MISSION_TITLE}
+        description={MISSION_DESCRIPTION}
+        path="/mission"
+        jsonLd={[
+          buildOrganizationSchema(),
+          buildWebSiteSchema(),
+          buildWebPageSchema({
+            title: MISSION_TITLE,
+            description: MISSION_DESCRIPTION,
+            path: '/mission',
+          }),
+        ]}
+      />
 
       <section className="mission-hero landing-reveal">
         <div className="mission-hero__inner">
