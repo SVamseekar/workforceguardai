@@ -38,9 +38,24 @@ class AnalyticsRepositoryTests(unittest.TestCase):
         cls.repo = AnalyticsRepository(ROOT_DIR)
 
     def _copy_analytics_db(self, temp_dir: str) -> Path:
+        if not ANALYTICS_DB_PATH.exists():
+            self.skipTest("Analytics DB not available in this environment")
         db_path = Path(temp_dir) / "workforceguard_analytics.duckdb"
         shutil.copyfile(ANALYTICS_DB_PATH, db_path)
         return db_path
+
+    def _require_internal_marts_in_db(self, db_path: Path) -> None:
+        required_tables = {
+            "stg_internal__payroll_snapshot",
+            "stg_internal__job_architecture",
+            "fct_internal_pay_snapshot",
+            "dim_worker_category",
+            "mart_internal_market_pay_benchmark",
+        }
+        with duckdb.connect(str(db_path)) as connection:
+            tables = {row[0] for row in connection.execute("show tables").fetchall()}
+        if not required_tables.issubset(tables):
+            self.skipTest("Internal mart tables are not materialized in analytics DB")
 
     def _write_internal_manifest(self, temp_dir: str, trusted: bool) -> Path:
         manifest_dir = Path(temp_dir) / "internal_meta"
@@ -597,6 +612,7 @@ class AnalyticsRepositoryTests(unittest.TestCase):
             internal_dir.mkdir(parents=True)
             self._write_internal_manifest(temp_dir, trusted=False)
             db_path = self._copy_analytics_db(temp_dir)
+            self._require_internal_marts_in_db(db_path)
             repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir, analytics_db_path=db_path)
             overview = repo.build_overview(country="FR", geography="FR")
 
@@ -1107,11 +1123,16 @@ class IngestUploadedPayrollTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             internal_dir = Path(temp_dir) / "internal"
             internal_dir.mkdir(parents=True)
-            # Copy job architecture so the warning check has something to compare against
-            shutil.copyfile(
-                ROOT_DIR / "data" / "internal" / "job_architecture.parquet",
-                internal_dir / "job_architecture.parquet",
-            )
+            pd.DataFrame(
+                [
+                    {
+                        "job_code": "SE-1",
+                        "job_title": "Software Engineer",
+                        "job_family": "Engineering",
+                        "country_code": "FR",
+                    }
+                ]
+            ).to_parquet(internal_dir / "job_architecture.parquet", index=False)
             repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
             rows = self._valid_rows(10)
             for row in rows:

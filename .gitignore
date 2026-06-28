@@ -1,4 +1,5 @@
 .DS_Store
+Thumbs.db
 
 # Local secrets and machine-specific config
 .env
@@ -6,14 +7,25 @@
 !.env.example
 !deploy/.env.production.example
 analytics/.user.yml
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+credentials.json
+service-account*.json
 
 # Python
 __pycache__/
 *.py[cod]
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
 .coverage
 htmlcov/
+*.egg-info/
+dist/
+build/
 
 # Local virtual environments
 .venv/
@@ -43,7 +55,27 @@ data/internal_raw/*
 !data/internal_raw/.gitkeep
 deploy/.env.production
 
+# IDE and editor
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*.swo
+*~
+
+# Tooling / local automation
 .playwright-mcp/
 screenshot-*.png
 .vercel
 .env*.local
+
+# Large generated or scratch assets (keep committed demo GIFs in docs/demos/)
+docs/demos/video_recording/
+*.webm
+/image.png
+/*.pdf
+
+# Research paper build scratch (drafts live in docs/ and can be committed intentionally)
+docs/paper-output.pdf
+docs/paper-output.html

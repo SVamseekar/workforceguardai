@@ -192,9 +192,7 @@ export function useOverviewData() {
     mutationFn: async (file: File) => {
       const formData = new FormData()
       formData.append('file', file)
-      const response = await api.post('/upload/payroll', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
+      const response = await api.post('/upload/payroll', formData)
       return response.data as { record_count: number }
     },
     onSuccess: (data) => {
@@ -228,6 +226,6 @@ export function useOverviewData() {
     recordGovernanceAction: (actionCode: string, targetType: string, targetId: string, reason?: string) =>
       governanceMutation.mutate({ actionCode, targetType, targetId, reason }),
     scheduleBrief: (template: { id: string; label: string }) => scheduleMutation.mutateAsync(template),
-    uploadPayroll: (file: File) => uploadMutation.mutate(file),
+    uploadPayroll: (file: File) => uploadMutation.mutateAsync(file),
   }
 }
