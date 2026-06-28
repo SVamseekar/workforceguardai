@@ -65,10 +65,10 @@ describe('useOverviewData', () => {
     const file = new File(['emp_id,salary\n1,50000'], 'payroll.csv', { type: 'text/csv' })
 
     await act(async () => {
-      result.current.uploadPayroll(file)
+      await result.current.uploadPayroll(file)
     })
 
-    await waitFor(() => expect(result.current.notice?.type).toBe('success'), { timeout: 5000 })
+    expect(result.current.notice?.type).toBe('success')
     expect(result.current.notice?.message).toBe('Upload accepted — 42 employees loaded.')
   })
 
@@ -85,10 +85,10 @@ describe('useOverviewData', () => {
     const file = new File(['bad'], 'bad.csv', { type: 'text/csv' })
 
     await act(async () => {
-      result.current.uploadPayroll(file)
+      await result.current.uploadPayroll(file).catch(() => undefined)
     })
 
-    await waitFor(() => expect(result.current.notice?.type).toBe('error'), { timeout: 5000 })
+    expect(result.current.notice?.type).toBe('error')
     expect(result.current.notice?.message).toBe('Invalid columns.')
   })
 
