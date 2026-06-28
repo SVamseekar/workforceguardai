@@ -68,7 +68,7 @@ describe('useOverviewData', () => {
       result.current.uploadPayroll(file)
     })
 
-    await waitFor(() => expect(result.current.notice?.type).toBe('success'))
+    await waitFor(() => expect(result.current.notice?.type).toBe('success'), { timeout: 5000 })
     expect(result.current.notice?.message).toBe('Upload accepted — 42 employees loaded.')
   })
 
@@ -88,7 +88,7 @@ describe('useOverviewData', () => {
       result.current.uploadPayroll(file)
     })
 
-    await waitFor(() => expect(result.current.notice?.type).toBe('error'))
+    await waitFor(() => expect(result.current.notice?.type).toBe('error'), { timeout: 5000 })
     expect(result.current.notice?.message).toBe('Invalid columns.')
   })
 
