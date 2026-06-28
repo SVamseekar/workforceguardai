@@ -83,12 +83,11 @@ describe('useOverviewData', () => {
 
   it('uploadPayroll shows error notice on failure', async () => {
     vi.spyOn(api, 'post').mockRejectedValueOnce(
-      new axios.AxiosError('Upload rejected', '422', undefined, undefined, {
-        status: 422,
-        data: { detail: 'Invalid columns.' },
-        statusText: 'Unprocessable Entity',
-        headers: {},
-        config: {},
+      Object.assign(new axios.AxiosError('Upload rejected'), {
+        response: {
+          status: 422,
+          data: { detail: 'Invalid columns.' },
+        },
       }),
     )
 
