@@ -45,3 +45,5 @@ deploy/.env.production
 
 .playwright-mcp/
 screenshot-*.png
+.vercel
+.env*.local
