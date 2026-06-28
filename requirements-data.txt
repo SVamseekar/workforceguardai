@@ -3,6 +3,6 @@ dbt-duckdb>=1.8,<2
 duckdb>=1.1
 pandas>=2.2
 pyarrow>=18
-pyyaml>=6
+pyyaml>=6.0.3
 requests>=2.31
 openpyxl>=3.1
