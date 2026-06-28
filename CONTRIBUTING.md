@@ -82,6 +82,17 @@ git lfs install
 git lfs pull
 ```
 
+## AI assistants
+
+- **Claude Code** reads [CLAUDE.md](CLAUDE.md) automatically each session.
+- **Cursor** uses [.cursor/rules/workforceguard.mdc](.cursor/rules/workforceguard.mdc).
+- Both follow the same branch → PR → CI workflow above.
+
+## CI cost notes
+
+CI jobs are **path-filtered**: docs-only PRs skip Python, frontend, and dbt work.
+For smaller private repos, copy [.github/workflows/templates/ci-lite.yml](.github/workflows/templates/ci-lite.yml).
+
 ## Questions
 
 Open a [GitHub issue](https://github.com/SVamseekar/workforceguardai/issues) for bugs or feature requests.

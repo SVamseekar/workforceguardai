@@ -61,8 +61,9 @@ cd analytics && dbt test
 
 ## CI / deploy
 
-- PRs run: secret scan, Python tests (Postgres service), frontend lint/typecheck/tests.
+- PRs run: secret scan + path-filtered jobs (Python, frontend, dbt compile only when those paths change).
 - Production deploy (GCP + Vercel) runs only after CI passes on `main`.
+- Smaller private repos: see `.github/workflows/templates/ci-lite.yml`.
 
 ## Other tools
 
