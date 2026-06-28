@@ -23,6 +23,10 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       rollupOptions: {
+        input: {
+          main: 'index.html',
+          mission: 'mission.html',
+        },
         output: {
           manualChunks: {
             charts: ['recharts'],

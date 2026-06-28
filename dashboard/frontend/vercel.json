@@ -19,6 +19,10 @@
       "destination": "https://api.workforceguardai.souravamseekar.com/api/:path*"
     },
     {
+      "source": "/mission",
+      "destination": "/mission.html"
+    },
+    {
       "source": "/((?!api/.*|.*\\..*).*)",
       "destination": "/index.html"
     }
