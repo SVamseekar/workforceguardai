@@ -1,0 +1,56 @@
+# Lightweight CI template for smaller private repos.
+# Copy to .github/workflows/ci.yml and adjust paths/commands.
+#
+# Saves GitHub Actions minutes: PR-only, path-filtered, no deploy gate.
+name: CI Lite
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-lite-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - 'src/**'
+              - 'lib/**'
+              - 'tests/**'
+              - 'package.json'
+              - 'requirements.txt'
+
+  checks:
+    name: Lint and test
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Skip — docs or config only
+        if: needs.changes.outputs.code != 'true'
+        run: echo "No code changes."
+
+      # --- customize below for your stack ---
+      - uses: actions/setup-node@v4
+        if: needs.changes.outputs.code == 'true'
+        with:
+          node-version: "22"
+
+      - name: Install and test
+        if: needs.changes.outputs.code == 'true'
+        run: |
+          npm ci
+          npm run lint --if-present
+          npm test --if-present

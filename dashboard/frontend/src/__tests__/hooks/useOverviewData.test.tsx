@@ -1,11 +1,17 @@
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+import axios from 'axios'
 import { http, HttpResponse } from 'msw'
 import { server } from '../handlers.js'
+import { api } from '../../lib/api'
 import { useOverviewData } from '../../hooks/useOverviewData'
 import { AuthProvider } from '../../contexts/AuthContext'
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 
 function makeWrapper() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -59,24 +65,30 @@ describe('useOverviewData', () => {
   })
 
   it('uploadPayroll posts file and shows success notice', async () => {
+    vi.spyOn(api, 'post').mockResolvedValueOnce({ data: { record_count: 42 } })
+
     const { result } = renderHook(() => useOverviewData(), { wrapper: makeWrapper() })
     await waitFor(() => expect(result.current.loading).toBe(false))
 
     const file = new File(['emp_id,salary\n1,50000'], 'payroll.csv', { type: 'text/csv' })
 
     await act(async () => {
-      result.current.uploadPayroll(file)
+      await result.current.uploadPayroll(file)
     })
 
-    await waitFor(() => expect(result.current.notice?.type).toBe('success'))
+    expect(api.post).toHaveBeenCalledWith('/upload/payroll', expect.any(FormData))
+    expect(result.current.notice?.type).toBe('success')
     expect(result.current.notice?.message).toBe('Upload accepted — 42 employees loaded.')
   })
 
   it('uploadPayroll shows error notice on failure', async () => {
-    server.use(
-      http.post('/api/upload/payroll', () =>
-        HttpResponse.json({ detail: 'Invalid columns.' }, { status: 422 }),
-      ),
+    vi.spyOn(api, 'post').mockRejectedValueOnce(
+      Object.assign(new axios.AxiosError('Upload rejected'), {
+        response: {
+          status: 422,
+          data: { detail: 'Invalid columns.' },
+        },
+      }),
     )
 
     const { result } = renderHook(() => useOverviewData(), { wrapper: makeWrapper() })
@@ -85,10 +97,10 @@ describe('useOverviewData', () => {
     const file = new File(['bad'], 'bad.csv', { type: 'text/csv' })
 
     await act(async () => {
-      result.current.uploadPayroll(file)
+      await result.current.uploadPayroll(file).catch(() => undefined)
     })
 
-    await waitFor(() => expect(result.current.notice?.type).toBe('error'))
+    expect(result.current.notice?.type).toBe('error')
     expect(result.current.notice?.message).toBe('Invalid columns.')
   })
 

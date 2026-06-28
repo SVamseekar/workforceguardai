@@ -1,0 +1,15 @@
+# Default owner for all changes
+* @SVamseekar
+
+# Backend API and auth
+/dashboard/backend/ @SVamseekar
+
+# Frontend dashboard
+/dashboard/frontend/ @SVamseekar
+
+# Analytics / dbt models
+/analytics/ @SVamseekar
+
+# Deployment and infrastructure
+/deploy/ @SVamseekar
+/.github/ @SVamseekar

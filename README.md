@@ -5,13 +5,13 @@
 
 This system is described in:
 
-> Marti, S. V. (2026). *Why Tight Labour Markets Do Not Close Gender 
-> Pay Gaps: Evidence from a 20-Country Eurostat Panel.*  
-> Independent Researcher. May 2026.  
+> Marti, S. V. (2026). *Why Tight Labour Markets Do Not Close Gender
+> Pay Gaps: Evidence from a 20-Country Eurostat Panel.*
+> Independent Researcher. May 2026.
 > SSRN: [ssrn.com/abstract=6826361](https://ssrn.com/abstract=6826361) | Zenodo: [doi.org/10.5281/zenodo.20455974](https://doi.org/10.5281/zenodo.20455974) | MPRA: [mpra.ub.uni-muenchen.de/129330](https://mpra.ub.uni-muenchen.de/129330/) (Paper No. 129330)
 
-**Live dashboard:** https://workforceguardai.souravamseekar.com/app  
-**Keywords:** gender pay gap · pay transparency · EU Pay Transparency Directive · 
+**Live dashboard:** https://workforceguardai.souravamseekar.com/app
+**Keywords:** gender pay gap · pay transparency · EU Pay Transparency Directive ·
 labour market tightness · Eurostat · composite indicators
 
 ---
@@ -69,7 +69,7 @@ Eurostat API  ──►  Python ingestion  ──►  DuckDB  ──►  dbt mod
 
 **Frontend:** React 18 + TypeScript + Vite, TanStack Query for data fetching, Recharts for time-series visualisation, Tailwind CSS. Deployed on Vercel.
 
-**CI/CD:** GitHub Actions — push to `main` triggers parallel deploy to GCP (backend via SSH + Docker) and Vercel (frontend).
+**CI/CD:** GitHub Actions — PRs and pushes to `main` run CI (tests, lint, secret scan). Deploy to GCP and Vercel runs only after CI passes on `main`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the git workflow.
 
 ---
 

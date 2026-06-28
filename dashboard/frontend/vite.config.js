@@ -40,6 +40,9 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       setupFiles: ['./src/__tests__/setup.js'],
       globals: true,
+      // MSW uses a process-global server; avoid cross-file handler races in CI.
+      fileParallelism: false,
+      testTimeout: 15_000,
     },
   }
 })

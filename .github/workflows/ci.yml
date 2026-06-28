@@ -1,0 +1,190 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      python: ${{ steps.filter.outputs.python }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      analytics: ${{ steps.filter.outputs.analytics }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            python:
+              - 'dashboard/backend/**'
+              - 'scripts/**'
+              - 'tests/**'
+              - 'requirements*.txt'
+              - 'data/**'
+            frontend:
+              - 'dashboard/frontend/**'
+            analytics:
+              - 'analytics/**'
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  python:
+    name: Python tests
+    needs: changes
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: workforceguard_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d workforceguard_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/workforceguard_test
+      SESSION_SECRET: ci-secret-not-for-production-use-only
+      PYTHONPATH: dashboard/backend
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Skip — no Python changes
+        if: needs.changes.outputs.python != 'true'
+        run: echo "No Python changes in this diff."
+
+      - uses: actions/setup-python@v5
+        if: needs.changes.outputs.python == 'true'
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-data.txt
+            dashboard/backend/requirements.txt
+
+      - name: Install Python dependencies
+        if: needs.changes.outputs.python == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-data.txt -r dashboard/backend/requirements.txt
+          pip install pytest httpx
+
+      - name: Run backend tests
+        if: needs.changes.outputs.python == 'true'
+        run: python -m pytest dashboard/backend/tests/ -q --tb=short
+
+      - name: Run data pipeline tests
+        if: needs.changes.outputs.python == 'true'
+        run: python -m pytest tests/ -q --tb=short
+
+  frontend:
+    name: Frontend checks
+    needs: changes
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard/frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Skip — no frontend changes
+        if: needs.changes.outputs.frontend != 'true'
+        run: echo "No frontend changes in this diff."
+
+      - uses: actions/setup-node@v4
+        if: needs.changes.outputs.frontend == 'true'
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: dashboard/frontend/package-lock.json
+
+      - name: Install dependencies
+        if: needs.changes.outputs.frontend == 'true'
+        run: npm ci
+
+      - name: Lint
+        if: needs.changes.outputs.frontend == 'true'
+        run: npm run lint
+
+      - name: Typecheck
+        if: needs.changes.outputs.frontend == 'true'
+        run: npm run typecheck
+
+      - name: Unit tests
+        if: needs.changes.outputs.frontend == 'true'
+        run: npm test
+
+  analytics:
+    name: Analytics checks
+    needs: changes
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: analytics
+
+    env:
+      WORKFORCEGUARD_DB_PATH: ${{ github.workspace }}/data/workforceguard_analytics.duckdb
+      WORKFORCEGUARD_EU_RAW_PATH: ${{ github.workspace }}/data/eu_raw
+      WORKFORCEGUARD_INTERNAL_PATH: ${{ github.workspace }}/data/internal
+      WORKFORCEGUARD_REFERENCE_PATH: ${{ github.workspace }}/data/reference
+      WORKFORCEGUARD_PUBLIC_COMPANY_PATH: ${{ github.workspace }}/data/public_company
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Skip — no analytics changes
+        if: needs.changes.outputs.analytics != 'true'
+        run: echo "No analytics changes in this diff."
+
+      - uses: actions/setup-python@v5
+        if: needs.changes.outputs.analytics == 'true'
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: dashboard/backend/requirements.txt
+
+      - name: Install dbt
+        if: needs.changes.outputs.analytics == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install "dbt-core>=1.8,<2" "dbt-duckdb>=1.8,<2"
+
+      - name: Parse and compile dbt project
+        if: needs.changes.outputs.analytics == 'true'
+        run: |
+          dbt parse --profiles-dir .
+          dbt compile --profiles-dir .
