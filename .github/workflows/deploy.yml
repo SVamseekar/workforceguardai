@@ -80,8 +80,10 @@ jobs:
              git fetch origin main
              git reset --hard origin/main
              bash deploy/sync-production-env.sh || true
+             bash deploy/ensure-postgres.sh
              bash deploy/install-service.sh
              docker build -t workforceguard-api:latest -f dashboard/backend/Dockerfile .
+             bash deploy/migrate-legacy-data.sh
              sudo systemctl restart workforceguard-api
              for attempt in $(seq 1 30); do
                if curl -sf http://localhost:8080/health >/dev/null; then
@@ -125,4 +127,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run production smoke checks
+        env:
+          API_DIRECT_IP: ${{ secrets.GCP_VM_IP }}
         run: bash deploy/verify-production.sh

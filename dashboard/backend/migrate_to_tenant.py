@@ -81,6 +81,10 @@ if __name__ == "__main__":
         print("Usage: python migrate_to_tenant.py <admin_email> <admin_display_name> <tenant_name>")
         sys.exit(1)
 
-    root_dir = Path(__file__).resolve().parents[2]
+    _here = Path(__file__).resolve().parent
+    if "WORKFORCEGUARD_ROOT" in os.environ:
+        root_dir = Path(os.environ["WORKFORCEGUARD_ROOT"])
+    else:
+        root_dir = _here.parents[2]
     tenant_id = asyncio.run(migrate(root_dir, sys.argv[1], sys.argv[2], sys.argv[3]))
     print(f"Migrated existing data to tenant {tenant_id}")

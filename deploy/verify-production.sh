@@ -27,8 +27,10 @@ fi
 
 if curl -sf "https://${API_HOST}/health" | grep -q '"status"'; then
   pass "API health https://${API_HOST}/health"
+elif [[ -n "${API_DIRECT_IP:-}" ]] && curl -sf "http://${API_DIRECT_IP}:8080/health" | grep -q '"status"'; then
+  pass "API health http://${API_DIRECT_IP}:8080/health (DNS for ${API_HOST} not set yet)"
 else
-  fail "API health https://${API_HOST}/health (is DNS A-record set for ${API_HOST}?)"
+  fail "API health https://${API_HOST}/health (add DNS A-record for ${API_HOST} → VM IP, or set API_DIRECT_IP)"
 fi
 
 if curl -sf "https://${FRONTEND_HOST}/api/auth/me" 2>/dev/null | grep -q 'detail'; then

@@ -2,11 +2,15 @@
   "headers": [
     {
       "source": "/robots.txt",
-      "headers": [{ "key": "Content-Type", "value": "text/plain; charset=utf-8" }]
+      "headers": [
+        { "key": "Content-Type", "value": "text/plain; charset=utf-8" }
+      ]
     },
     {
       "source": "/sitemap.xml",
-      "headers": [{ "key": "Content-Type", "value": "application/xml; charset=utf-8" }]
+      "headers": [
+        { "key": "Content-Type", "value": "application/xml; charset=utf-8" }
+      ]
     }
   ],
   "rewrites": [
@@ -16,7 +20,7 @@
     },
     {
       "source": "/api/:path((?!request-demo$).*)",
-      "destination": "https://api.workforceguardai.souravamseekar.com/api/:path*"
+      "destination": "http://34.55.194.136/api/:path*"
     },
     {
       "source": "/mission",
