@@ -31,5 +31,5 @@ class SessionTokenTests(unittest.TestCase):
     def test_tampered_token_is_rejected(self):
         expires = datetime.now(timezone.utc) + timedelta(hours=1)
         token = sessions.create_session_token("session-abc", expires)
-        tampered = token[:-1] + ("a" if token[-1] != "a" else "b")
+        tampered = f"{token}tampered"
         self.assertIsNone(sessions.verify_session_token(tampered))
