@@ -12,6 +12,8 @@ ExecStartPre=-/usr/bin/docker stop workforceguard-api
 ExecStartPre=-/usr/bin/docker rm workforceguard-api
 ExecStart=/usr/bin/docker run \
   --name workforceguard-api \
+  --user REPLACE_UID:REPLACE_GID \
+  --network workforceguard-net \
   -p 8080:8080 \
   -e PORT=8080 \
   -e WORKFORCEGUARD_ROOT=/app_root \
