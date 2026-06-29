@@ -83,8 +83,17 @@ jobs:
              bash deploy/install-service.sh
              docker build -t workforceguard-api:latest -f dashboard/backend/Dockerfile .
              sudo systemctl restart workforceguard-api
-             sleep 10
-             curl -sf http://localhost:8080/health'
+             for attempt in $(seq 1 30); do
+               if curl -sf http://localhost:8080/health >/dev/null; then
+                 echo "API healthy after ${attempt} attempt(s)"
+                 exit 0
+               fi
+               echo "Waiting for API health (${attempt}/30)..."
+               sleep 5
+             done
+             echo "API failed to become healthy"
+             sudo journalctl -u workforceguard-api -n 30 --no-pager
+             exit 1'
 
   deploy-frontend:
     name: Deploy frontend to Vercel
