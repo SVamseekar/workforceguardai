@@ -4,4 +4,4 @@ pyarrow
 pyyaml
 openpyxl
 requests
-urllib3<2
+urllib3<3
