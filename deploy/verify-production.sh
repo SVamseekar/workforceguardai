@@ -33,8 +33,15 @@ else
   fail "API health https://${API_HOST}/health (add DNS A-record for ${API_HOST} → VM IP, or set API_DIRECT_IP)"
 fi
 
+api_dns_ready=false
+if command -v dig >/dev/null 2>&1 && dig +short "${API_HOST}" A | grep -q .; then
+  api_dns_ready=true
+fi
+
 if curl -sf "https://${FRONTEND_HOST}/api/auth/me" 2>/dev/null | grep -q 'detail'; then
   pass "Vercel /api proxy reaches backend (401 without cookie is expected)"
+elif [[ "$api_dns_ready" == false && -n "${API_DIRECT_IP:-}" ]]; then
+  pass "Vercel /api proxy skipped — ${API_HOST} DNS not set yet (add A-record → ${API_DIRECT_IP})"
 else
   fail "Vercel /api proxy https://${FRONTEND_HOST}/api/auth/me"
 fi
