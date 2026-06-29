@@ -20,7 +20,7 @@ jobs:
       frontend: ${{ steps.filter.outputs.frontend }}
       analytics: ${{ steps.filter.outputs.analytics }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: dorny/paths-filter@v3
         id: filter
@@ -41,12 +41,12 @@ jobs:
     name: Secret scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Gitleaks
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -75,7 +75,7 @@ jobs:
       PYTHONPATH: dashboard/backend
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           lfs: true
 
@@ -83,7 +83,7 @@ jobs:
         if: needs.changes.outputs.python != 'true'
         run: echo "No Python changes in this diff."
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         if: needs.changes.outputs.python == 'true'
         with:
           python-version: "3.12"
@@ -117,13 +117,13 @@ jobs:
         working-directory: dashboard/frontend
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Skip — no frontend changes
         if: needs.changes.outputs.frontend != 'true'
         run: echo "No frontend changes in this diff."
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         if: needs.changes.outputs.frontend == 'true'
         with:
           node-version: "22"
@@ -162,7 +162,7 @@ jobs:
       WORKFORCEGUARD_PUBLIC_COMPANY_PATH: ${{ github.workspace }}/data/public_company
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           lfs: true
 
@@ -170,7 +170,7 @@ jobs:
         if: needs.changes.outputs.analytics != 'true'
         run: echo "No analytics changes in this diff."
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         if: needs.changes.outputs.analytics == 'true'
         with:
           python-version: "3.12"
