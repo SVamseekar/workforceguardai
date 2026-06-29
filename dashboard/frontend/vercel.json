@@ -20,7 +20,7 @@
     },
     {
       "source": "/api/:path((?!request-demo$).*)",
-      "destination": "http://34.55.194.136/api/:path*"
+      "destination": "https://api.workforceguardai.souravamseekar.com/api/:path*"
     },
     {
       "source": "/mission",
