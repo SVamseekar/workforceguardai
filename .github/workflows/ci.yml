@@ -20,7 +20,7 @@ jobs:
       frontend: ${{ steps.filter.outputs.frontend }}
       analytics: ${{ steps.filter.outputs.analytics }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: dorny/paths-filter@v3
         id: filter
@@ -41,7 +41,7 @@ jobs:
     name: Secret scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -75,7 +75,7 @@ jobs:
       PYTHONPATH: dashboard/backend
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           lfs: true
 
@@ -117,7 +117,7 @@ jobs:
         working-directory: dashboard/frontend
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Skip — no frontend changes
         if: needs.changes.outputs.frontend != 'true'
@@ -162,7 +162,7 @@ jobs:
       WORKFORCEGUARD_PUBLIC_COMPANY_PATH: ${{ github.workspace }}/data/public_company
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           lfs: true
 
