@@ -19,6 +19,14 @@ else
   fail "Landing page https://${FRONTEND_HOST}/"
 fi
 
+custom_bundle=$(curl -sf "https://${FRONTEND_HOST}/" | grep -oE 'main-[A-Za-z0-9_-]+\.js' | head -1 || true)
+vercel_bundle=$(curl -sf "https://workforceguardai.vercel.app/" | grep -oE 'main-[A-Za-z0-9_-]+\.js' | head -1 || true)
+if [[ -n "${custom_bundle}" && -n "${vercel_bundle}" && "${custom_bundle}" == "${vercel_bundle}" ]]; then
+  pass "Custom domain serves same build as workforceguardai.vercel.app (${custom_bundle})"
+else
+  fail "Custom domain stale — ${FRONTEND_HOST}=${custom_bundle:-missing}, vercel.app=${vercel_bundle:-missing}"
+fi
+
 if curl -sf "https://${FRONTEND_HOST}/app" >/dev/null; then
   pass "Dashboard shell https://${FRONTEND_HOST}/app"
 else
