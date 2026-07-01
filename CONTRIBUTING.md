@@ -100,6 +100,12 @@ git lfs pull
 - Frontend API routes in `dashboard/frontend/api/` use Node globals (not browser).
 - Auth tests require `DATABASE_URL`; others may skip if Postgres is unavailable.
 
+## AI assistants
+
+- **Claude Code** reads [CLAUDE.md](CLAUDE.md) automatically each session.
+- **Cursor** uses [.cursor/rules/workforceguard.mdc](.cursor/rules/workforceguard.mdc).
+- Both follow the same branch → PR → CI workflow above.
+
 ## CI cost notes
 
 CI jobs are **path-filtered**: docs-only PRs skip Python, frontend, and dbt work.

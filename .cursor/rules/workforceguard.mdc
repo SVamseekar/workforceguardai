@@ -1,0 +1,38 @@
+---
+description: WorkforceGuard git workflow, verification, and project conventions
+alwaysApply: true
+---
+
+# WorkforceGuard AI
+
+Read `CLAUDE.md` and `CONTRIBUTING.md` for the canonical workflow. This rule mirrors them for Cursor.
+
+## Git (required)
+
+- Never commit or push to `main`. Branch first: `feature/…`, `fix/…`, `chore/…`
+- Ship via PR; CI must pass before merge
+- Do not use `git commit --no-verify` unless the user explicitly requests it
+- One branch per task; focused diffs only
+
+## Verify before done
+
+| Changed | Run |
+|---------|-----|
+| `dashboard/frontend/` | `npm run lint && npm run typecheck && npm test` |
+| `dashboard/backend/` | `pytest dashboard/backend/tests/ -q` (needs `DATABASE_URL` for auth) |
+| `scripts/` or root `tests/` | `pytest tests/ -q` |
+| `analytics/` | `dbt test` (not in CI yet) |
+
+## Never commit
+
+`.env`, secrets, `data/internal/`, `data/tenants/`, raw video under `docs/demos/video_recording/`
+
+## Layout
+
+- `dashboard/frontend/` — React UI
+- `dashboard/backend/` — FastAPI + auth
+- `analytics/` — dbt models
+- `scripts/` — data pipelines
+- `deploy/` — GCP/Vercel
+
+Match existing code style. Add tests when behavior changes. User also uses Claude Code — commit/stash before switching tools on a branch.
