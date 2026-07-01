@@ -64,7 +64,7 @@ function ProductShowcase() {
             muted
             playsInline
             preload="auto"
-            aria-label="WorkforceGuard AI product walkthrough: command centre, market intelligence, compare, pay analysis, and governance log for Czechia financial and insurance activities"
+            aria-label="WorkforceGuard AI product walkthrough: command centre, market intelligence, compare, pay analysis, and governance log across EU member states"
           />
         </div>
       </div>
@@ -184,9 +184,9 @@ function LandingHomeContent() {
             <GitCompare size={18} />
             <h3>Combined Risk Quadrant</h3>
             <p>
-              Czechia finance (NACE K): SES gap {research.czFinanceSectorGapPct2023}% with HPI{' '}
-              {LANDING_FACTS.demo.czFinanceSignals.hiringPressureIndex} and ERS{' '}
-              {LANDING_FACTS.demo.czFinanceSignals.equityRiskScore} in live semantic metrics.
+              Plot Hiring Pressure against Equity Risk for any country × sector — finance (NACE K)
+              averages {research.eu27FinanceSectorGapPct}% EU-wide, the highest sectoral exposure in
+              the panel.
             </p>
             <Link to="/app/compare" className="landing-cta landing-cta--secondary">
               Explore the comparison <ChevronRight size={14} />
@@ -225,9 +225,8 @@ function LandingHomeContent() {
           <MessageSquare size={28} />
           <h2>See where your organisation stands</h2>
           <p>
-            Book a walkthrough on the Meridian CZ demo tenant ({LANDING_FACTS.demo.payrollRows} payroll
-            rows, {LANDING_FACTS.demo.reviewCategories.length} flagged categories), or sign in if your
-            organisation already has access.
+            Book a tailored walkthrough for your reporting countries and worker categories, or sign in
+            if your organisation already has access.
           </p>
           <div className="landing-cta-section__actions">
             <button

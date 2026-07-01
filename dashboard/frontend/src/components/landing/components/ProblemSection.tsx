@@ -35,9 +35,9 @@ export function ProblemSection() {
           Directive (EU) 2023/970 requires category-level measurement, objective justification, and
           retrievable evidence. Our Eurostat panel shows why competitive labour markets alone have not
           closed gaps: employment rate and gender pay gap correlate positively (r ≈{' '}
-          {research.employmentGapCorrelation}) across {research.panelCountries} countries — Czechia
-          records {research.czAllSectorGapPct}% overall while finance (NACE K) reaches{' '}
-          {research.czFinanceSectorGapPct2023}% in Eurostat SES 2023.
+          {research.employmentGapCorrelation}) across {research.panelCountries} countries — and
+          finance (NACE K) averages {research.eu27FinanceSectorGapPct}% EU-wide, more than double the{' '}
+          {research.eu27UnadjustedGapPct}% all-sector benchmark.
         </p>
       </div>
 

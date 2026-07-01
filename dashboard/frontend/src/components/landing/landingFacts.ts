@@ -1,6 +1,7 @@
 /**
- * Landing copy grounded in local pipeline output (dbt run + Meridian CZ tenant seed).
- * Update when demo scenario or Eurostat panel changes.
+ * Landing copy grounded in local pipeline output (dbt run + demo tenant seed).
+ * EU-wide figures are used on the public page; country-specific demo data lives
+ * under `demo` and appears only in the analyst demo section.
  */
 export const LANDING_FACTS = {
   market: {
@@ -17,12 +18,10 @@ export const LANDING_FACTS = {
   },
   research: {
     eu27UnadjustedGapPct: 11.1,
+    eu27FinanceSectorGapPct: 24.28,
     employmentGapCorrelation: 0.41,
     panelCountries: 20,
     panelSectors: 11,
-    czAllSectorGapPct: 17.5,
-    czFinanceSectorGapPct2023: 36.4,
-    eu27FinanceSectorGapPct: 24.28,
   },
   directive: {
     transpositionLabel: 'Jun 2026',
@@ -30,10 +29,9 @@ export const LANDING_FACTS = {
     jointAssessmentThresholdPct: 5,
     unresolvedReviewThresholdPct: 10,
   },
+  /** Seeded demo tenant — referenced only in the analyst demo theater. */
   demo: {
-    tenantName: 'Meridian CZ',
-    countryCode: 'CZ',
-    sectorCode: 'K',
+    tenantLabel: 'Sample tenant',
     payrollRows: 210,
     jobCodes: 9,
     reviewCategories: [
@@ -42,11 +40,6 @@ export const LANDING_FACTS = {
       { label: 'Operations', internalGapPct: 7.2, marketGapPct: 17.5, priority: 'medium' as const },
       { label: 'Client Advisory', internalGapPct: 2.3, marketGapPct: 17.5, priority: 'medium' as const },
     ],
-    czFinanceSignals: {
-      hiringPressureIndex: 80,
-      equityRiskScore: 96,
-      labourResilience: 98,
-    },
   },
 } as const
 
@@ -54,7 +47,7 @@ export const LIVE_PROOF_STATS = [
   {
     value: `${LANDING_FACTS.research.eu27UnadjustedGapPct}%`,
     label: 'EU27 unadjusted gender pay gap',
-    detail: 'Research panel benchmark — most employers have not mapped their position.',
+    detail: 'Research panel benchmark across member states.',
   },
   {
     value: `${LANDING_FACTS.directive.jointAssessmentThresholdPct}%`,
@@ -62,13 +55,13 @@ export const LIVE_PROOF_STATS = [
     detail: 'Directive (EU) 2023/970 when the gap is unjustified by category.',
   },
   {
-    value: String(LANDING_FACTS.demo.reviewCategories.length),
-    label: 'Meridian CZ categories flagged',
-    detail: 'Live demo tenant from seeded payroll (210 rows · 9 job codes).',
+    value: `${LANDING_FACTS.research.eu27FinanceSectorGapPct}%`,
+    label: 'EU27 finance sector gap',
+    detail: 'Eurostat SES — more than double the all-sector EU27 average.',
   },
   {
-    value: `${LANDING_FACTS.research.czFinanceSectorGapPct2023}%`,
-    label: 'CZ finance sector gap (Eurostat SES 2023)',
-    detail: `HPI ${LANDING_FACTS.demo.czFinanceSignals.hiringPressureIndex} · ERS ${LANDING_FACTS.demo.czFinanceSignals.equityRiskScore} in semantic metrics.`,
+    value: String(LANDING_FACTS.market.euMemberStates),
+    label: 'Member states in pipeline',
+    detail: `${LANDING_FACTS.market.compositeIndices.length} composite indices · ${LANDING_FACTS.market.yearRange} Eurostat panel.`,
   },
 ] as const

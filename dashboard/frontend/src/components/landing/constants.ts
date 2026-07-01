@@ -91,26 +91,26 @@ const [risk, tech, ops] = demo.reviewCategories
 
 export const ANALYST_DEMO_SCENES: AnalystDemoScene[] = [
   {
-    persona: 'Compliance lead · Czechia',
+    persona: 'Compliance lead',
     question: 'Which worker categories in our payroll need a joint pay assessment under the Directive?',
     answer:
       `${risk.label} (${risk.internalGapPct}% internal gap) and ${tech.label} (${tech.internalGapPct}%) are unresolved_review_item. ${ops.label} is at ${ops.internalGapPct}% — monitor against the ${LANDING_FACTS.directive.unresolvedReviewThresholdPct}% review threshold.`,
     provenance: [
       { label: 'Source', value: 'mart_pay_transparency_category_review' },
-      { label: 'Tenant', value: `${demo.tenantName} · ${demo.payrollRows} payroll rows` },
+      { label: 'Demo tenant', value: `${demo.payrollRows} payroll rows · ${demo.jobCodes} job codes` },
       { label: 'Confidence', value: 'High — trusted payroll + job architecture' },
     ],
     action: 'Open Pay Transparency Review',
   },
   {
-    persona: 'People analytics · EU benchmark',
-    question: 'How does Czechia\'s financial services gender pay gap compare to the EU27 average?',
+    persona: 'People analytics',
+    question: 'How does the EU27 finance sector gender pay gap compare to the all-sector average?',
     answer:
-      `Czechia NACE K: ${research.czFinanceSectorGapPct2023}% (Eurostat SES 2023) vs EU27 finance average ${research.eu27FinanceSectorGapPct}%. Hiring Pressure Index ${demo.czFinanceSignals.hiringPressureIndex} with Equity Risk Score ${demo.czFinanceSignals.equityRiskScore} — tight market, high equity exposure.`,
+      `EU27 NACE K averages ${research.eu27FinanceSectorGapPct}% (Eurostat SES) — more than double the ${research.eu27UnadjustedGapPct}% all-sector benchmark. The five tightest labour markets in our ${research.panelCountries}-country panel all sit above the EU27 average.`,
     provenance: [
       { label: 'Dataset', value: 'Eurostat SES · mart_semantic_metrics' },
-      { label: 'EU27 all-sector', value: `${research.eu27UnadjustedGapPct}%` },
-      { label: 'Panel', value: `${research.panelCountries}-country research sample` },
+      { label: 'All-sector EU27', value: `${research.eu27UnadjustedGapPct}%` },
+      { label: 'Panel', value: `${research.panelCountries} countries · ${research.panelSectors} sectors` },
     ],
     action: 'View Compare narrative',
   },

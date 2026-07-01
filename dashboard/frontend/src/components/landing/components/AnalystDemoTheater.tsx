@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ArrowRight, Bot, Database, ShieldCheck, Sparkles } from 'lucide-react'
 import { ANALYST_DEMO_SCENES } from '../constants'
+import { LANDING_FACTS } from '../landingFacts'
 import { SectionLabel } from './SectionLabel'
 import { ScreenshotPanel } from './ScreenshotPanel'
 import { useLandingDemo } from '../LandingShell'
@@ -52,7 +53,7 @@ export function AnalystDemoTheater() {
           <div className="landing-demo-stage__chrome">
             <Bot size={16} />
             <span>AI Analyst</span>
-            <span className="landing-demo-stage__live">Live · Meridian CZ demo</span>
+            <span className="landing-demo-stage__live">Live · {LANDING_FACTS.demo.tenantLabel}</span>
           </div>
 
           <div className="landing-demo-stage__personas" aria-label="Typical users">
