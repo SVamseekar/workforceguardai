@@ -11,13 +11,13 @@ import { buildHomeJsonLd, DEFAULT_DESCRIPTION, DEFAULT_TITLE } from '../../lib/s
 import { AnalystDemoTheater } from './components/AnalystDemoTheater'
 import { ComplianceWorkflowStory } from './components/ComplianceWorkflowStory'
 import { ContactSection } from './components/ContactSection'
-import { GettingStartedSection } from './components/GettingStartedSection'
 import { MarqueeStrip } from './components/MarqueeStrip'
+import { OnboardingSupportSection } from './components/OnboardingSupportSection'
 import { ProblemSection } from './components/ProblemSection'
 import { ProductTour } from './components/ProductTour'
-import { useLandingScrollRestore } from './hooks/useLandingScrollRestore'
 import { LandingShell, useLandingDemo } from './LandingShell'
-import { RESEARCH_PAPER_URL } from './site'
+import { RESEARCH_PAPER_LABEL, RESEARCH_PAPER_URL } from './site'
+
 import { useScrollReveal } from './useScrollReveal'
 import './landing.css'
 
@@ -100,7 +100,7 @@ const FAQS = [
   },
   {
     q: 'Is the methodology published?',
-    a: 'Yes. The underlying composite indices (Hiring Pressure Index, Labour Resilience, Equity Risk Score) are documented in an open research paper covering a 20-country, 6-year Eurostat panel, available for review alongside the open-source codebase.',
+    a: 'Yes. The composite indices are documented in an MPRA preprint (Paper No. 129330) covering a 20-country, 6-year Eurostat panel, currently in peer-review for journal publication. The open-source dbt/DuckDB pipeline is available alongside the paper.',
   },
   {
     q: 'How do I request a demo?',
@@ -151,9 +151,8 @@ function ProductShowcase() {
 }
 
 function LandingHomeContent() {
-  const { openDemo } = useLandingDemo()
+  const { openDemo, goToHash } = useLandingDemo()
   useScrollReveal()
-  useLandingScrollRestore()
 
   return (
     <>
@@ -184,7 +183,7 @@ function LandingHomeContent() {
               and evidence packs ready for regulators.
             </p>
             <p className="landing-hero__proof">
-              Methodology published on SSRN · 20-country Eurostat panel · open dbt/DuckDB pipeline
+              MPRA preprint (peer-review in progress) · 20-country Eurostat panel · open dbt/DuckDB pipeline
             </p>
             <div className="landing-hero__actions">
               <button
@@ -201,9 +200,13 @@ function LandingHomeContent() {
               >
                 Sign in to dashboard
               </Link>
-              <a href="#compliance" className="landing-cta landing-cta--ghost landing-cta--large">
+              <button
+                type="button"
+                className="landing-cta landing-cta--ghost landing-cta--large"
+                onClick={() => goToHash('#compliance')}
+              >
                 See compliance mapping
-              </a>
+              </button>
             </div>
             <p className="landing-hero__action-note">
               Organisation sign-in is for provisioned teams only. New to WorkforceGuard? Start with a demo above.
@@ -236,7 +239,8 @@ function LandingHomeContent() {
       <ProblemSection />
       <ProductTour />
 
-      <section id="compliance" className="landing-section landing-section--alt landing-reveal">
+      <section className="landing-section landing-section--alt landing-reveal">
+        <div id="compliance" className="landing-anchor" tabIndex={-1} />
         <div className="landing-section__header">
           <p className="landing-section__eyebrow">Compliance mapping</p>
           <h2>Every Directive obligation, mapped to a platform feature</h2>
@@ -299,7 +303,8 @@ function LandingHomeContent() {
         </div>
       </section>
 
-      <section id="research" className="landing-section landing-reveal">
+      <section className="landing-section landing-reveal">
+        <div id="research" className="landing-anchor" tabIndex={-1} />
         <div className="landing-research">
           <div className="landing-research__copy">
             <p className="landing-section__eyebrow">Research-backed</p>
@@ -315,11 +320,11 @@ function LandingHomeContent() {
               pipeline ingesting live Eurostat data.
             </p>
             <p className="landing-research__proof">
-              Published on{' '}
+              Available as an{' '}
               <a href={RESEARCH_PAPER_URL} target="_blank" rel="noopener noreferrer">
-                SSRN (abstract 6826361)
+                {RESEARCH_PAPER_LABEL}
               </a>
-              {' '}— 20-country Eurostat panel, open methodology.
+              {' '}preprint, currently in peer-review for journal publication — open methodology and pipeline.
             </p>
           </div>
           <div className="landing-research__panel">
@@ -344,10 +349,11 @@ function LandingHomeContent() {
         </div>
       </section>
 
-      <GettingStartedSection />
+      <OnboardingSupportSection />
       <ContactSection />
 
-      <section id="faq" className="landing-section landing-section--alt landing-reveal">
+      <section className="landing-section landing-section--alt landing-reveal">
+        <div id="faq" className="landing-anchor" tabIndex={-1} />
         <div className="landing-section__split">
           <div className="landing-section__header landing-section__header--left">
             <p className="landing-section__eyebrow">FAQ</p>

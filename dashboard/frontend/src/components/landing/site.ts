@@ -1,6 +1,7 @@
 export const SITE_URL = 'https://workforceguardai.souravamseekar.com'
 export const SUPPORT_EMAIL = 'workforceguardai@souravamseekar.com'
-export const RESEARCH_PAPER_URL = 'https://ssrn.com/abstract=6826361'
+export const RESEARCH_PAPER_URL = 'https://mpra.ub.uni-muenchen.de/129330/'
+export const RESEARCH_PAPER_LABEL = 'MPRA Paper No. 129330'
 
 export const OPEN_CONTACT_EVENT = 'workforceguard:open-contact'
 

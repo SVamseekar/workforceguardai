@@ -85,14 +85,54 @@ export const MARQUEE_ITEMS = [
   '5% joint pay assessment threshold flagging',
   'One-click compliance evidence export',
   'Payroll separated from public EU layer',
-  'Open methodology and research paper',
+  'MPRA preprint · peer-review in progress',
 ]
 
-export const ANALYST_DEMO_LINES: string[][] = [
-  ['What is Czechia\'s gender pay gap in financial services?', '11.4% unadjusted (Eurostat SES, 2024)', 'Source: eurostat_ses · confidence: high'],
-  ['Which categories need review in our CZ payroll?', '2 unresolved · 1 observed gap', 'Routed to Pay Transparency Review'],
-  ['Export evidence for Q1 compliance sign-off', 'Bundle ready: metrics + provenance + governance log', 'SHA-256 chain integrity: verified'],
-  ['How does our eng_ic gap compare to the EU average?', 'Internal gap 10.3% · EU27 sector avg 11.1%', 'Benchmark: EU average · NACE J'],
+export type AnalystDemoScene = {
+  persona: string
+  question: string
+  answer: string
+  provenance: { label: string; value: string }[]
+  action?: string
+}
+
+export const ANALYST_DEMO_SCENES: AnalystDemoScene[] = [
+  {
+    persona: 'Compliance lead · Czechia',
+    question: 'Which worker categories in our payroll need a joint pay assessment under the Directive?',
+    answer:
+      'Two categories are unresolved: Risk & Compliance (14.8% internal gap) and Technology (10.0%). Operations is observed at 7.2% — monitor, not yet unresolved.',
+    provenance: [
+      { label: 'Source', value: 'mart_pay_transparency_category_review' },
+      { label: 'Country', value: 'CZ · NACE K' },
+      { label: 'Confidence', value: 'High — trusted payroll + job architecture' },
+    ],
+    action: 'Open Pay Transparency Review',
+  },
+  {
+    persona: 'People analytics · EU benchmark',
+    question: 'How does Czechia\'s financial services gender pay gap compare to the EU27 average?',
+    answer:
+      'Czechia financial services (NACE K): 11.4% unadjusted vs EU27 average 11.1%. Hiring Pressure Index 95 with Equity Risk Score 96 — combined exposure is among the highest in the sample.',
+    provenance: [
+      { label: 'Dataset', value: 'Eurostat SES 2024' },
+      { label: 'Indices', value: 'HPI · ERS · mart_semantic_metrics' },
+      { label: 'Coverage', value: '20-country panel' },
+    ],
+    action: 'View Compare narrative',
+  },
+  {
+    persona: 'HR reward · evidence pack',
+    question: 'Prepare an evidence bundle for Q1 compliance sign-off.',
+    answer:
+      'Export ready: category-level gaps, Eurostat provenance, governance log (SHA-256 chain verified). 4 review decisions recorded with approve/override context.',
+    provenance: [
+      { label: 'Governance', value: 'Hash chain integrity: verified' },
+      { label: 'Export', value: 'JSON evidence bundle' },
+      { label: 'Audit', value: '4 events · tenant-isolated' },
+    ],
+    action: 'Export evidence pack',
+  },
 ]
 
 export const WORKFLOW_STEPS = [

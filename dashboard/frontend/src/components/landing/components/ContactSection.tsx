@@ -19,7 +19,8 @@ export function ContactSection() {
   }, [])
 
   return (
-    <section id="contact" className="landing-section landing-section--alt landing-reveal">
+    <section className="landing-section landing-section--alt landing-reveal">
+      <div id="contact" className="landing-anchor" tabIndex={-1} />
       <div className="landing-contact">
         <div className="landing-contact__intro">
           <SectionLabel>Contact</SectionLabel>

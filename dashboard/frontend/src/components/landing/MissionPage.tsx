@@ -16,7 +16,7 @@ import {
   buildWebSiteSchema,
 } from '../../lib/seo'
 import { LandingShell, useLandingDemo } from './LandingShell'
-import { useLandingScrollRestore } from './hooks/useLandingScrollRestore'
+
 import { useScrollReveal } from './useScrollReveal'
 import './landing.css'
 
@@ -73,7 +73,7 @@ const MISSION_DESCRIPTION =
 function MissionContent() {
   const { openDemo } = useLandingDemo()
   useScrollReveal()
-  useLandingScrollRestore()
+
 
   return (
     <>

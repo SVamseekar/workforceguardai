@@ -81,11 +81,15 @@ async function main() {
     await page.goto(`${BASE}${route.path}`, { waitUntil: 'networkidle', timeout: 90000 })
     await page.waitForSelector(route.wait, { timeout: 45000 }).catch(() => {})
     if (route.openCopilot) {
-      const copilotToggle = page.locator(
-        'button[aria-label*="Analyst"], button[aria-label*="Copilot"], [data-testid="copilot-toggle"]',
-      )
+      const copilotToggle = page.locator('.sidebar__copilot')
       if (await copilotToggle.count()) {
         await copilotToggle.first().click()
+        await page.waitForSelector('.copilot-panel', { timeout: 15000 }).catch(() => {})
+        const suggestion = page.locator('.analyst-console__chip').first()
+        if (await suggestion.count()) {
+          await suggestion.click()
+          await page.waitForSelector('.analyst-console__response', { timeout: 20000 }).catch(() => {})
+        }
         await page.waitForTimeout(1200)
       }
     }

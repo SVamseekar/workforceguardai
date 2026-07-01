@@ -9,7 +9,8 @@ export function ProductTour() {
   const tab = PRODUCT_TOUR_TABS[active]
 
   return (
-    <section id="product-tour" className="landing-section landing-reveal">
+    <section className="landing-section landing-reveal">
+      <div id="product-tour" className="landing-anchor" tabIndex={-1} />
       <div className="landing-section__header">
         <SectionLabel>Product</SectionLabel>
         <h2>One workspace for intelligence, review, and regulatory evidence</h2>
