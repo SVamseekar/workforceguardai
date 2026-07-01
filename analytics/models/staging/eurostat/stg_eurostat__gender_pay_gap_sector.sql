@@ -13,7 +13,9 @@ standardized as (
         nace_r2_label as sector_label,
         unit as unit_code,
         cast(value as double) as metric_value,
-        'gender_pay_gap_sector' as dataset_name
+        'gender_pay_gap_sector' as dataset_name,
+        'earn_gr_gpgr2' as dataset_code,
+        {{ get_pull_timestamp('gender_pay_gap_sector') }} as pulled_at
     from source
     where geo is not null
       and nace_r2 is not null
@@ -22,4 +24,3 @@ standardized as (
 
 select *
 from standardized
-

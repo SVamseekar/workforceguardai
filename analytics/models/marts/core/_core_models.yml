@@ -46,3 +46,6 @@ models:
       - name: metric_value
         tests:
           - not_null
+      - name: formula_version
+        tests:
+          - not_null

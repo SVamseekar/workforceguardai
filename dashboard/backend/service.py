@@ -3059,7 +3059,7 @@ class AnalyticsRepository:
                         {"label": "Leading vacancy hotspot", "value": top_vacancy["sector_label"] if top_vacancy else "Unavailable"},
                     ],
                     [
-                        (semantic_metrics.get("\1") or {}).get("provenance", {}),
+                        (semantic_metrics.get("hiring_pressure_index") or {}).get("provenance", {}),
                         metric_provenance("vacancy_rate", "eurostat_jvs", "observed-v1", False),
                     ],
                     "signal_hiring_pressure",
@@ -3079,7 +3079,7 @@ class AnalyticsRepository:
                         {"label": "Unemployment", "value": format_percentage(unemployment_rate)},
                     ],
                     [
-                        (semantic_metrics.get("\1") or {}).get("provenance", {}),
+                        (semantic_metrics.get("labour_resilience") or {}).get("provenance", {}),
                         metric_provenance("employment_rate", "eurostat_lfs", "observed-v1", False),
                         metric_provenance("unemployment_rate", "eurostat_lfs", "observed-v1", False),
                     ],
@@ -3108,7 +3108,7 @@ class AnalyticsRepository:
                         {"label": "Leading pay-gap hotspot", "value": top_gap["sector_label"] if top_gap else "Unavailable"},
                     ],
                     [
-                        (semantic_metrics.get("\1") or {}).get("provenance", {}),
+                        (semantic_metrics.get("equity_risk_score") or {}).get("provenance", {}),
                         metric_provenance("gender_pay_gap", "eurostat_lfs", "observed-v1", True),
                     ],
                     "signal_equity_risk",
@@ -3203,7 +3203,7 @@ class AnalyticsRepository:
                             {"label": "Selected geography", "value": filters.geography_label},
                         ],
                         [
-                            (semantic_metrics.get("\1") or {}).get("provenance", {}),
+                            (semantic_metrics.get("hiring_pressure_index") or {}).get("provenance", {}),
                             charts["vacancy_by_sector"]["provenance"],
                         ],
                         "recommendation_hiring_focus",
@@ -3257,7 +3257,7 @@ class AnalyticsRepository:
                             {"label": "Selected geography", "value": filters.geography_label},
                         ],
                         [
-                            (semantic_metrics.get("\1") or {}).get("provenance", {}),
+                            (semantic_metrics.get("equity_risk_score") or {}).get("provenance", {}),
                             charts["pay_gap_by_sector"]["provenance"],
                         ],
                         "recommendation_equity_review",

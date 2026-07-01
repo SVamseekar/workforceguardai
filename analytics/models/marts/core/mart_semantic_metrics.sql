@@ -269,12 +269,15 @@ unioned as (
 )
 
 select
-    concat_ws('::', geo_id, sector_id, metric_id) as semantic_metric_id,
-    geo_id,
-    sector_id,
-    metric_id,
-    cast(metric_value as double) as metric_value,
-    primary_source_id,
-    implementation_status,
-    evidence_summary
-from unioned
+    concat_ws('::', u.geo_id, u.sector_id, u.metric_id) as semantic_metric_id,
+    u.geo_id,
+    u.sector_id,
+    u.metric_id,
+    cast(u.metric_value as double) as metric_value,
+    u.primary_source_id,
+    u.implementation_status,
+    r.formula_version,
+    u.evidence_summary
+from unioned u
+left join {{ ref('dim_metric_registry') }} r
+    on u.metric_id = r.metric_id
