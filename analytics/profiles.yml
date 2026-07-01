@@ -1,0 +1,7 @@
+workforceguard_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('WORKFORCEGUARD_DB_PATH', '/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/workforceguard_analytics.duckdb') }}"
+      threads: 4

@@ -7,7 +7,6 @@ Thumbs.db
 !.env.example
 !deploy/.env.production.example
 analytics/.user.yml
-analytics/profiles.yml
 **/*.duckdb
 projects/
 *.pem
