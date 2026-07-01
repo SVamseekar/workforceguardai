@@ -1,5 +1,5 @@
 numpy
-pandas>=3.0.4
+pandas>=3.0.3
 pyarrow
 pyyaml
 openpyxl
