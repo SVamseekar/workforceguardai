@@ -4,6 +4,11 @@ export function scrollToSection(hash: string, behavior: ScrollBehavior = 'smooth
   const id = hash.replace(/^#/, '')
   const el = document.getElementById(id)
   if (!el) return
-  const top = el.getBoundingClientRect().top + window.scrollY - LANDING_NAV_OFFSET
-  window.scrollTo({ top: Math.max(0, top), behavior })
+  el.scrollIntoView({ behavior, block: 'start' })
+}
+
+export function focusContactForm() {
+  window.setTimeout(() => {
+    document.querySelector<HTMLInputElement>('.demo-form input[autocomplete="given-name"]')?.focus()
+  }, 450)
 }

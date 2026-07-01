@@ -33,5 +33,7 @@ export function openContactForm() {
     window.location.assign('/#contact')
     return
   }
+  window.history.pushState(null, '', '#contact')
+  window.dispatchEvent(new HashChangeEvent('hashchange'))
   window.dispatchEvent(new CustomEvent(OPEN_CONTACT_EVENT))
 }

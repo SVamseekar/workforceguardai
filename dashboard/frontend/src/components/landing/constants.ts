@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import {
   BarChart2, Bot, GitCompare, MessageSquare, Scale, ShieldCheck,
 } from 'lucide-react'
+import { LANDING_FACTS } from './landingFacts'
 
 export type ProductTourTab = {
   id: string
@@ -77,17 +78,6 @@ export const PRODUCT_TOUR_TABS: ProductTourTab[] = [
   },
 ]
 
-export const MARQUEE_ITEMS = [
-  'EU27 · 13 NACE sectors · 2019–2024',
-  'Directive (EU) 2023/970 compliance mapping',
-  'SHA-256 hash-chained governance log',
-  'Eurostat LFS · JVS · SES provenance',
-  '5% joint pay assessment threshold flagging',
-  'One-click compliance evidence export',
-  'Payroll separated from public EU layer',
-  'MPRA preprint · peer-review in progress',
-]
-
 export type AnalystDemoScene = {
   persona: string
   question: string
@@ -96,15 +86,18 @@ export type AnalystDemoScene = {
   action?: string
 }
 
+const { demo, research } = LANDING_FACTS
+const [risk, tech, ops] = demo.reviewCategories
+
 export const ANALYST_DEMO_SCENES: AnalystDemoScene[] = [
   {
     persona: 'Compliance lead · Czechia',
     question: 'Which worker categories in our payroll need a joint pay assessment under the Directive?',
     answer:
-      'Two categories are unresolved: Risk & Compliance (14.8% internal gap) and Technology (10.0%). Operations is observed at 7.2% — monitor, not yet unresolved.',
+      `${risk.label} (${risk.internalGapPct}% internal gap) and ${tech.label} (${tech.internalGapPct}%) are unresolved_review_item. ${ops.label} is at ${ops.internalGapPct}% — monitor against the ${LANDING_FACTS.directive.unresolvedReviewThresholdPct}% review threshold.`,
     provenance: [
       { label: 'Source', value: 'mart_pay_transparency_category_review' },
-      { label: 'Country', value: 'CZ · NACE K' },
+      { label: 'Tenant', value: `${demo.tenantName} · ${demo.payrollRows} payroll rows` },
       { label: 'Confidence', value: 'High — trusted payroll + job architecture' },
     ],
     action: 'Open Pay Transparency Review',
@@ -113,11 +106,11 @@ export const ANALYST_DEMO_SCENES: AnalystDemoScene[] = [
     persona: 'People analytics · EU benchmark',
     question: 'How does Czechia\'s financial services gender pay gap compare to the EU27 average?',
     answer:
-      'Czechia financial services (NACE K): 11.4% unadjusted vs EU27 average 11.1%. Hiring Pressure Index 95 with Equity Risk Score 96 — combined exposure is among the highest in the sample.',
+      `Czechia NACE K: ${research.czFinanceSectorGapPct2023}% (Eurostat SES 2023) vs EU27 finance average ${research.eu27FinanceSectorGapPct}%. Hiring Pressure Index ${demo.czFinanceSignals.hiringPressureIndex} with Equity Risk Score ${demo.czFinanceSignals.equityRiskScore} — tight market, high equity exposure.`,
     provenance: [
-      { label: 'Dataset', value: 'Eurostat SES 2024' },
-      { label: 'Indices', value: 'HPI · ERS · mart_semantic_metrics' },
-      { label: 'Coverage', value: '20-country panel' },
+      { label: 'Dataset', value: 'Eurostat SES · mart_semantic_metrics' },
+      { label: 'EU27 all-sector', value: `${research.eu27UnadjustedGapPct}%` },
+      { label: 'Panel', value: `${research.panelCountries}-country research sample` },
     ],
     action: 'View Compare narrative',
   },
@@ -125,11 +118,11 @@ export const ANALYST_DEMO_SCENES: AnalystDemoScene[] = [
     persona: 'HR reward · evidence pack',
     question: 'Prepare an evidence bundle for Q1 compliance sign-off.',
     answer:
-      'Export ready: category-level gaps, Eurostat provenance, governance log (SHA-256 chain verified). 4 review decisions recorded with approve/override context.',
+      `Export bundles category-level gaps for ${demo.reviewCategories.length} worker categories, Eurostat provenance, and governance events. Chain integrity verified on API — ${demo.reviewCategories.length} unresolved items ready for approve/override/reverse.`,
     provenance: [
-      { label: 'Governance', value: 'Hash chain integrity: verified' },
+      { label: 'Governance', value: 'SHA-256 chain · integrity verified' },
       { label: 'Export', value: 'JSON evidence bundle' },
-      { label: 'Audit', value: '4 events · tenant-isolated' },
+      { label: 'Review queue', value: `${demo.reviewCategories.length} categories · tenant-isolated` },
     ],
     action: 'Export evidence pack',
   },

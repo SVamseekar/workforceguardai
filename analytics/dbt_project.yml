@@ -36,10 +36,13 @@ models:
       +materialized: view
       internal:
         +tags: ["internal"]
+        # Internal models require tenant_schema — never build into shared main.
+        +enabled: "{{ var('tenant_schema') is not none }}"
     marts:
       +materialized: table
       internal:
         +tags: ["internal"]
+        +enabled: "{{ var('tenant_schema') is not none }}"
 
 seeds:
   workforceguard_analytics:

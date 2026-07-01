@@ -1,6 +1,10 @@
 import { useCallback, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { scrollToSection } from '../utils/scrollToSection'
+import { focusContactForm, scrollToSection } from '../utils/scrollToSection'
+
+function normalizeHash(hash: string) {
+  return hash.startsWith('#') ? hash : `#${hash}`
+}
 
 export function useHashNavigation(onNavigate?: () => void) {
   const { pathname, hash } = useLocation()
@@ -9,7 +13,8 @@ export function useHashNavigation(onNavigate?: () => void) {
 
   const goToHash = useCallback(
     (targetHash: string, behavior: ScrollBehavior = 'smooth') => {
-      const normalized = targetHash.startsWith('#') ? targetHash : `#${targetHash}`
+      const normalized = normalizeHash(targetHash)
+      const hashId = normalized.slice(1)
       onNavigate?.()
 
       if (!onHome) {
@@ -17,15 +22,28 @@ export function useHashNavigation(onNavigate?: () => void) {
         return
       }
 
-      window.history.pushState(null, '', normalized)
-      requestAnimationFrame(() => scrollToSection(normalized, behavior))
+      const scroll = () => {
+        scrollToSection(normalized, behavior)
+        if (hashId === 'contact') focusContactForm()
+      }
+
+      if (hash !== normalized) {
+        navigate({ pathname: '/', hash: hashId }, { preventScrollReset: true })
+        window.setTimeout(scroll, 60)
+        return
+      }
+
+      scroll()
     },
-    [navigate, onHome, onNavigate],
+    [hash, navigate, onHome, onNavigate],
   )
 
   useEffect(() => {
     if (pathname !== '/' || !hash) return
-    const timer = window.setTimeout(() => scrollToSection(hash, 'auto'), 50)
+    const timer = window.setTimeout(() => {
+      scrollToSection(hash, 'auto')
+      if (hash.replace(/^#/, '') === 'contact') focusContactForm()
+    }, 80)
     return () => window.clearTimeout(timer)
   }, [pathname, hash])
 

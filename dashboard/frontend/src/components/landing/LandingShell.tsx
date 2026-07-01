@@ -5,7 +5,7 @@ import { LogoMark } from '../shared/LogoMark'
 import { CookieConsent } from './components/CookieConsent'
 import { SupportEmailLink } from './components/SupportEmailLink'
 import { useHashNavigation } from './hooks/useHashNavigation'
-import { NAV_LINKS, openContactForm } from './site'
+import { NAV_LINKS } from './site'
 
 type LandingDemoContextValue = {
   openDemo: () => void
@@ -54,16 +54,17 @@ export function LandingShell({ children }: LandingShellProps) {
   }, [])
 
   useEffect(() => {
-    document.body.style.overflow = navOpen ? 'hidden' : ''
+    if (!navOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
     return () => {
-      document.body.style.overflow = ''
+      document.body.style.overflow = prev
     }
   }, [navOpen])
 
   const toggleTheme = () => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
   const openDemo = () => {
-    closeNav()
-    openContactForm()
+    goToHash('#contact')
   }
 
   const handleHashClick = (event: React.MouseEvent<HTMLAnchorElement>, hash: string) => {
