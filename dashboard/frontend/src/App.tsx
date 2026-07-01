@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Route, Routes, ScrollRestoration } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Sidebar } from './components/layout/Sidebar'
@@ -106,7 +106,6 @@ export default function App() {
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <ScrollRestoration />
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/mission" element={<MissionPage />} />

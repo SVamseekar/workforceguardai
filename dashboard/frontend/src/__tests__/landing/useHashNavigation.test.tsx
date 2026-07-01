@@ -84,8 +84,8 @@ describe('landing hash navigation', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { level: 2, name: /tight labour markets/i })).toBeInTheDocument()
+      expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalled()
     })
-    expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalled()
   })
 
   it('renders the full privacy policy from the top', () => {

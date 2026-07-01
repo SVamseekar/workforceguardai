@@ -19,6 +19,7 @@ export function useHashNavigation(onNavigate?: () => void) {
     (targetHash: string, behavior: ScrollBehavior = 'smooth') => {
       const normalized = normalizeHash(targetHash)
       const id = hashId(normalized)
+      const currentHash = hash ? normalizeHash(hash) : ''
       onNavigate?.()
 
       if (!onHome) {
@@ -26,9 +27,9 @@ export function useHashNavigation(onNavigate?: () => void) {
         return
       }
 
-      if (hash !== normalized) {
+      if (currentHash !== normalized) {
         navigate({ pathname: '/', hash: id }, { preventScrollReset: true })
-        window.setTimeout(() => scrollToSectionWhenReady(normalized, behavior), 60)
+        window.setTimeout(() => scrollToSectionWhenReady(normalized, behavior), 100)
         return
       }
 
@@ -39,7 +40,8 @@ export function useHashNavigation(onNavigate?: () => void) {
 
   useEffect(() => {
     if (pathname !== '/' || !hash) return
-    scrollToSectionWhenReady(hash, 'auto')
+    const timer = window.setTimeout(() => scrollToSectionWhenReady(hash, 'auto'), 120)
+    return () => window.clearTimeout(timer)
   }, [pathname, hash])
 
   useEffect(() => {

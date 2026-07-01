@@ -1,5 +1,12 @@
 export const LANDING_NAV_OFFSET = 72
 
+/** Hash jumps skip scroll-reveal intersection; show all sections so the page is not blank. */
+export function revealAllLandingSections() {
+  document.querySelectorAll('.landing-reveal:not(.is-visible)').forEach((el) => {
+    el.classList.add('is-visible')
+  })
+}
+
 export function scrollToSection(hash: string, behavior: ScrollBehavior = 'smooth') {
   const id = hash.replace(/^#/, '')
   const el = document.getElementById(id)
@@ -17,6 +24,7 @@ export function scrollToSectionWhenReady(
   const id = hash.replace(/^#/, '')
   const tryScroll = (remaining: number) => {
     if (scrollToSection(hash, behavior)) {
+      revealAllLandingSections()
       if (id === 'contact') focusContactForm()
       return
     }
