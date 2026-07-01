@@ -67,7 +67,20 @@ def run_pca(df: pd.DataFrame) -> tuple[PCA, np.ndarray]:
     X_scaled = StandardScaler().fit_transform(X)
     pca = PCA(n_components=len(SIGNAL_COLUMNS))
     scores = pca.fit_transform(X_scaled)
+    _orient_pc1_toward_vacancy(pca, scores)
     return pca, scores
+
+
+def _orient_pc1_toward_vacancy(pca: PCA, scores: np.ndarray) -> None:
+    """PCA component sign is arbitrary; anchor PC1 so higher PC1 means higher
+    vacancy_rate (the intuitive 'tighter market' direction), so the sign of
+    every downstream comparison (weights, plots) is stable and interpretable
+    across sample changes rather than flipping based on which raw signal
+    happens to dominate the fit."""
+    vacancy_idx = SIGNAL_COLUMNS.index("job_vacancy_rate")
+    if pca.components_[0, vacancy_idx] < 0:
+        pca.components_[0] *= -1
+        scores[:, 0] *= -1
 
 
 def build_table_a1(pca: PCA) -> pd.DataFrame:
