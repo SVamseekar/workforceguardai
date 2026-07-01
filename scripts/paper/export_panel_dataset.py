@@ -5,7 +5,7 @@ Reads the same warehouse (data/workforceguard_analytics.duckdb) the dashboard
 backend queries, in read-only mode, and writes three replication CSVs to
 data/paper_exports/.
 
-Two structural quirks of fct_labour_market_region_sector this script has to
+Three structural quirks of fct_labour_market_region_sector this script has to
 account for:
 
 1. job_vacancy_rate and gender_pay_gap are only recorded at sector grain,
@@ -13,7 +13,12 @@ account for:
    this by falling back to a default sector per signal (A-S for vacancy,
    B-S for pay gap) when building country-level composite scores; the
    country-year panel export mirrors that same convention.
-2. job_vacancy_rate, labour_market_slack_rate, labour_flow_to_employment,
+2. A handful of countries (Austria, Belgium, Greece, Malta, Portugal) report
+   the country-wide aggregate under a different NACE rollup than the EU27
+   majority uses: B-S for vacancy, B-S_X_O for pay gap. Without this
+   fallback these countries were silently excluded from the panel entirely
+   (see the matching fix in mart_semantic_metrics.sql).
+3. job_vacancy_rate, labour_market_slack_rate, labour_flow_to_employment,
    and labour_flow_to_inactivity are recorded quarterly (period_code like
    '2024-Q1'), while employment_rate, unemployment_rate, and gender_pay_gap
    are recorded annually (period_code like '2024'). The country-year panel
@@ -31,7 +36,9 @@ DB_PATH = ROOT / "data" / "workforceguard_analytics.duckdb"
 EXPORT_DIR = ROOT / "data" / "paper_exports"
 
 DEFAULT_VACANCY_SECTOR = "A-S"
+DEFAULT_VACANCY_SECTOR_FALLBACK = "B-S"
 DEFAULT_PAY_GAP_SECTOR = "B-S"
+DEFAULT_PAY_GAP_SECTOR_FALLBACK = "B-S_X_O"
 
 EXCLUDED_GEO_IDS = ("EU27_MEAN", "EU27_AVG", "EA19", "EA20")
 
@@ -68,8 +75,14 @@ default_sector_signals as (
             when f.period_type = 'quarter' then split_part(f.period_code, '-Q', 1)
             else f.period_code
         end as year,
-        avg(case when f.sector_id = '{DEFAULT_VACANCY_SECTOR}' and f.signal_name = 'job_vacancy_rate' then f.signal_value end) as job_vacancy_rate,
-        avg(case when f.sector_id = '{DEFAULT_PAY_GAP_SECTOR}' and f.signal_name = 'gender_pay_gap' then f.signal_value end) as gender_pay_gap
+        coalesce(
+            avg(case when f.sector_id = '{DEFAULT_VACANCY_SECTOR}' and f.signal_name = 'job_vacancy_rate' then f.signal_value end),
+            avg(case when f.sector_id = '{DEFAULT_VACANCY_SECTOR_FALLBACK}' and f.signal_name = 'job_vacancy_rate' then f.signal_value end)
+        ) as job_vacancy_rate,
+        coalesce(
+            avg(case when f.sector_id = '{DEFAULT_PAY_GAP_SECTOR}' and f.signal_name = 'gender_pay_gap' then f.signal_value end),
+            avg(case when f.sector_id = '{DEFAULT_PAY_GAP_SECTOR_FALLBACK}' and f.signal_name = 'gender_pay_gap' then f.signal_value end)
+        ) as gender_pay_gap
     from fct_labour_market_region_sector f
     where f.sector_id is not null
       and f.geo_id not in {EXCLUDED_GEO_IDS}
