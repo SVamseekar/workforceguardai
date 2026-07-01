@@ -60,10 +60,20 @@ sector_signals as (
 ),
 
 default_sector_signals as (
+    -- A handful of countries report the country-wide aggregate under a
+    -- different NACE rollup than the EU27 majority uses (A-S for vacancy,
+    -- B-S for pay gap): B-S for vacancy, B-S_X_O for pay gap. Both
+    -- fallbacks are tried so these countries aren't silently scored as 0.
     select
         geo_id,
-        max(case when sector_id = 'A-S' and signal_name = 'job_vacancy_rate' then signal_value end) as default_vacancy_rate,
-        max(case when sector_id = 'B-S' and signal_name = 'gender_pay_gap' then signal_value end) as default_gender_pay_gap
+        coalesce(
+            max(case when sector_id = 'A-S' and signal_name = 'job_vacancy_rate' then signal_value end),
+            max(case when sector_id = 'B-S' and signal_name = 'job_vacancy_rate' then signal_value end)
+        ) as default_vacancy_rate,
+        coalesce(
+            max(case when sector_id = 'B-S' and signal_name = 'gender_pay_gap' then signal_value end),
+            max(case when sector_id = 'B-S_X_O' and signal_name = 'gender_pay_gap' then signal_value end)
+        ) as default_gender_pay_gap
     from latest_signals
     group by 1
 ),
