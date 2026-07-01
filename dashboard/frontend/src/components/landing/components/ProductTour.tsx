@@ -15,7 +15,7 @@ export function ProductTour() {
         <SectionLabel>Product</SectionLabel>
         <h2>One workspace for intelligence, review, and regulatory evidence</h2>
         <p className="landing-section__lede">
-          Six integrated views — explore each module with screenshots from the live dashboard.
+          Five integrated views — explore each module with screenshots from the live dashboard.
         </p>
       </div>
 

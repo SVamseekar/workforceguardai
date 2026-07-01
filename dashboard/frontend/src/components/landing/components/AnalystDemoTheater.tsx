@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ArrowRight, Bot, Database, ShieldCheck, Sparkles } from 'lucide-react'
-import { ANALYST_DEMO_SCENES } from '../constants'
+import { AI_ANALYST_HIGHLIGHTS, ANALYST_DEMO_SCENES } from '../constants'
 import { LANDING_FACTS } from '../landingFacts'
 import { SectionLabel } from './SectionLabel'
 import { ScreenshotPanel } from './ScreenshotPanel'
@@ -44,7 +44,8 @@ export function AnalystDemoTheater() {
         <h2>Ask compliance questions — get sourced answers, not summaries</h2>
         <p className="landing-section__lede">
           Built for compliance leads, people analytics, and HR reward teams preparing for Directive
-          (EU) 2023/970. Every response cites datasets, benchmark confidence, and next actions.
+          (EU) 2023/970. The AI Analyst copilot answers in natural language — with datasets,
+          benchmark confidence, and next actions on every response.
         </p>
       </div>
 
@@ -108,6 +109,18 @@ export function AnalystDemoTheater() {
             See it on your data <ArrowRight size={14} />
           </button>
         </div>
+      </div>
+
+      <div className="landing-demo-stage__highlights" aria-label="AI Analyst capabilities">
+        {AI_ANALYST_HIGHLIGHTS.map(({ icon: Icon, title, detail }) => (
+          <article key={title} className="landing-demo-stage__highlight">
+            <div className="landing-demo-stage__highlight-icon">
+              <Icon size={18} />
+            </div>
+            <h3>{title}</h3>
+            <p>{detail}</p>
+          </article>
+        ))}
       </div>
     </section>
   )

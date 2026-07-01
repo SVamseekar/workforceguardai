@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import {
-  BarChart2, Bot, GitCompare, MessageSquare, Scale, ShieldCheck,
+  BarChart2, GitCompare, Scale, ShieldCheck, Sparkles,
 } from 'lucide-react'
 import { countrySample, LANDING_FACTS } from './landingFacts'
 
@@ -66,17 +66,32 @@ export const PRODUCT_TOUR_TABS: ProductTourTab[] = [
     accentColor: '#10b981',
     bullets: ['Tamper-evident event chain', 'Integrity verified on every API call', 'Structured evidence bundle for regulators'],
   },
-  {
-    id: 'ai',
-    label: 'AI Analyst',
-    icon: MessageSquare,
-    headline: 'Natural-language answers with provenance',
-    desc: 'Ask questions about labour markets or your benchmarks; answers include source datasets, benchmark confidence, and coverage notes.',
-    screenshot: '/screenshots/ai-analyst.png',
-    accentColor: '#c9a84c',
-    bullets: ['Grounded evidence, not black-box summaries', 'Benchmark basis selection', 'Refuses when coverage is partial'],
-  },
 ]
+
+export const AI_ANALYST_HIGHLIGHTS = [
+  {
+    icon: Sparkles,
+    title: 'Grounded evidence',
+    detail: 'Answers cite Eurostat datasets and benchmark confidence — never black-box summaries.',
+  },
+  {
+    icon: GitCompare,
+    title: 'Inherits your filters',
+    detail: 'Country, sector, and payroll context from the dashboard flow into every response.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Honest coverage',
+    detail: 'Refuses to answer when data is partial and tells you what is missing.',
+  },
+] as const
+
+export const MARKET_INTELLIGENCE_SCOPE = [
+  { label: 'Market Intelligence', detail: 'Live Eurostat panels with country × sector filters', active: true },
+  { label: 'Compare', detail: 'Peer benchmarking and combined risk quadrant' },
+  { label: 'Pay Analysis', detail: 'Payroll gaps ranked with Directive threshold flagging' },
+  { label: 'Govern & Export', detail: 'Tamper-evident audit log and evidence bundles' },
+] as const
 
 export type AnalystDemoScene = {
   persona: string

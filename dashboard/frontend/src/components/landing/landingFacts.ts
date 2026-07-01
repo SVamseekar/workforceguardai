@@ -75,7 +75,7 @@ export const LIVE_PROOF_STATS = [
   },
   {
     value: String(LANDING_FACTS.countrySamples.length),
-    label: 'Countries in exposure chart',
-    detail: `${LANDING_FACTS.market.compositeIndices.length} composite indices · ${LANDING_FACTS.market.yearRange}.`,
+    label: 'Countries in live example',
+    detail: `Sample of ${LANDING_FACTS.market.euMemberStates} member states · ${LANDING_FACTS.market.compositeIndices.length} composite indices.`,
   },
 ] as const
