@@ -3,7 +3,7 @@ import { createRequire } from 'node:module'
 const require = createRequire(import.meta.url)
 const nodemailer = require('nodemailer')
 
-const DEFAULT_TO = 'martisoura@gmail.com'
+const DEFAULT_TO = 'workforceguardai@souravamseekar.com'
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000
 const RATE_LIMIT_MAX = 5
@@ -217,7 +217,7 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('Demo request email failed:', error)
     return res.status(503).json({
-      error: 'Unable to send your request right now. Please email martisoura@gmail.com directly.',
+      error: 'Unable to send your request right now. Please email workforceguardai@souravamseekar.com directly.',
     })
   }
 }

@@ -16,6 +16,7 @@ import {
   buildWebSiteSchema,
 } from '../../lib/seo'
 import { LandingShell, useLandingDemo } from './LandingShell'
+
 import { useScrollReveal } from './useScrollReveal'
 import './landing.css'
 
@@ -38,7 +39,7 @@ const BELIEFS = [
   {
     icon: BookOpen,
     title: 'Methodology belongs in the open',
-    body: 'Composite indices, pipeline logic, and governance design are published and inspectable. Employers should not have to trust a black box for obligations that carry legal weight.',
+    body: 'Composite indices, benchmark formulas, and governance design are documented in our research. Employers should not have to trust a black box for obligations that carry legal weight.',
   },
 ]
 
@@ -72,6 +73,7 @@ const MISSION_DESCRIPTION =
 function MissionContent() {
   const { openDemo } = useLandingDemo()
   useScrollReveal()
+
 
   return (
     <>
@@ -208,7 +210,7 @@ function MissionContent() {
               years from now.
             </p>
             <p>
-              We work in public — research paper, open pipeline, inspectable codebase — because the
+              We publish our methodology — peer-reviewed indices and a research preprint — because the
               standard of proof the Directive implies should not depend on proprietary opacity.
               Employers deserve tools as serious as the obligation they face.
             </p>
@@ -216,14 +218,6 @@ function MissionContent() {
               <Link to="/#research" className="landing-cta landing-cta--secondary">
                 Read the research <GitBranch size={14} />
               </Link>
-              <a
-                href="https://github.com/SVamseekar/workforceguardai"
-                target="_blank"
-                rel="noreferrer"
-                className="landing-cta landing-cta--ghost"
-              >
-                View the open-source project
-              </a>
             </div>
           </div>
         </div>

@@ -662,7 +662,7 @@ class AnalyticsRepositoryTests(unittest.TestCase):
 
             self.assertFalse(overview["internal_data"]["available"])
             self.assertFalse(overview["company_benchmark"]["available"])
-            self.assertIn("modeled company benchmark mart", overview["internal_data"]["note"])
+            self.assertIn("company benchmark mart", overview["internal_data"]["note"])
 
     def test_company_question_is_blocked_without_internal_assets(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -1165,6 +1165,117 @@ class IngestUploadedPayrollTests(unittest.TestCase):
 
             with self.assertRaises(ValueError):
                 repo.ingest_uploaded_payroll(b"not,a,payroll,file\n1,2,3,4\n")
+
+
+class IngestUploadedJobArchitectureTests(unittest.TestCase):
+    """Tests for ingest_uploaded_job_architecture."""
+
+    def _make_csv(self, rows: list[dict]) -> bytes:
+        import csv, io
+        if not rows:
+            return b""
+        buf = io.StringIO()
+        writer = csv.DictWriter(buf, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
+        return buf.getvalue().encode()
+
+    def _valid_rows(self, n: int = 3) -> list[dict]:
+        return [
+            {
+                "job_code": f"JOB-{i:03d}",
+                "job_family": "Engineering",
+                "job_level": str(i + 1),
+                "worker_category_id": "eng_ic",
+                "worker_category_label": "Engineering IC",
+                "esco_uri": f"http://data.europa.eu/esco/occupation/{i}",
+                "nace_code": "k64",
+            }
+            for i in range(n)
+        ]
+
+    def test_valid_upload_returns_accepted(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+
+            result = repo.ingest_uploaded_job_architecture(self._make_csv(self._valid_rows(3)))
+
+            self.assertEqual(result["status"], "accepted")
+            self.assertEqual(result["record_count"], 3)
+            self.assertTrue(result["validation"]["passed"])
+
+    def test_output_parquet_written_to_internal_dir(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+
+            repo.ingest_uploaded_job_architecture(self._make_csv(self._valid_rows(2)))
+
+            self.assertTrue((internal_dir / "job_architecture.parquet").exists())
+            df = pd.read_parquet(internal_dir / "job_architecture.parquet")
+            self.assertEqual(len(df), 2)
+            self.assertEqual(df["nace_code"].tolist(), ["K64", "K64"])
+
+    def test_manifest_updated_with_trusted_flag(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+
+            repo.ingest_uploaded_job_architecture(self._make_csv(self._valid_rows(2)))
+
+            manifest_path = internal_dir.parent / "internal_meta" / "manifest.json"
+            self.assertTrue(manifest_path.exists())
+            manifest = json.loads(manifest_path.read_text())
+            job_arch_asset = next(
+                a for a in manifest["assets"] if a["asset_type"] == "internal_job_architecture"
+            )
+            self.assertTrue(job_arch_asset["trusted_for_company_claims"])
+            self.assertEqual(job_arch_asset["record_count"], 2)
+
+    def test_rejects_duplicate_job_codes(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+            rows = self._valid_rows(2)
+            rows[1]["job_code"] = rows[0]["job_code"]
+
+            with self.assertRaises(ValueError) as ctx:
+                repo.ingest_uploaded_job_architecture(self._make_csv(rows))
+            self.assertIn("Duplicate job_code", str(ctx.exception))
+
+    def test_warns_on_unknown_payroll_job_codes(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            pd.DataFrame(
+                [
+                    {
+                        "employee_id": "emp-001",
+                        "job_code": "MISSING-JOB",
+                        "country_code": "FR",
+                        "worker_category_id": "eng_ic",
+                        "gender": "female",
+                        "base_pay_amount": 55000,
+                        "pay_currency": "EUR",
+                        "snapshot_date": "2025-12-31",
+                        "employment_status": "active",
+                        "version": "uploaded-v1",
+                        "job_title": "Engineer",
+                    }
+                ]
+            ).to_parquet(internal_dir / "payroll_snapshot.parquet", index=False)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+
+            result = repo.ingest_uploaded_job_architecture(self._make_csv(self._valid_rows(1)))
+
+            self.assertEqual(result["status"], "accepted")
+            self.assertTrue(len(result["validation"]["warnings"]) > 0)
+            self.assertIn("payroll job_codes", result["validation"]["warnings"][0])
 
 
 @unittest.skipIf(main is None, f"FastAPI app unavailable in test env: {MAIN_IMPORT_ERROR}")

@@ -459,12 +459,38 @@ def get_egapro_benchmark(
     return guarded(repo._build_egapro_peer_benchmark, filters)
 
 
-@app.post("/api/upload/payroll")
-async def upload_payroll(
-    file: UploadFile = File(...),
-    repo: AnalyticsRepository = Depends(get_repository),
-    ctx: AuthContext = Depends(require_role("admin")),
-):
+def _trigger_tenant_internal_dbt(repo: AnalyticsRepository, result: Dict[str, Any]) -> None:
+    """Rebuild this tenant's internal dbt models after an upload."""
+    analytics_dir = root_dir / "analytics"
+    if not analytics_dir.exists() or repo.tenant_schema is None:
+        return
+
+    try:
+        dbt_env = {**os.environ, "WORKFORCEGUARD_INTERNAL_PATH": str(repo.internal_data_dir)}
+        subprocess.Popen(
+            [
+                "dbt",
+                "run",
+                "--project-dir",
+                str(analytics_dir),
+                "--profiles-dir",
+                str(analytics_dir),
+                "--select",
+                "tag:internal",
+                "--vars",
+                f'{{"tenant_schema": "{repo.tenant_schema}"}}',
+            ],
+            cwd=str(root_dir),
+            env=dbt_env,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        result["dbt_run"] = "triggered"
+    except FileNotFoundError:
+        result["dbt_run"] = "dbt not found in PATH — run manually"
+
+
+async def _read_uploaded_csv(file: UploadFile) -> bytes:
     if file.content_type not in ("text/csv", "application/csv", "text/plain"):
         raise HTTPException(
             status_code=400,
@@ -477,39 +503,30 @@ async def upload_payroll(
             status_code=413,
             detail="File too large. Maximum upload size is 10MB.",
         )
+    return content
 
+
+@app.post("/api/upload/payroll")
+async def upload_payroll(
+    file: UploadFile = File(...),
+    repo: AnalyticsRepository = Depends(get_repository),
+    ctx: AuthContext = Depends(require_role("admin")),
+):
+    content = await _read_uploaded_csv(file)
     result = guarded(repo.ingest_uploaded_payroll, content)
+    _trigger_tenant_internal_dbt(repo, result)
+    return result
 
-    # Trigger dbt rebuild of this tenant's internal models in the background.
-    # internal_path and tenant_schema must both point at this tenant's own
-    # data/schema — otherwise the rebuild would model another tenant's (or
-    # nobody's) data, or land tables in the shared default schema where every
-    # tenant's dashboard would read them. See AnalyticsRepository._connect()
-    # and analytics/macros/tenant_schema.sql for the read-side of this.
-    analytics_dir = root_dir / "analytics"
-    if analytics_dir.exists() and repo.tenant_schema is not None:
-        try:
-            dbt_env = {**os.environ, "WORKFORCEGUARD_INTERNAL_PATH": str(repo.internal_data_dir)}
-            subprocess.Popen(
-                [
-                    "dbt",
-                    "run",
-                    "--select",
-                    "tag:internal",
-                    "--vars",
-                    f'{{"tenant_schema": "{repo.tenant_schema}"}}',
-                    "--profiles-dir",
-                    ".",
-                ],
-                cwd=str(analytics_dir),
-                env=dbt_env,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-            result["dbt_run"] = "triggered"
-        except FileNotFoundError:
-            result["dbt_run"] = "dbt not found in PATH — run manually"
 
+@app.post("/api/upload/job-architecture")
+async def upload_job_architecture(
+    file: UploadFile = File(...),
+    repo: AnalyticsRepository = Depends(get_repository),
+    ctx: AuthContext = Depends(require_role("admin")),
+):
+    content = await _read_uploaded_csv(file)
+    result = guarded(repo.ingest_uploaded_job_architecture, content)
+    _trigger_tenant_internal_dbt(repo, result)
     return result
 
 

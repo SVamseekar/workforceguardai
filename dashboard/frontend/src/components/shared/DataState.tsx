@@ -84,7 +84,7 @@ function ErrorState({ error }: { error: string }) {
           </button>
           <a
             className="error-panel__report"
-            href="mailto:support@workforceguard.ai?subject=Dashboard+error"
+            href="mailto:workforceguardai@souravamseekar.com?subject=Dashboard+error"
           >
             Report issue
           </a>

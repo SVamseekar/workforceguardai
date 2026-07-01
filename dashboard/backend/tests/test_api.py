@@ -268,6 +268,68 @@ class UploadPayrollRouteTests(unittest.TestCase):
         self.assertIn(resp.json()["dbt_run"], ["triggered", "dbt not found in PATH — run manually"])
 
 
+def _make_job_architecture_csv(n: int = 3) -> bytes:
+    rows = [
+        {
+            "job_code": f"JOB-{i:03d}",
+            "job_family": "Engineering",
+            "job_level": str(i + 1),
+            "worker_category_id": "eng_ic",
+            "worker_category_label": "Engineering IC",
+            "esco_uri": f"http://data.europa.eu/esco/occupation/{i}",
+            "nace_code": "K64",
+        }
+        for i in range(n)
+    ]
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=list(rows[0].keys()))
+    writer.writeheader()
+    writer.writerows(rows)
+    return buf.getvalue().encode()
+
+
+@unittest.skipIf(_SKIP, f"FastAPI app or httpx unavailable: {_SKIP_REASON}")
+class UploadJobArchitectureRouteTests(unittest.TestCase):
+    """POST /api/upload/job-architecture"""
+
+    def test_valid_csv_returns_accepted(self):
+        csv_bytes = _make_job_architecture_csv(3)
+        resp = _client.post(
+            "/api/upload/job-architecture",
+            files={"file": ("job_architecture.csv", csv_bytes, "text/csv")},
+        )
+
+        self.assertEqual(resp.status_code, 200)
+        body = resp.json()
+        self.assertEqual(body["status"], "accepted")
+        self.assertEqual(body["record_count"], 3)
+        self.assertTrue(body["validation"]["passed"])
+        self.assertIn("dbt_run", body)
+
+    def test_rejects_missing_columns_with_400(self):
+        bad_csv = b"job_code,job_family\nJOB-001,Engineering\n"
+        resp = _client.post(
+            "/api/upload/job-architecture",
+            files={"file": ("bad.csv", bad_csv, "text/csv")},
+        )
+
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("Missing required columns", resp.json()["detail"])
+
+    def test_rejects_empty_file_with_400(self):
+        empty_csv = (
+            "job_code,job_family,job_level,worker_category_id,"
+            "worker_category_label,esco_uri,nace_code\n"
+        ).encode()
+        resp = _client.post(
+            "/api/upload/job-architecture",
+            files={"file": ("empty.csv", empty_csv, "text/csv")},
+        )
+
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("at least 1 job code", resp.json()["detail"])
+
+
 @unittest.skipIf(_SKIP, f"FastAPI app or httpx unavailable: {_SKIP_REASON}")
 class OverviewEgaproBenchmarkIntegrationTests(unittest.TestCase):
     """Verifies egapro_peer_benchmark key is correctly shaped in the full overview response."""

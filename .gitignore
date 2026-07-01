@@ -7,6 +7,8 @@ Thumbs.db
 !.env.example
 !deploy/.env.production.example
 analytics/.user.yml
+**/*.duckdb
+projects/
 *.pem
 *.key
 *.p12
@@ -53,13 +55,22 @@ data/internal_meta/*
 !data/internal_meta/.gitkeep
 data/internal_raw/*
 !data/internal_raw/.gitkeep
+data/demo_raw/*
+!data/demo_raw/.gitkeep
 deploy/.env.production
 
 # IDE and editor
 .idea/
+.claude/
+.cursor/
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
+# Internal drafts and tooling scratch
+docs/superpowers/
+docs/social_media_campaign/
+record_demo.mjs
+node_modules/
 *.swp
 *.swo
 *~
@@ -76,6 +87,13 @@ docs/demos/video_recording/
 /image.png
 /*.pdf
 
-# Research paper build scratch (drafts live in docs/ and can be committed intentionally)
+# Research paper workspace (local drafts — keep untracked)
+docs/paper.tex
+docs/paper-refs.bib
+docs/paper-*.md
+docs/paper-*.html
+docs/paper-style.css
+docs/figures/
 docs/paper-output.pdf
 docs/paper-output.html
+docs/SECURITY_AUDIT.md

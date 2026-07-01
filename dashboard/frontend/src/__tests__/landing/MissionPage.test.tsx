@@ -38,6 +38,7 @@ describe('MissionPage', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/enforceable/i)
     expect(screen.getByText(/Transparency must be provable/i)).toBeInTheDocument()
     expect(screen.getByText(/Methodology belongs in the open/i)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /our mission/i })).toHaveAttribute('href', '/mission')
+    const missionLinks = screen.getAllByRole('link', { name: /^Mission$/i })
+    expect(missionLinks.some((link) => link.getAttribute('href') === '/mission')).toBe(true)
   })
 })

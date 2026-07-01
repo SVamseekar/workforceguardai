@@ -2,15 +2,19 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { Link, useLocation } from 'react-router-dom'
 import { Menu, Moon, Sun, X } from 'lucide-react'
 import { LogoMark } from '../shared/LogoMark'
-import { DemoRequestModal } from './DemoRequestModal'
+import { CookieConsent } from './components/CookieConsent'
+import { SupportEmailLink } from './components/SupportEmailLink'
+import { useHashNavigation } from './hooks/useHashNavigation'
 import { NAV_LINKS } from './site'
 
 type LandingDemoContextValue = {
   openDemo: () => void
+  goToHash: (hash: string) => void
 }
 
 const LandingDemoContext = createContext<LandingDemoContextValue>({
   openDemo: () => {},
+  goToHash: () => {},
 })
 
 export function useLandingDemo() {
@@ -24,7 +28,6 @@ type LandingShellProps = {
 export function LandingShell({ children }: LandingShellProps) {
   const location = useLocation()
   const onHome = location.pathname === '/'
-  const hashPrefix = onHome ? '' : '/'
 
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('theme')
@@ -32,9 +35,11 @@ export function LandingShell({ children }: LandingShellProps) {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   })
   const [navOpen, setNavOpen] = useState(false)
-  const [demoOpen, setDemoOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const navRef = useRef<HTMLElement>(null)
+
+  const closeNav = () => setNavOpen(false)
+  const { goToHash } = useHashNavigation(closeNav)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -49,18 +54,25 @@ export function LandingShell({ children }: LandingShellProps) {
   }, [])
 
   useEffect(() => {
-    document.body.style.overflow = navOpen ? 'hidden' : ''
+    if (!navOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
     return () => {
-      document.body.style.overflow = ''
+      document.body.style.overflow = prev
     }
   }, [navOpen])
 
   const toggleTheme = () => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
-  const closeNav = () => setNavOpen(false)
   const openDemo = () => {
-    closeNav()
-    setDemoOpen(true)
+    goToHash('#contact')
   }
+
+  const handleHashClick = (event: React.MouseEvent<HTMLAnchorElement>, hash: string) => {
+    event.preventDefault()
+    goToHash(hash)
+  }
+
+  const hashHref = (hash: string) => (onHome ? hash : `/${hash}`)
 
   return (
     <div className="landing">
@@ -87,7 +99,11 @@ export function LandingShell({ children }: LandingShellProps) {
                   {link.label}
                 </Link>
               ) : (
-                <a key={link.hash} href={`${hashPrefix}${link.hash}`}>
+                <a
+                  key={link.hash}
+                  href={hashHref(link.hash)}
+                  onClick={(e) => handleHashClick(e, link.hash)}
+                >
                   {link.label}
                 </a>
               ),
@@ -132,7 +148,11 @@ export function LandingShell({ children }: LandingShellProps) {
                 {link.label}
               </Link>
             ) : (
-              <a key={link.hash} href={`${hashPrefix}${link.hash}`} onClick={closeNav}>
+              <a
+                key={link.hash}
+                href={hashHref(link.hash)}
+                onClick={(e) => handleHashClick(e, link.hash)}
+              >
                 {link.label}
               </a>
             ),
@@ -151,9 +171,7 @@ export function LandingShell({ children }: LandingShellProps) {
         </nav>
       </div>
 
-      <LandingDemoContext.Provider value={{ openDemo }}>{children}</LandingDemoContext.Provider>
-
-      <DemoRequestModal open={demoOpen} onClose={() => setDemoOpen(false)} />
+      <LandingDemoContext.Provider value={{ openDemo, goToHash }}>{children}</LandingDemoContext.Provider>
 
       <footer className="landing-footer">
         <div className="landing-footer__inner">
@@ -166,38 +184,49 @@ export function LandingShell({ children }: LandingShellProps) {
               EU workforce intelligence and pay-transparency compliance for HR, people analytics,
               and compliance teams.
             </p>
+            <p className="landing-footer__email">
+              <SupportEmailLink />
+            </p>
           </div>
           <div className="landing-footer__cols">
             <div>
               <h4>Product</h4>
               <nav>
+                <a href={hashHref('#product-tour')} onClick={(e) => handleHashClick(e, '#product-tour')}>Product tour</a>
+                <a href={hashHref('#compliance')} onClick={(e) => handleHashClick(e, '#compliance')}>Compliance mapping</a>
+                <a href={hashHref('#demo')} onClick={(e) => handleHashClick(e, '#demo')}>See it live</a>
                 <Link to="/app">Dashboard</Link>
-                <Link to="/app/market">Market Intelligence</Link>
-                <Link to="/app/pay-analysis">Pay Analysis</Link>
-                <Link to="/app/govern">Governance</Link>
               </nav>
             </div>
             <div>
-              <h4>Resources</h4>
+              <h4>More</h4>
               <nav>
-                <Link to="/mission">Our mission</Link>
-                <a href="/#compliance">Compliance mapping</a>
-                <a href="/#research">Research</a>
-                <a href="/#faq">FAQ</a>
-                <a href="https://github.com/SVamseekar/workforceguardai" target="_blank" rel="noreferrer">
-                  GitHub
+                <Link to="/mission">Mission</Link>
+                <a href={hashHref('#onboarding')} onClick={(e) => handleHashClick(e, '#onboarding')}>Onboarding &amp; support</a>
+                <a href={hashHref('#research')} onClick={(e) => handleHashClick(e, '#research')}>Research</a>
+                <a href="https://mpra.ub.uni-muenchen.de/129330/" target="_blank" rel="noreferrer">
+                  Research paper
                 </a>
+              </nav>
+            </div>
+            <div>
+              <h4>Get started</h4>
+              <nav>
+                <a href={hashHref('#contact')} onClick={(e) => handleHashClick(e, '#contact')}>Request a demo</a>
+                <a href={hashHref('#faq')} onClick={(e) => handleHashClick(e, '#faq')}>FAQ</a>
+              </nav>
+            </div>
+            <div>
+              <h4>Legal</h4>
+              <nav>
+                <Link to="/privacy">Privacy Policy</Link>
               </nav>
             </div>
           </div>
         </div>
-        <div className="landing-footer__legal">
-          <p>
-            WorkforceGuard AI is an analytics and evidence platform. It does not provide legal advice;
-            consult qualified counsel for compliance determinations under Directive (EU) 2023/970.
-          </p>
-        </div>
       </footer>
+
+      <CookieConsent />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import type { DemoRequestMeta, DemoRequestPayload } from './demo-types'
 
-const DEFAULT_TO = 'martisoura@gmail.com'
+const DEFAULT_TO = 'workforceguardai@souravamseekar.com'
 
 function escapeHtml(value: string): string {
   return value

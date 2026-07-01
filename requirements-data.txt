@@ -1,7 +1,7 @@
 dbt-core>=1.11.11,<2
 dbt-duckdb>=1.10.1,<2
 duckdb>=1.5.4
-pandas>=3.0.4
+pandas>=3.0.3
 pyarrow>=18
 pyyaml>=6.0.3
 requests>=2.31

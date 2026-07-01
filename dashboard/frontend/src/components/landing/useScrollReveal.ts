@@ -1,5 +1,10 @@
 import { useEffect } from 'react'
 
+function isInViewport(node: Element) {
+  const rect = node.getBoundingClientRect()
+  return rect.top < window.innerHeight * 0.92 && rect.bottom > 0
+}
+
 export function useScrollReveal() {
   useEffect(() => {
     const nodes = document.querySelectorAll('.landing-reveal')
@@ -17,7 +22,14 @@ export function useScrollReveal() {
       { threshold: 0.12, rootMargin: '0px 0px -40px 0px' },
     )
 
-    nodes.forEach((node) => observer.observe(node))
+    nodes.forEach((node) => {
+      if (isInViewport(node)) {
+        node.classList.add('is-visible')
+      } else {
+        observer.observe(node)
+      }
+    })
+
     return () => observer.disconnect()
   }, [])
 }

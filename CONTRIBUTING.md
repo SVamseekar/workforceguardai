@@ -82,6 +82,24 @@ git lfs install
 git lfs pull
 ```
 
+## Project layout
+
+| Path | Purpose |
+|------|---------|
+| `dashboard/frontend/` | React UI (Vite, TanStack Query, Tailwind) |
+| `dashboard/backend/` | FastAPI API, auth, `AnalyticsRepository` |
+| `analytics/` | dbt models (Eurostat → marts) |
+| `scripts/` | Data ingestion and preparation |
+| `data/` | Parquet/DuckDB assets (LFS); tenant data is gitignored |
+| `deploy/` | GCP + Vercel deployment scripts |
+
+## Implementation norms
+
+- Match existing patterns in the file you edit; keep diffs focused.
+- Add or update tests when behavior changes.
+- Frontend API routes in `dashboard/frontend/api/` use Node globals (not browser).
+- Auth tests require `DATABASE_URL`; others may skip if Postgres is unavailable.
+
 ## AI assistants
 
 - **Claude Code** reads [CLAUDE.md](CLAUDE.md) automatically each session.

@@ -1,0 +1,19 @@
+employee_id,job_code,country_code,worker_category_id,gender,base_salary,currency,snapshot_date,job_title,employment_status,version
+upload-001,RA-1,CZ,risk_analyst,female,1050000,CZK,2025-12-31,Risk Analyst,active,upload-demo-v1
+upload-002,RA-1,CZ,risk_analyst,female,1120000,CZK,2025-12-31,Risk Analyst,active,upload-demo-v1
+upload-003,RA-2,CZ,risk_analyst,female,1180000,CZK,2025-12-31,Senior Compliance Officer,active,upload-demo-v1
+upload-004,RA-1,CZ,risk_analyst,male,1320000,CZK,2025-12-31,Risk Analyst,active,upload-demo-v1
+upload-005,RA-2,CZ,risk_analyst,male,1360000,CZK,2025-12-31,Senior Compliance Officer,active,upload-demo-v1
+upload-006,RA-2,CZ,risk_analyst,male,1290000,CZK,2025-12-31,Senior Compliance Officer,active,upload-demo-v1
+upload-007,CA-1,CZ,client_advisor,female,930000,CZK,2025-12-31,Client Advisor,active,upload-demo-v1
+upload-008,CA-2,CZ,client_advisor,female,970000,CZK,2025-12-31,Senior Client Advisor,active,upload-demo-v1
+upload-009,CA-1,CZ,client_advisor,male,990000,CZK,2025-12-31,Client Advisor,active,upload-demo-v1
+upload-010,CA-2,CZ,client_advisor,male,975000,CZK,2025-12-31,Senior Client Advisor,active,upload-demo-v1
+upload-011,OPS-1,CZ,ops_support,female,700000,CZK,2025-12-31,Operations Specialist,active,upload-demo-v1
+upload-012,OPS-2,CZ,ops_support,female,735000,CZK,2025-12-31,Operations Team Lead,active,upload-demo-v1
+upload-013,OPS-1,CZ,ops_support,male,795000,CZK,2025-12-31,Operations Specialist,active,upload-demo-v1
+upload-014,OPS-2,CZ,ops_support,male,770000,CZK,2025-12-31,Operations Team Lead,active,upload-demo-v1
+upload-015,TP-1,CZ,tech_platform,female,1320000,CZK,2025-12-31,Software Engineer,active,upload-demo-v1
+upload-016,TP-2,CZ,tech_platform,female,1400000,CZK,2025-12-31,Senior Software Engineer,active,upload-demo-v1
+upload-017,TP-1,CZ,tech_platform,male,1540000,CZK,2025-12-31,Software Engineer,active,upload-demo-v1
+upload-018,TP-3,CZ,tech_platform,male,1580000,CZK,2025-12-31,Platform Engineer,active,upload-demo-v1

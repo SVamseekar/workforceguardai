@@ -1,5 +1,0 @@
-risk_zone,total_employees,actual_left,actual_turnover_rate,avg_probability,std_probability
-High Risk Zone (Red),655,651,0.994,0.992,0.02
-Low Risk Zone (Yellow),117,7,0.06,0.318,0.106
-Medium Risk Zone (Orange),53,47,0.887,0.758,0.093
-Safe Zone (Green),2175,9,0.004,0.028,0.041

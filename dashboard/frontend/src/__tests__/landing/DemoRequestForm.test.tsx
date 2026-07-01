@@ -1,7 +1,16 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { DemoRequestForm } from '../../components/landing/DemoRequestForm'
+
+function renderForm() {
+  return render(
+    <MemoryRouter>
+      <DemoRequestForm />
+    </MemoryRouter>,
+  )
+}
 
 describe('DemoRequestForm', () => {
   beforeEach(() => {
@@ -15,7 +24,7 @@ describe('DemoRequestForm', () => {
       json: async () => ({ ok: true }),
     } as Response)
 
-    render(<DemoRequestForm />)
+    renderForm()
 
     await user.type(screen.getByLabelText(/first name/i), 'Alex')
     await user.type(screen.getByLabelText(/last name/i), 'Morgan')
