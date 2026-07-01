@@ -60,6 +60,11 @@ deploy/.env.production
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
+# Internal drafts and tooling scratch
+docs/superpowers/
+docs/social_media_campaign/
+record_demo.mjs
+node_modules/
 *.swp
 *.swo
 *~
