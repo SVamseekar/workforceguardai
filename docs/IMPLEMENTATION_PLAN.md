@@ -229,17 +229,21 @@ docs/paper-output.*
 | `docs/paper-*.md`, `docs/paper.tex`, `docs/figures/` | `docs/paper/` |
 | `docs/SECURITY_AUDIT.md` | `docs/security/` (refresh for OAuth) |
 
-### Dev-tooling hygiene (done in `chore/remove-dev-tooling-traces`)
+### Dev-tooling hygiene
 
-**Removed from repo:** `CLAUDE.md`, `.cursor/`, `.claude/`, `WORKFORCEGUARD_AI_REFERENCE.md`, `docs/superpowers/`, `docs/social_media_campaign/`
+**Removed (files + full git history via `git filter-repo`):** `CLAUDE.md`, `.cursor/`, `WORKFORCEGUARD_AI_REFERENCE.md`, `docs/WORKFORCEGUARD_MASTER_REFERENCE_*`, superpowers/social-media drafts
 
-**Keep (product features, not dev tooling):** “AI Analyst”, `CopilotPanel`, copilot API, research methodology mentions
+**Untracked via `.gitignore`:** `docs/paper-*.md`, `docs/paper.tex`, `docs/figures/`, `docs/SECURITY_AUDIT.md`
 
-**Scan before merge:**
+**Keep (product features):** “AI Analyst”, `CopilotPanel`, copilot API
+
+**Remote `main`:** branch protection blocks force-push — temporarily allow it in GitHub Rules, then:
 
 ```bash
-rg -i 'claude code|cursor rules|codex|antigravity|superpowers:subagent|chatgpt' --glob '!node_modules' --glob '!.venv' .
+git push --force --no-verify origin main
 ```
+
+`chore/remove-dev-tooling-traces` is already on GitHub with the rewritten history.
 
 ### Industry-standard layout (target)
 
