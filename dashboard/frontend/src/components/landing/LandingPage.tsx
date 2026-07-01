@@ -17,6 +17,7 @@ import { ProblemSection } from './components/ProblemSection'
 import { ProductTour } from './components/ProductTour'
 import { useLandingScrollRestore } from './hooks/useLandingScrollRestore'
 import { LandingShell, useLandingDemo } from './LandingShell'
+import { RESEARCH_PAPER_URL } from './site'
 import { useScrollReveal } from './useScrollReveal'
 import './landing.css'
 
@@ -182,6 +183,9 @@ function LandingHomeContent() {
               gender pay gap benchmarking across all 27 member states, guided compliance review,
               and evidence packs ready for regulators.
             </p>
+            <p className="landing-hero__proof">
+              Methodology published on SSRN · 20-country Eurostat panel · open dbt/DuckDB pipeline
+            </p>
             <div className="landing-hero__actions">
               <button
                 type="button"
@@ -309,6 +313,13 @@ function LandingHomeContent() {
               The five tightest labour markets in the sample all record gender pay gaps above the
               EU27 average of 11.1%. The platform implements these indices over an open dbt/DuckDB
               pipeline ingesting live Eurostat data.
+            </p>
+            <p className="landing-research__proof">
+              Published on{' '}
+              <a href={RESEARCH_PAPER_URL} target="_blank" rel="noopener noreferrer">
+                SSRN (abstract 6826361)
+              </a>
+              {' '}— 20-country Eurostat panel, open methodology.
             </p>
           </div>
           <div className="landing-research__panel">

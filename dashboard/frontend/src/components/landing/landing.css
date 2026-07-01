@@ -371,11 +371,19 @@
 }
 
 .landing-hero__lede {
-  margin: 0 0 30px;
+  margin: 0 0 16px;
   max-width: 520px;
   font-size: 1.06rem;
   line-height: 1.75;
   color: var(--text-muted);
+}
+
+.landing-hero__proof {
+  margin: 0 0 30px;
+  max-width: 520px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--text-muted) 85%, var(--accent-primary));
 }
 
 .landing-hero__actions {
@@ -854,6 +862,17 @@
   color: var(--text-muted);
   font-size: 0.96rem;
   line-height: 1.75;
+}
+
+.landing-research__proof {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.landing-research__proof a {
+  color: var(--accent-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .landing-research__panel {

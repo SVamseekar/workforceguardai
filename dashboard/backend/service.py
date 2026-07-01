@@ -4182,6 +4182,106 @@ class AnalyticsRepository:
             "dbt_run": "pending",
         }
 
+    def ingest_uploaded_job_architecture(
+        self,
+        csv_bytes: bytes,
+    ) -> Dict[str, Any]:
+        """
+        Validates a job architecture CSV upload, converts to parquet, updates the manifest.
+        Returns a summary dict. Raises ValueError for validation failures.
+        """
+        import io
+        import json
+        from datetime import datetime, timezone
+
+        import pandas as pd
+
+        REQUIRED_COLUMNS = {
+            "job_code",
+            "job_family",
+            "job_level",
+            "worker_category_id",
+            "worker_category_label",
+            "esco_uri",
+            "nace_code",
+        }
+
+        try:
+            df = pd.read_csv(io.BytesIO(csv_bytes))
+        except Exception as e:
+            raise ValueError(f"Could not parse CSV: {e}") from e
+
+        missing = REQUIRED_COLUMNS - set(df.columns.str.lower())
+        if missing:
+            raise ValueError(f"Missing required columns: {', '.join(sorted(missing))}")
+
+        df.columns = df.columns.str.lower()
+
+        if len(df) < 1:
+            raise ValueError("Upload must contain at least 1 job code. Got 0.")
+
+        if df["job_code"].duplicated().any():
+            duplicates = sorted(df.loc[df["job_code"].duplicated(), "job_code"].unique().tolist())
+            raise ValueError(
+                f"Duplicate job_code values are not allowed: {', '.join(duplicates[:5])}"
+            )
+
+        df["nace_code"] = df["nace_code"].astype("string").str.upper()
+        if df["nace_code"].isna().any() or (df["nace_code"].str.len() == 0).any():
+            raise ValueError("nace_code must be provided for all rows.")
+
+        if "version" not in df.columns:
+            df["version"] = "uploaded-v1"
+
+        warnings = []
+        payroll_path = self.internal_data_dir / "payroll_snapshot.parquet"
+        if payroll_path.exists():
+            import pyarrow.parquet as pq
+
+            payroll_df = pq.read_table(payroll_path).to_pandas()
+            known_codes = set(df["job_code"])
+            unknown_codes = set(payroll_df["job_code"]) - known_codes
+            if unknown_codes:
+                warnings.append(
+                    f"{len(unknown_codes)} payroll job_codes not in this upload — "
+                    f"those rows will have no NACE/ESCO mapping: {sorted(unknown_codes)[:5]}"
+                )
+
+        out_path = self.internal_data_dir / "job_architecture.parquet"
+        df.to_parquet(out_path, index=False)
+
+        manifest_path = self._internal_manifest_path()
+        manifest_path.parent.mkdir(parents=True, exist_ok=True)
+        manifest = {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "assets": [
+                {
+                    "asset_type": "internal_job_architecture",
+                    "version": "uploaded-v1",
+                    "record_count": len(df),
+                    "output": str(out_path),
+                    "trusted_for_company_claims": True,
+                },
+            ],
+        }
+        existing = self._internal_manifest_assets()
+        for asset_type, asset in existing.items():
+            if asset_type != "internal_job_architecture":
+                manifest["assets"].append(asset)
+
+        with manifest_path.open("w", encoding="utf-8") as f:
+            json.dump(manifest, f, indent=2)
+
+        return {
+            "status": "accepted",
+            "record_count": len(df),
+            "validation": {
+                "passed": True,
+                "warnings": warnings,
+            },
+            "dbt_run": "pending",
+        }
+
     def _build_egapro_peer_benchmark(
         self,
         filters: FilterState,
