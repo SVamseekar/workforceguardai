@@ -4,6 +4,7 @@ import { HelmetProvider } from 'react-helmet-async'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { LandingPage } from '../../components/landing/LandingPage'
+import { PrivacyPage } from '../../components/landing/PrivacyPage'
 
 vi.mock('../../lib/api', () => ({
   api: {
@@ -11,12 +12,13 @@ vi.mock('../../lib/api', () => ({
   },
 }))
 
-function renderLanding(initialEntry = '/') {
+function renderRoutes(initialEntry = '/') {
   return render(
     <HelmetProvider>
       <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
         </Routes>
       </MemoryRouter>
     </HelmetProvider>,
@@ -51,7 +53,7 @@ describe('landing hash navigation', () => {
 
   it('scrolls to contact when Request a demo is clicked', async () => {
     const user = userEvent.setup()
-    renderLanding()
+    renderRoutes()
 
     await user.click(screen.getAllByRole('button', { name: /request a demo/i })[0])
 
@@ -62,12 +64,35 @@ describe('landing hash navigation', () => {
 
   it('scrolls to compliance when See compliance mapping is clicked', async () => {
     const user = userEvent.setup()
-    renderLanding()
+    renderRoutes()
 
     await user.click(screen.getByRole('button', { name: /see compliance mapping/i }))
 
     await waitFor(() => {
       expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalled()
     })
+  })
+
+  it('navigates from privacy to home research section without a blank page', async () => {
+    const user = userEvent.setup()
+    renderRoutes('/privacy')
+
+    expect(screen.getByRole('heading', { level: 1, name: /privacy policy/i })).toBeInTheDocument()
+
+    const researchLinks = screen.getAllByRole('link', { name: /^research$/i })
+    await user.click(researchLinks[researchLinks.length - 1])
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 2, name: /tight labour markets/i })).toBeInTheDocument()
+    })
+    expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalled()
+  })
+
+  it('renders the full privacy policy from the top', () => {
+    renderRoutes('/privacy')
+
+    expect(screen.getByRole('heading', { level: 1, name: /privacy policy/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: /data we collect/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: /your rights/i })).toBeInTheDocument()
   })
 })

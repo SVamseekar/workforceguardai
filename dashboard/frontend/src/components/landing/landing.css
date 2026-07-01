@@ -2168,6 +2168,72 @@
   color: var(--text-muted);
 }
 
+.mission-prose h2 {
+  margin: 8px 0 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-strong);
+}
+
+.mission-prose ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 1.02rem;
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+.mission-prose a {
+  color: var(--accent-teal);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.mission-prose a:hover {
+  color: var(--text-strong);
+}
+
+.landing-legal {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: calc(var(--landing-nav-offset, 72px) + 40px) 28px 56px;
+}
+
+.landing-legal__header {
+  margin-bottom: 32px;
+}
+
+.landing-legal__header h1 {
+  margin: 0 0 10px;
+  font-family: var(--landing-display);
+  font-size: clamp(2rem, 4vw, 2.6rem);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--text-strong);
+}
+
+.landing-legal__updated {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.landing-legal__prose {
+  margin: 0;
+}
+
+.landing-legal__footer {
+  margin-top: 36px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-light);
+}
+
 .mission-beliefs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

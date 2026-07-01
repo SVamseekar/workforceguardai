@@ -1,9 +1,13 @@
 import { useCallback, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { focusContactForm, scrollToSection } from '../utils/scrollToSection'
+import { scrollToSection, scrollToSectionWhenReady } from '../utils/scrollToSection'
 
 function normalizeHash(hash: string) {
   return hash.startsWith('#') ? hash : `#${hash}`
+}
+
+function hashId(hash: string) {
+  return normalizeHash(hash).slice(1)
 }
 
 export function useHashNavigation(onNavigate?: () => void) {
@@ -14,43 +18,34 @@ export function useHashNavigation(onNavigate?: () => void) {
   const goToHash = useCallback(
     (targetHash: string, behavior: ScrollBehavior = 'smooth') => {
       const normalized = normalizeHash(targetHash)
-      const hashId = normalized.slice(1)
+      const id = hashId(normalized)
       onNavigate?.()
 
       if (!onHome) {
-        navigate(`/${normalized}`)
+        navigate({ pathname: '/', hash: id }, { preventScrollReset: true })
         return
-      }
-
-      const scroll = () => {
-        scrollToSection(normalized, behavior)
-        if (hashId === 'contact') focusContactForm()
       }
 
       if (hash !== normalized) {
-        navigate({ pathname: '/', hash: hashId }, { preventScrollReset: true })
-        window.setTimeout(scroll, 60)
+        navigate({ pathname: '/', hash: id }, { preventScrollReset: true })
+        window.setTimeout(() => scrollToSectionWhenReady(normalized, behavior), 60)
         return
       }
 
-      scroll()
+      scrollToSectionWhenReady(normalized, behavior)
     },
     [hash, navigate, onHome, onNavigate],
   )
 
   useEffect(() => {
     if (pathname !== '/' || !hash) return
-    const timer = window.setTimeout(() => {
-      scrollToSection(hash, 'auto')
-      if (hash.replace(/^#/, '') === 'contact') focusContactForm()
-    }, 80)
-    return () => window.clearTimeout(timer)
+    scrollToSectionWhenReady(hash, 'auto')
   }, [pathname, hash])
 
   useEffect(() => {
     const onPopState = () => {
       if (window.location.pathname !== '/' || !window.location.hash) return
-      requestAnimationFrame(() => scrollToSection(window.location.hash, 'auto'))
+      requestAnimationFrame(() => scrollToSectionWhenReady(window.location.hash, 'auto'))
     }
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)

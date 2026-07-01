@@ -116,7 +116,7 @@ export function CountryExposureViz() {
             {MARKET_INTELLIGENCE_SCOPE.map((item) => (
               <li
                 key={item.label}
-                className={`landing-exposure-viz__scope-item${item.active ? ' is-active' : ''}`}
+                className={`landing-exposure-viz__scope-item${'active' in item && item.active ? ' is-active' : ''}`}
               >
                 <span className="landing-exposure-viz__scope-label">{item.label}</span>
                 <span className="landing-exposure-viz__scope-detail">{item.detail}</span>

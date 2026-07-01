@@ -1,26 +1,28 @@
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Seo } from '../seo/Seo'
 import { LandingShell } from './LandingShell'
 import { SUPPORT_EMAIL } from './site'
-import { useScrollReveal } from './useScrollReveal'
 import './landing.css'
 
 const TITLE = 'Privacy Policy — WorkforceGuard AI'
 const DESCRIPTION = 'How WorkforceGuard AI collects, uses, and protects personal data submitted via demo requests and organisation sign-in.'
 
 function PrivacyContent() {
-  useScrollReveal()
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [])
 
   return (
     <>
       <Seo title={TITLE} description={DESCRIPTION} path="/privacy" />
-      <section className="landing-section landing-reveal" style={{ paddingTop: 120 }}>
-        <div className="landing-section__header landing-section__header--left">
+      <article className="landing-legal">
+        <header className="landing-legal__header">
           <p className="landing-section__eyebrow">Legal</p>
           <h1>Privacy Policy</h1>
-          <p className="landing-section__lede">Last updated: 1 July 2026</p>
-        </div>
-        <div className="mission-prose">
+          <p className="landing-legal__updated">Last updated: 1 July 2026</p>
+        </header>
+        <div className="landing-legal__prose mission-prose">
           <p>
             WorkforceGuard AI (&quot;we&quot;, &quot;us&quot;) operates the workforceguardai.souravamseekar.com
             website and provisioned analytics dashboard for EU pay-transparency compliance workflows.
@@ -53,10 +55,10 @@ function PrivacyContent() {
             Questions about this policy: <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
           </p>
         </div>
-        <p style={{ marginTop: 32 }}>
+        <footer className="landing-legal__footer">
           <Link to="/" className="landing-cta landing-cta--ghost">Back to home</Link>
-        </p>
-      </section>
+        </footer>
+      </article>
     </>
   )
 }
