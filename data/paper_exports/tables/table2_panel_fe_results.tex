@@ -1,0 +1,11 @@
+\begin{tabular}{lllrllll}
+\toprule
+model & coefficient & std\_error & n & r\_squared & r\_squared\_within & entity\_fe & time\_fe \\
+\midrule
+Model 1: Pooled OLS & 0.694*** & (0.140) & 131 & 0.395 &  & No & Yes \\
+Model 2: Country + Year FE (main result) & 0.254 & (0.292) & 131 & 0.032 & -0.206 & Yes & Yes \\
+Model 3: FE with controls & 0.565 & (0.423) & 95 & 0.148 & -0.413 & Yes & Yes \\
+Model 4: First differences & 0.233* & (0.127) & 109 & 0.042 &  & No & No \\
+Model 5: Lagged employment rate & 0.100 & (0.226) & 109 & 0.003 & -0.050 & Yes & Yes \\
+\bottomrule
+\end{tabular}
