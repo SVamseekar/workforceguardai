@@ -1,5 +1,5 @@
 import { AlertTriangle, CheckCircle2 } from 'lucide-react'
-import { countrySample, LANDING_FACTS } from '../landingFacts'
+import { LANDING_FACTS } from '../landingFacts'
 import { SectionLabel } from './SectionLabel'
 
 const CHAOS = [
@@ -10,10 +10,10 @@ const CHAOS = [
 ]
 
 const SOLUTION = [
-  'dbt-modeled EU reference layer with provenance on every metric',
-  'Tenant-isolated payroll blended against market benchmarks',
-  'Category review with configurable 5% / 10% thresholds',
-  'SHA-256 hash-chained governance log verified on every API call',
+  'Live EU benchmarks with provenance on every metric',
+  'Payroll kept separate from public market data until you benchmark',
+  'Category review with 5% and 10% threshold flagging',
+  'Tamper-evident governance log for every compliance decision',
 ]
 
 const TIMELINE = [
@@ -22,12 +22,25 @@ const TIMELINE = [
   { when: 'Jun 2031', what: 'Reporting extends to employers with 100–149 workers (every three years)' },
 ] as const
 
-export function ProblemSection() {
-  const { research } = LANDING_FACTS
-  const nl = countrySample('NL')
-  const de = countrySample('DE')
-  const es = countrySample('ES')
+const INSIGHTS = [
+  {
+    value: `+${LANDING_FACTS.research.employmentGapCorrelation}`,
+    label: 'Employment–gap correlation',
+    detail: `Pearson r across ${LANDING_FACTS.research.panelCountries} countries — stronger labour markets do not mean smaller gaps.`,
+  },
+  {
+    value: `${LANDING_FACTS.research.eu27FinanceSectorGapPct}%`,
+    label: 'EU27 finance sector (NACE K)',
+    detail: `More than 2× the ${LANDING_FACTS.research.eu27UnadjustedGapPct}% all-sector EU27 average (Eurostat SES).`,
+  },
+  {
+    value: LANDING_FACTS.directive.transpositionLabel,
+    label: 'Transposition deadline',
+    detail: 'Category-level reporting, justification, and evidence retention become enforceable.',
+  },
+] as const
 
+export function ProblemSection() {
   return (
     <section className="landing-section landing-section--alt landing-reveal">
       <div id="problem" className="landing-anchor" tabIndex={-1} />
@@ -35,14 +48,19 @@ export function ProblemSection() {
         <SectionLabel>The problem</SectionLabel>
         <h2>Pay transparency is a legal obligation — not a spreadsheet exercise</h2>
         <p className="landing-section__lede">
-          Directive (EU) 2023/970 requires category-level measurement, objective justification, and
-          retrievable evidence. Our Eurostat panel shows why competitive labour markets alone have not
-          closed gaps: employment rate and gender pay gap correlate positively (r ≈{' '}
-          {research.employmentGapCorrelation}) across {research.panelCountries} countries. Netherlands
-          posts HPI {nl.hpi} with finance gap {nl.financeGpgPct}%; Germany HPI {de.hpi} at{' '}
-          {de.financeGpgPct}%; Spain finance gap {es.financeGpgPct}% with ERS {es.ers} — finance (NACE K)
-          averages {research.eu27FinanceSectorGapPct}% EU-wide.
+          Directive (EU) 2023/970 requires measurable, defensible pay equity evidence — not narrative
+          assurance. The labour-market data says why that matters.
         </p>
+      </div>
+
+      <div className="landing-problem-insights">
+        {INSIGHTS.map((item) => (
+          <article key={item.label} className="landing-problem-insight">
+            <span className="landing-problem-insight__value">{item.value}</span>
+            <span className="landing-problem-insight__label">{item.label}</span>
+            <p>{item.detail}</p>
+          </article>
+        ))}
       </div>
 
       <ol className="landing-problem-timeline">
@@ -70,8 +88,8 @@ export function ProblemSection() {
         <div className="landing-problem-card landing-problem-card--solution">
           <h3><CheckCircle2 size={18} /> With WorkforceGuard</h3>
           <p className="landing-problem-card__intro">
-            One DuckDB + dbt pipeline connects Eurostat intelligence, uploaded payroll, review
-            workflows, and a tamper-evident governance log.
+            One workspace connects Eurostat intelligence, uploaded payroll, review workflows, and an
+            audit-ready evidence trail.
           </p>
           <ul>
             {SOLUTION.map((item) => (

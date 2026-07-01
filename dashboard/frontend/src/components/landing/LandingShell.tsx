@@ -204,8 +204,8 @@ export function LandingShell({ children }: LandingShellProps) {
                 <Link to="/mission">Mission</Link>
                 <a href={hashHref('#onboarding')} onClick={(e) => handleHashClick(e, '#onboarding')}>Onboarding &amp; support</a>
                 <a href={hashHref('#research')} onClick={(e) => handleHashClick(e, '#research')}>Research</a>
-                <a href="https://github.com/SVamseekar/workforceguardai" target="_blank" rel="noreferrer">
-                  GitHub
+                <a href="https://mpra.ub.uni-muenchen.de/129330/" target="_blank" rel="noreferrer">
+                  Research paper
                 </a>
               </nav>
             </div>

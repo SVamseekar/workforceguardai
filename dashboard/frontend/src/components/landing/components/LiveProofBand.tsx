@@ -2,7 +2,7 @@ import { LIVE_PROOF_STATS } from '../landingFacts'
 
 export function LiveProofBand() {
   return (
-    <section className="landing-stats-band landing-reveal" aria-label="Live pipeline proof points">
+    <section className="landing-stats-band landing-reveal" aria-label="Key market and compliance figures">
       <div className="landing-stats-band__inner">
         {LIVE_PROOF_STATS.map((stat) => (
           <div key={stat.label} className="landing-stat">

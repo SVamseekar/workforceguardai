@@ -96,7 +96,7 @@ export const ANALYST_DEMO_SCENES: AnalystDemoScene[] = [
     answer:
       `${risk.label} (${risk.internalGapPct}% internal gap) and ${tech.label} (${tech.internalGapPct}%) are unresolved_review_item. ${ops.label} is at ${ops.internalGapPct}% — monitor against the ${LANDING_FACTS.directive.unresolvedReviewThresholdPct}% review threshold.`,
     provenance: [
-      { label: 'Source', value: 'mart_pay_transparency_category_review' },
+      { label: 'Source', value: 'Pay transparency review' },
       { label: 'Demo tenant', value: `${demo.payrollRows} payroll rows · ${demo.jobCodes} job codes` },
       { label: 'Confidence', value: 'High — trusted payroll + job architecture' },
     ],
@@ -108,8 +108,8 @@ export const ANALYST_DEMO_SCENES: AnalystDemoScene[] = [
     answer:
       `EU27 NACE K averages ${research.eu27FinanceSectorGapPct}% vs ${research.eu27UnadjustedGapPct}% all-sector. Sample: Hungary ${countrySample('HU').financeGpgPct}%, France ${countrySample('FR').financeGpgPct}%, Netherlands ${countrySample('NL').financeGpgPct}% (HPI ${countrySample('NL').hpi}), Spain ${countrySample('ES').financeGpgPct}%.`,
     provenance: [
-      { label: 'Dataset', value: 'Eurostat SES · mart_semantic_metrics' },
-      { label: 'Countries', value: `${LANDING_FACTS.countrySamples.length} in live sample table` },
+      { label: 'Dataset', value: 'Eurostat Structure of Earnings Survey' },
+      { label: 'Countries', value: `${LANDING_FACTS.countrySamples.length} in exposure chart` },
       { label: 'Panel', value: `${research.panelCountries} countries · ${research.panelSectors} sectors` },
     ],
     action: 'View Compare narrative',
@@ -120,7 +120,7 @@ export const ANALYST_DEMO_SCENES: AnalystDemoScene[] = [
     answer:
       `Export bundles category-level gaps for ${demo.reviewCategories.length} worker categories, Eurostat provenance, and governance events. Chain integrity verified on API — ${demo.reviewCategories.length} unresolved items ready for approve/override/reverse.`,
     provenance: [
-      { label: 'Governance', value: 'SHA-256 chain · integrity verified' },
+      { label: 'Governance', value: 'Tamper-evident audit log' },
       { label: 'Export', value: 'JSON evidence bundle' },
       { label: 'Review queue', value: `${demo.reviewCategories.length} categories · tenant-isolated` },
     ],

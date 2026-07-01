@@ -17,7 +17,7 @@ const STEPS = [
   {
     icon: Upload,
     title: 'Payroll & job architecture upload',
-    desc: 'Upload CSV payroll and job architecture files — or we seed a demo scenario. dbt rebuilds internal marts automatically.',
+    desc: 'Upload CSV payroll and job architecture files — or we seed a demo scenario with your countries in scope.',
   },
   {
     icon: Users,

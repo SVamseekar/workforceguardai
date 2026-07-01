@@ -695,58 +695,244 @@
   line-height: 1.55;
 }
 
-/* ── Country sample table ──────────────────────────────────────────────── */
-.landing-country-table-wrap {
+/* ── Country exposure viz ─────────────────────────────────────────────── */
+.landing-exposure-viz {
   max-width: 1240px;
   margin: 0 auto;
   padding: 0 28px;
-  overflow-x: auto;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 28px;
+  align-items: start;
 }
 
-.landing-country-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.88rem;
+.landing-exposure-viz__scatter {
+  position: relative;
+  margin: 0;
+  padding: 28px 0 36px 0;
+  min-height: 340px;
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  background:
+    linear-gradient(
+      to top,
+      color-mix(in srgb, var(--tone-watch) 8%, transparent),
+      transparent 55%
+    ),
+    var(--landing-surface);
 }
 
-.landing-country-table th,
-.landing-country-table td {
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--border-light);
-  text-align: left;
+.landing-exposure-viz__plot {
+  position: relative;
+  min-height: 260px;
+  margin: 0 12px 0 36px;
 }
 
-.landing-country-table thead th {
+.landing-exposure-viz__grid {
+  position: absolute;
+  inset: 0;
+}
+
+.landing-exposure-viz__grid-line {
+  position: absolute;
+  background: color-mix(in srgb, var(--border-light) 80%, transparent);
+  pointer-events: none;
+}
+
+.landing-exposure-viz__grid-line--v {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.landing-exposure-viz__grid-line--h {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+.landing-exposure-viz__zone {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-family: var(--landing-mono);
+  font-size: 0.68rem;
+  color: var(--tone-watch);
+  letter-spacing: 0.03em;
+}
+
+.landing-exposure-viz__axis {
+  position: absolute;
+  font-family: var(--landing-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.landing-exposure-viz__axis--x {
+  left: 36px;
+  right: 12px;
+  bottom: 10px;
+  text-align: center;
+}
+
+.landing-exposure-viz__axis--y {
+  left: 6px;
+  top: 50%;
+  transform: rotate(-90deg) translateX(-50%);
+  transform-origin: left top;
+  white-space: nowrap;
+}
+
+.landing-exposure-viz__point {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transform: translate(-50%, 50%);
+  background: color-mix(
+    in srgb,
+    var(--accent-primary) 55%,
+    var(--landing-gold)
+  );
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 70%, white);
+  box-shadow: 0 2px 10px
+    color-mix(in srgb, var(--accent-primary) 25%, transparent);
+  cursor: default;
+  z-index: 1;
+}
+
+.landing-exposure-viz__point-label {
+  font-family: var(--landing-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: var(--bg-base);
+  line-height: 1;
+}
+
+.landing-exposure-viz__caption {
+  margin: 14px 0 0;
+  padding-left: 36px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.landing-exposure-viz__rank h3 {
+  margin: 0 0 16px;
+  font-size: 0.95rem;
+}
+
+.landing-exposure-viz__bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.landing-exposure-viz__bars li {
+  display: grid;
+  grid-template-columns: minmax(108px, 1fr) 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.landing-exposure-viz__bar-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.landing-exposure-viz__bar-code {
+  display: inline-block;
+  min-width: 1.6rem;
+  margin-right: 6px;
   font-family: var(--landing-mono);
   font-size: 0.72rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  background: var(--landing-elevated);
+  color: var(--landing-gold);
 }
 
-.landing-country-table tbody th {
+.landing-exposure-viz__bar-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--landing-elevated);
+  overflow: hidden;
+}
+
+.landing-exposure-viz__bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent-teal), var(--accent-primary));
+}
+
+.landing-exposure-viz__bar-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 4.2rem;
+}
+
+.landing-exposure-viz__bar-value {
+  font-family: var(--landing-mono);
+  font-size: 0.76rem;
   font-weight: 600;
   color: var(--text-strong);
 }
 
-.landing-country-table tbody tr:hover {
-  background: color-mix(in srgb, var(--landing-elevated) 60%, transparent);
+.landing-exposure-viz__bar-emp {
+  font-family: var(--landing-mono);
+  font-size: 0.66rem;
+  color: var(--text-muted);
 }
 
-.landing-country-table__code {
-  display: inline-block;
-  min-width: 2rem;
-  margin-right: 8px;
-  font-family: var(--landing-mono);
+.landing-exposure-viz__footnote {
+  margin: 14px 0 0;
   font-size: 0.76rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.landing-problem-insights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  max-width: 1240px;
+  margin: 0 auto 28px;
+  padding: 0 28px;
+}
+
+.landing-problem-insight {
+  padding: 18px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border-light);
+  background: var(--landing-surface);
+}
+
+.landing-problem-insight__value {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--landing-display);
+  font-size: 1.85rem;
+  line-height: 1;
   color: var(--landing-gold);
 }
 
-.landing-country-table__period {
-  font-family: var(--landing-mono);
-  font-size: 0.78rem;
+.landing-problem-insight__label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.landing-problem-insight p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
   color: var(--text-muted);
 }
 
@@ -1321,6 +1507,14 @@
 
   .landing-stats-band__inner {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .landing-exposure-viz {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-problem-insights {
+    grid-template-columns: 1fr;
   }
 
   .landing-problem-timeline {

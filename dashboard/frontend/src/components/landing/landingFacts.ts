@@ -1,13 +1,9 @@
-/**
- * Landing copy grounded in local pipeline output (dbt run + demo tenant seed).
- * `countrySamples` are live DuckDB values (Eurostat SES + mart_semantic_metrics).
- */
+/** Landing figures sourced from Eurostat SES/LFS and composite index metrics. */
 export const LANDING_FACTS = {
   market: {
     euMemberStates: 27,
     naceSectors: 13,
     yearRange: '2019–2024',
-    dbtModels: 31,
     compositeIndices: [
       'Hiring Pressure Index',
       'Labour Resilience',
@@ -28,20 +24,18 @@ export const LANDING_FACTS = {
     jointAssessmentThresholdPct: 5,
     unresolvedReviewThresholdPct: 10,
   },
-  /** Eurostat SES + semantic metrics — sampled from workforceguard_analytics.duckdb */
   countrySamples: [
     { code: 'CZ', name: 'Czechia', employmentRatePct: 82.3, financeGpgPct: 36.4, hpi: 80, ers: 96, period: '2023' },
     { code: 'HU', name: 'Hungary', employmentRatePct: 81.1, financeGpgPct: 34.7, hpi: 96, ers: 93, period: '2023' },
     { code: 'FR', name: 'France', employmentRatePct: 75.1, financeGpgPct: 32.1, hpi: 59, ers: 70, period: '2023' },
     { code: 'EE', name: 'Estonia', employmentRatePct: 81.8, financeGpgPct: 27.6, hpi: 71, ers: 90, period: '2023' },
     { code: 'DE', name: 'Germany', employmentRatePct: 81.3, financeGpgPct: 26.1, hpi: 96, ers: 92, period: '2023' },
-    { code: 'IT', name: 'Italy', financeGpgPct: 23.0, hpi: 60, ers: 18, period: '2023' },
+    { code: 'IT', name: 'Italy', employmentRatePct: 66.3, financeGpgPct: 23.0, hpi: 60, ers: 18, period: '2023' },
     { code: 'NL', name: 'Netherlands', employmentRatePct: 83.5, financeGpgPct: 22.6, hpi: 100, ers: 63, period: '2023' },
     { code: 'SE', name: 'Sweden', employmentRatePct: 81.9, financeGpgPct: 22.4, hpi: 53, ers: 58, period: '2023' },
-    { code: 'IE', name: 'Ireland', financeGpgPct: 21.7, hpi: 85, ers: 46, period: '2022' },
-    { code: 'ES', name: 'Spain', financeGpgPct: 14.1, hpi: 43, ers: 49, period: '2023' },
+    { code: 'IE', name: 'Ireland', employmentRatePct: 79.1, financeGpgPct: 21.7, hpi: 85, ers: 46, period: '2022' },
+    { code: 'ES', name: 'Spain', employmentRatePct: 70.5, financeGpgPct: 14.1, hpi: 43, ers: 49, period: '2023' },
   ] as const,
-  /** Seeded demo tenant — referenced only in the analyst demo theater. */
   demo: {
     tenantLabel: 'Sample tenant',
     payrollRows: 210,
@@ -81,7 +75,7 @@ export const LIVE_PROOF_STATS = [
   },
   {
     value: String(LANDING_FACTS.countrySamples.length),
-    label: 'Countries in sample table',
-    detail: `Live pipeline snapshot · ${LANDING_FACTS.market.compositeIndices.length} composite indices.`,
+    label: 'Countries in exposure chart',
+    detail: `${LANDING_FACTS.market.compositeIndices.length} composite indices · ${LANDING_FACTS.market.yearRange}.`,
   },
 ] as const

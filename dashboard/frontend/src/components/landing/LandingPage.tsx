@@ -9,7 +9,7 @@ import { buildHomeJsonLd, DEFAULT_DESCRIPTION, DEFAULT_TITLE } from '../../lib/s
 import { AnalystDemoTheater } from './components/AnalystDemoTheater'
 import { ComplianceMappingSection } from './components/ComplianceMappingSection'
 import { ContactSection } from './components/ContactSection'
-import { CountrySamplePanel } from './components/CountrySamplePanel'
+import { CountryExposureViz } from './components/CountryExposureViz'
 import { LiveProofBand } from './components/LiveProofBand'
 import { OnboardingSupportSection } from './components/OnboardingSupportSection'
 import { ProblemSection } from './components/ProblemSection'
@@ -30,11 +30,11 @@ const FAQS = [
   },
   {
     q: 'What happens to uploaded payroll data?',
-    a: 'Payroll is modelled in a tenant-isolated DuckDB schema (tag:internal in dbt). It never blends into the shared EU reference layer unless you explicitly run company-specific benchmarks.',
+    a: 'Payroll is kept in a tenant-isolated layer, separate from public EU benchmarks, until you run company-specific comparisons.',
   },
   {
     q: 'Is the methodology published?',
-    a: `Yes — ${RESEARCH_PAPER_LABEL} documents a ${research.panelCountries}-country, ${research.panelSectors}-sector Eurostat panel (${market.yearRange}) with an open dbt/DuckDB pipeline.`,
+    a: `Yes — ${RESEARCH_PAPER_LABEL} documents a ${research.panelCountries}-country, ${research.panelSectors}-sector Eurostat panel (${market.yearRange}) with open methodology.`,
   },
   {
     q: 'Can I open the dashboard without a demo?',
@@ -101,9 +101,8 @@ function LandingHomeContent() {
               {' '}and a hash-chained audit trail
             </h1>
             <p className="landing-hero__lede">
-              {market.dbtModels} dbt models over DuckDB turn Eurostat LFS, JVS, and SES into composite
-              indices and pay transparency review — with tenant-isolated payroll and regulator-ready
-              evidence export.
+              Map Eurostat labour-market data and your payroll to Directive (EU) 2023/970 workflows —
+              composite indices, category-level review, and evidence export with provenance on every figure.
             </p>
             <p className="landing-hero__proof">
               <Database size={14} aria-hidden="true" />
@@ -147,7 +146,7 @@ function LandingHomeContent() {
       </section>
 
       <LiveProofBand />
-      <CountrySamplePanel />
+      <CountryExposureViz />
       <ProblemSection />
       <ProductTour />
       <ComplianceMappingSection />
@@ -166,12 +165,11 @@ function LandingHomeContent() {
               sample all record gaps above the EU27 average of {research.eu27UnadjustedGapPct}%.
             </p>
             <p>
-              WorkforceGuard implements Hiring Pressure, Labour Resilience, Equity Risk, and Transition
-              Readiness indices in an open dbt/DuckDB pipeline — the same methodology cited in our{' '}
+              WorkforceGuard implements the same composite indices cited in our{' '}
               <a href={RESEARCH_PAPER_URL} target="_blank" rel="noopener noreferrer">
                 {RESEARCH_PAPER_LABEL}
               </a>
-              {' '}preprint.
+              {' '}preprint — Hiring Pressure, Labour Resilience, Equity Risk, and Transition Readiness.
             </p>
           </div>
           <div className="landing-research__panel">
