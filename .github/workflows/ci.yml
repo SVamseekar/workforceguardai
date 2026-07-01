@@ -73,6 +73,11 @@ jobs:
       DATABASE_URL: postgresql://test:test@localhost:5432/workforceguard_test
       SESSION_SECRET: ci-secret-not-for-production-use-only
       PYTHONPATH: dashboard/backend
+      WORKFORCEGUARD_DB_PATH: ${{ github.workspace }}/data/workforceguard_analytics.duckdb
+      WORKFORCEGUARD_EU_RAW_PATH: ${{ github.workspace }}/data/eu_raw
+      WORKFORCEGUARD_INTERNAL_PATH: ${{ github.workspace }}/data/internal
+      WORKFORCEGUARD_REFERENCE_PATH: ${{ github.workspace }}/data/reference
+      WORKFORCEGUARD_PUBLIC_COMPANY_PATH: ${{ github.workspace }}/data/public_company
 
     steps:
       - uses: actions/checkout@v7
@@ -99,6 +104,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt -r requirements-data.txt -r dashboard/backend/requirements.txt
           pip install pytest httpx
+
+      - name: Build analytics database
+        if: needs.changes.outputs.python == 'true'
+        working-directory: analytics
+        run: |
+          dbt seed --profiles-dir .
+          dbt run --profiles-dir . --exclude tag:internal
 
       - name: Run backend tests
         if: needs.changes.outputs.python == 'true'
