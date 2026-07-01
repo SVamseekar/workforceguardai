@@ -212,11 +212,8 @@ export function LandingShell({ children }: LandingShellProps) {
             <div>
               <h4>Get started</h4>
               <nav>
-                <a href={hashHref('#contact')} onClick={(e) => handleHashClick(e, '#contact')}>Get in touch</a>
+                <a href={hashHref('#contact')} onClick={(e) => handleHashClick(e, '#contact')}>Request a demo</a>
                 <a href={hashHref('#faq')} onClick={(e) => handleHashClick(e, '#faq')}>FAQ</a>
-                <button type="button" className="landing-footer__link-btn" onClick={openDemo}>
-                  Request a demo
-                </button>
               </nav>
             </div>
             <div>
