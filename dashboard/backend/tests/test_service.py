@@ -662,7 +662,7 @@ class AnalyticsRepositoryTests(unittest.TestCase):
 
             self.assertFalse(overview["internal_data"]["available"])
             self.assertFalse(overview["company_benchmark"]["available"])
-            self.assertIn("modeled analytics database", overview["internal_data"]["note"])
+            self.assertIn("company benchmark mart", overview["internal_data"]["note"])
 
     def test_company_question_is_blocked_without_internal_assets(self):
         with tempfile.TemporaryDirectory() as temp_dir:
