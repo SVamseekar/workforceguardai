@@ -9,12 +9,13 @@ import { buildHomeJsonLd, DEFAULT_DESCRIPTION, DEFAULT_TITLE } from '../../lib/s
 import { AnalystDemoTheater } from './components/AnalystDemoTheater'
 import { ComplianceMappingSection } from './components/ComplianceMappingSection'
 import { ContactSection } from './components/ContactSection'
+import { CountrySamplePanel } from './components/CountrySamplePanel'
 import { LiveProofBand } from './components/LiveProofBand'
 import { OnboardingSupportSection } from './components/OnboardingSupportSection'
 import { ProblemSection } from './components/ProblemSection'
 import { ProductTour } from './components/ProductTour'
 import { LandingShell, useLandingDemo } from './LandingShell'
-import { LANDING_FACTS } from './landingFacts'
+import { countrySample, LANDING_FACTS } from './landingFacts'
 import { RESEARCH_PAPER_LABEL, RESEARCH_PAPER_URL } from './site'
 
 import { useScrollReveal } from './useScrollReveal'
@@ -146,6 +147,7 @@ function LandingHomeContent() {
       </section>
 
       <LiveProofBand />
+      <CountrySamplePanel />
       <ProblemSection />
       <ProductTour />
       <ComplianceMappingSection />
@@ -184,9 +186,9 @@ function LandingHomeContent() {
             <GitCompare size={18} />
             <h3>Combined Risk Quadrant</h3>
             <p>
-              Plot Hiring Pressure against Equity Risk for any country × sector — finance (NACE K)
-              averages {research.eu27FinanceSectorGapPct}% EU-wide, the highest sectoral exposure in
-              the panel.
+              Hungary finance gap {countrySample('HU').financeGpgPct}% (HPI {countrySample('HU').hpi}),
+              Germany {countrySample('DE').financeGpgPct}% (ERS {countrySample('DE').ers}), Italy ERS{' '}
+              {countrySample('IT').ers} — tight markets do not guarantee low equity risk.
             </p>
             <Link to="/app/compare" className="landing-cta landing-cta--secondary">
               Explore the comparison <ChevronRight size={14} />

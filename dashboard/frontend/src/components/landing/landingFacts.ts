@@ -1,7 +1,6 @@
 /**
  * Landing copy grounded in local pipeline output (dbt run + demo tenant seed).
- * EU-wide figures are used on the public page; country-specific demo data lives
- * under `demo` and appears only in the analyst demo section.
+ * `countrySamples` are live DuckDB values (Eurostat SES + mart_semantic_metrics).
  */
 export const LANDING_FACTS = {
   market: {
@@ -29,6 +28,19 @@ export const LANDING_FACTS = {
     jointAssessmentThresholdPct: 5,
     unresolvedReviewThresholdPct: 10,
   },
+  /** Eurostat SES + semantic metrics — sampled from workforceguard_analytics.duckdb */
+  countrySamples: [
+    { code: 'CZ', name: 'Czechia', employmentRatePct: 82.3, financeGpgPct: 36.4, hpi: 80, ers: 96, period: '2023' },
+    { code: 'HU', name: 'Hungary', employmentRatePct: 81.1, financeGpgPct: 34.7, hpi: 96, ers: 93, period: '2023' },
+    { code: 'FR', name: 'France', employmentRatePct: 75.1, financeGpgPct: 32.1, hpi: 59, ers: 70, period: '2023' },
+    { code: 'EE', name: 'Estonia', employmentRatePct: 81.8, financeGpgPct: 27.6, hpi: 71, ers: 90, period: '2023' },
+    { code: 'DE', name: 'Germany', employmentRatePct: 81.3, financeGpgPct: 26.1, hpi: 96, ers: 92, period: '2023' },
+    { code: 'IT', name: 'Italy', financeGpgPct: 23.0, hpi: 60, ers: 18, period: '2023' },
+    { code: 'NL', name: 'Netherlands', employmentRatePct: 83.5, financeGpgPct: 22.6, hpi: 100, ers: 63, period: '2023' },
+    { code: 'SE', name: 'Sweden', employmentRatePct: 81.9, financeGpgPct: 22.4, hpi: 53, ers: 58, period: '2023' },
+    { code: 'IE', name: 'Ireland', financeGpgPct: 21.7, hpi: 85, ers: 46, period: '2022' },
+    { code: 'ES', name: 'Spain', financeGpgPct: 14.1, hpi: 43, ers: 49, period: '2023' },
+  ] as const,
   /** Seeded demo tenant — referenced only in the analyst demo theater. */
   demo: {
     tenantLabel: 'Sample tenant',
@@ -42,6 +54,14 @@ export const LANDING_FACTS = {
     ],
   },
 } as const
+
+export type CountrySample = (typeof LANDING_FACTS.countrySamples)[number]
+
+export function countrySample(code: CountrySample['code']) {
+  const row = LANDING_FACTS.countrySamples.find((c) => c.code === code)
+  if (!row) throw new Error(`Missing country sample: ${code}`)
+  return row
+}
 
 export const LIVE_PROOF_STATS = [
   {
@@ -57,11 +77,11 @@ export const LIVE_PROOF_STATS = [
   {
     value: `${LANDING_FACTS.research.eu27FinanceSectorGapPct}%`,
     label: 'EU27 finance sector gap',
-    detail: 'Eurostat SES — more than double the all-sector EU27 average.',
+    detail: 'Eurostat SES NACE K — more than double the all-sector average.',
   },
   {
-    value: String(LANDING_FACTS.market.euMemberStates),
-    label: 'Member states in pipeline',
-    detail: `${LANDING_FACTS.market.compositeIndices.length} composite indices · ${LANDING_FACTS.market.yearRange} Eurostat panel.`,
+    value: String(LANDING_FACTS.countrySamples.length),
+    label: 'Countries in sample table',
+    detail: `Live pipeline snapshot · ${LANDING_FACTS.market.compositeIndices.length} composite indices.`,
   },
 ] as const

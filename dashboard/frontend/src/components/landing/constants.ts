@@ -2,7 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import {
   BarChart2, Bot, GitCompare, MessageSquare, Scale, ShieldCheck,
 } from 'lucide-react'
-import { LANDING_FACTS } from './landingFacts'
+import { countrySample, LANDING_FACTS } from './landingFacts'
 
 export type ProductTourTab = {
   id: string
@@ -106,10 +106,10 @@ export const ANALYST_DEMO_SCENES: AnalystDemoScene[] = [
     persona: 'People analytics',
     question: 'How does the EU27 finance sector gender pay gap compare to the all-sector average?',
     answer:
-      `EU27 NACE K averages ${research.eu27FinanceSectorGapPct}% (Eurostat SES) — more than double the ${research.eu27UnadjustedGapPct}% all-sector benchmark. The five tightest labour markets in our ${research.panelCountries}-country panel all sit above the EU27 average.`,
+      `EU27 NACE K averages ${research.eu27FinanceSectorGapPct}% vs ${research.eu27UnadjustedGapPct}% all-sector. Sample: Hungary ${countrySample('HU').financeGpgPct}%, France ${countrySample('FR').financeGpgPct}%, Netherlands ${countrySample('NL').financeGpgPct}% (HPI ${countrySample('NL').hpi}), Spain ${countrySample('ES').financeGpgPct}%.`,
     provenance: [
       { label: 'Dataset', value: 'Eurostat SES · mart_semantic_metrics' },
-      { label: 'All-sector EU27', value: `${research.eu27UnadjustedGapPct}%` },
+      { label: 'Countries', value: `${LANDING_FACTS.countrySamples.length} in live sample table` },
       { label: 'Panel', value: `${research.panelCountries} countries · ${research.panelSectors} sectors` },
     ],
     action: 'View Compare narrative',

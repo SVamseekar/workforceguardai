@@ -1,5 +1,5 @@
 import { AlertTriangle, CheckCircle2 } from 'lucide-react'
-import { LANDING_FACTS } from '../landingFacts'
+import { countrySample, LANDING_FACTS } from '../landingFacts'
 import { SectionLabel } from './SectionLabel'
 
 const CHAOS = [
@@ -24,6 +24,9 @@ const TIMELINE = [
 
 export function ProblemSection() {
   const { research } = LANDING_FACTS
+  const nl = countrySample('NL')
+  const de = countrySample('DE')
+  const es = countrySample('ES')
 
   return (
     <section className="landing-section landing-section--alt landing-reveal">
@@ -35,9 +38,10 @@ export function ProblemSection() {
           Directive (EU) 2023/970 requires category-level measurement, objective justification, and
           retrievable evidence. Our Eurostat panel shows why competitive labour markets alone have not
           closed gaps: employment rate and gender pay gap correlate positively (r ≈{' '}
-          {research.employmentGapCorrelation}) across {research.panelCountries} countries — and
-          finance (NACE K) averages {research.eu27FinanceSectorGapPct}% EU-wide, more than double the{' '}
-          {research.eu27UnadjustedGapPct}% all-sector benchmark.
+          {research.employmentGapCorrelation}) across {research.panelCountries} countries. Netherlands
+          posts HPI {nl.hpi} with finance gap {nl.financeGpgPct}%; Germany HPI {de.hpi} at{' '}
+          {de.financeGpgPct}%; Spain finance gap {es.financeGpgPct}% with ERS {es.ers} — finance (NACE K)
+          averages {research.eu27FinanceSectorGapPct}% EU-wide.
         </p>
       </div>
 

@@ -695,6 +695,61 @@
   line-height: 1.55;
 }
 
+/* ── Country sample table ──────────────────────────────────────────────── */
+.landing-country-table-wrap {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 28px;
+  overflow-x: auto;
+}
+
+.landing-country-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.landing-country-table th,
+.landing-country-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-light);
+  text-align: left;
+}
+
+.landing-country-table thead th {
+  font-family: var(--landing-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--landing-elevated);
+}
+
+.landing-country-table tbody th {
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.landing-country-table tbody tr:hover {
+  background: color-mix(in srgb, var(--landing-elevated) 60%, transparent);
+}
+
+.landing-country-table__code {
+  display: inline-block;
+  min-width: 2rem;
+  margin-right: 8px;
+  font-family: var(--landing-mono);
+  font-size: 0.76rem;
+  color: var(--landing-gold);
+}
+
+.landing-country-table__period {
+  font-family: var(--landing-mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
 /* ── Compliance card grid ──────────────────────────────────────────────── */
 .landing-compliance-grid {
   display: grid;
