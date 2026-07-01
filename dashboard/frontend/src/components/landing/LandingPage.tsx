@@ -8,6 +8,14 @@ import {
 } from 'lucide-react'
 import { Seo } from '../seo/Seo'
 import { buildHomeJsonLd, DEFAULT_DESCRIPTION, DEFAULT_TITLE } from '../../lib/seo'
+import { AnalystDemoTheater } from './components/AnalystDemoTheater'
+import { ComplianceWorkflowStory } from './components/ComplianceWorkflowStory'
+import { ContactSection } from './components/ContactSection'
+import { GettingStartedSection } from './components/GettingStartedSection'
+import { MarqueeStrip } from './components/MarqueeStrip'
+import { ProblemSection } from './components/ProblemSection'
+import { ProductTour } from './components/ProductTour'
+import { useLandingScrollRestore } from './hooks/useLandingScrollRestore'
 import { LandingShell, useLandingDemo } from './LandingShell'
 import { useScrollReveal } from './useScrollReveal'
 import './landing.css'
@@ -101,15 +109,10 @@ const FAQS = [
     q: 'Can I open the dashboard without a demo?',
     a: 'If your organisation already has access, sign in with Google or Microsoft to open the dashboard. New teams should request a demo first so we can provision the right tenant and walk you through pay transparency workflows.',
   },
-]
-
-const FEATURES = [
-  { id: 'home', icon: BarChart2, title: 'Command Centre', desc: 'Signal scores, AI-written executive brief, and live market indicators in one view.' },
-  { id: 'market', icon: BarChart2, title: 'Market Intelligence', desc: 'Employment, unemployment, vacancy, and gender pay gap trends across the EU27.' },
-  { id: 'compare', icon: GitCompare, title: 'Compare', desc: 'Side-by-side country and sector benchmarking with narrative synthesis.' },
-  { id: 'pay', icon: Scale, title: 'Pay Analysis', desc: 'Company payroll blended against market benchmarks, with review items ranked by exposure.' },
-  { id: 'govern', icon: ShieldCheck, title: 'Govern & Export', desc: 'Hash-chained audit log and one-click compliance evidence pack export.' },
-  { id: 'ai', icon: MessageSquare, title: 'AI Analyst', desc: 'Ask natural-language questions; answers come with provenance and benchmark confidence.' },
+  {
+    q: 'How do I reach support?',
+    a: 'Email workforceguardai@souravamseekar.com for demo follow-ups, technical questions, or GDPR requests. We aim to reply within one business day.',
+  },
 ]
 
 const TRUST_ITEMS = [
@@ -132,6 +135,7 @@ function ProductShowcase() {
         <div className="landing-showcase__viewport">
           <video
             src="/demos/product_walkthrough.mp4"
+            poster="/screenshots/command-centre.png"
             autoPlay
             loop
             muted
@@ -148,6 +152,7 @@ function ProductShowcase() {
 function LandingHomeContent() {
   const { openDemo } = useLandingDemo()
   useScrollReveal()
+  useLandingScrollRestore()
 
   return (
     <>
@@ -223,28 +228,9 @@ function LandingHomeContent() {
         </div>
       </section>
 
-      <section id="product" className="landing-section landing-reveal">
-        <div className="landing-section__header">
-          <p className="landing-section__eyebrow">Product</p>
-          <h2>One workspace for intelligence, review, and regulatory evidence</h2>
-          <p className="landing-section__lede">
-            Six integrated views — from live market signals to hash-chained governance exports —
-            designed for compliance teams who need more than a repurposed HR dashboard.
-          </p>
-        </div>
-        <div className="landing-feature-grid">
-          {FEATURES.map((feature, i) => (
-            <article key={feature.id} className="landing-feature-card">
-              <div className="landing-feature-card__body">
-                <span className="landing-feature-card__index">{String(i + 1).padStart(2, '0')}</span>
-                <feature.icon size={20} className="landing-feature-card__icon" />
-                <h3>{feature.title}</h3>
-                <p>{feature.desc}</p>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
+      <MarqueeStrip />
+      <ProblemSection />
+      <ProductTour />
 
       <section id="compliance" className="landing-section landing-section--alt landing-reveal">
         <div className="landing-section__header">
@@ -273,6 +259,9 @@ function LandingHomeContent() {
           ))}
         </div>
       </section>
+
+      <AnalystDemoTheater />
+      <ComplianceWorkflowStory />
 
       <section className="landing-section landing-reveal">
         <div className="landing-section__header">
@@ -343,6 +332,9 @@ function LandingHomeContent() {
           </div>
         </div>
       </section>
+
+      <GettingStartedSection />
+      <ContactSection />
 
       <section id="faq" className="landing-section landing-section--alt landing-reveal">
         <div className="landing-section__split">

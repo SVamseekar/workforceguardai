@@ -1,4 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
 import { submitDemoRequest, type DemoRequestInput } from '../../lib/demo-request'
 import {
@@ -350,7 +351,8 @@ export function DemoRequestForm({ onSuccess }: DemoRequestFormProps) {
           />
           <span>
             I agree that WorkforceGuard AI may contact me about this demo request and
-            process my details to respond. <em>*</em>
+            process my details to respond, per the{' '}
+            <Link to="/privacy">Privacy Policy</Link>. <em>*</em>
           </span>
         </label>
         <label className="demo-form__check">

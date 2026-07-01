@@ -7,6 +7,9 @@ Thumbs.db
 !.env.example
 !deploy/.env.production.example
 analytics/.user.yml
+analytics/profiles.yml
+**/*.duckdb
+projects/
 *.pem
 *.key
 *.p12
@@ -53,10 +56,14 @@ data/internal_meta/*
 !data/internal_meta/.gitkeep
 data/internal_raw/*
 !data/internal_raw/.gitkeep
+data/demo_raw/*
+!data/demo_raw/.gitkeep
 deploy/.env.production
 
 # IDE and editor
 .idea/
+.claude/
+.cursor/
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json

@@ -2,8 +2,8 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { Link, useLocation } from 'react-router-dom'
 import { Menu, Moon, Sun, X } from 'lucide-react'
 import { LogoMark } from '../shared/LogoMark'
-import { DemoRequestModal } from './DemoRequestModal'
-import { NAV_LINKS } from './site'
+import { SupportEmailLink } from './components/SupportEmailLink'
+import { NAV_LINKS, openContactForm } from './site'
 
 type LandingDemoContextValue = {
   openDemo: () => void
@@ -32,7 +32,6 @@ export function LandingShell({ children }: LandingShellProps) {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   })
   const [navOpen, setNavOpen] = useState(false)
-  const [demoOpen, setDemoOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const navRef = useRef<HTMLElement>(null)
 
@@ -59,7 +58,7 @@ export function LandingShell({ children }: LandingShellProps) {
   const closeNav = () => setNavOpen(false)
   const openDemo = () => {
     closeNav()
-    setDemoOpen(true)
+    openContactForm()
   }
 
   return (
@@ -153,8 +152,6 @@ export function LandingShell({ children }: LandingShellProps) {
 
       <LandingDemoContext.Provider value={{ openDemo }}>{children}</LandingDemoContext.Provider>
 
-      <DemoRequestModal open={demoOpen} onClose={() => setDemoOpen(false)} />
-
       <footer className="landing-footer">
         <div className="landing-footer__inner">
           <div className="landing-footer__brand">
@@ -165,6 +162,9 @@ export function LandingShell({ children }: LandingShellProps) {
             <p>
               EU workforce intelligence and pay-transparency compliance for HR, people analytics,
               and compliance teams.
+            </p>
+            <p className="landing-footer__email">
+              <SupportEmailLink />
             </p>
           </div>
           <div className="landing-footer__cols">
@@ -184,6 +184,8 @@ export function LandingShell({ children }: LandingShellProps) {
                 <a href="/#compliance">Compliance mapping</a>
                 <a href="/#research">Research</a>
                 <a href="/#faq">FAQ</a>
+                <a href="/#contact">Contact</a>
+                <Link to="/privacy">Privacy Policy</Link>
                 <a href="https://github.com/SVamseekar/workforceguardai" target="_blank" rel="noreferrer">
                   GitHub
                 </a>

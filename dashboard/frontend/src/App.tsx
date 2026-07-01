@@ -12,6 +12,7 @@ import { GovernSection } from './components/sections/GovernSection'
 import { CompareSection } from './components/sections/CompareSection'
 import { LandingPage } from './components/landing/LandingPage'
 import { MissionPage } from './components/landing/MissionPage'
+import { PrivacyPage } from './components/landing/PrivacyPage'
 import { AuthProvider } from './contexts/AuthContext'
 import { useAuth } from './hooks/useAuth'
 import { LoginScreen } from './components/auth/LoginScreen'
@@ -108,6 +109,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/mission" element={<MissionPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
             <Route
               path="/app/*"
               element={
