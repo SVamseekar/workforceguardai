@@ -81,6 +81,13 @@ docs/demos/video_recording/
 /image.png
 /*.pdf
 
-# Research paper build scratch (drafts live in docs/ and can be committed intentionally)
+# Research paper workspace (local drafts — keep untracked)
+docs/paper.tex
+docs/paper-refs.bib
+docs/paper-*.md
+docs/paper-*.html
+docs/paper-style.css
+docs/figures/
 docs/paper-output.pdf
 docs/paper-output.html
+docs/SECURITY_AUDIT.md
