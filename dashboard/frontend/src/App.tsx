@@ -13,6 +13,9 @@ import { CompareSection } from './components/sections/CompareSection'
 import { LandingPage } from './components/landing/LandingPage'
 import { MissionPage } from './components/landing/MissionPage'
 import { PrivacyPage } from './components/landing/PrivacyPage'
+import { TermsPage } from './components/landing/TermsPage'
+import { DisclaimerPage } from './components/landing/DisclaimerPage'
+import { RefundsPage } from './components/landing/RefundsPage'
 import { AuthProvider } from './contexts/AuthContext'
 import { useAuth } from './hooks/useAuth'
 import { LoginScreen } from './components/auth/LoginScreen'
@@ -110,6 +113,9 @@ export default function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/mission" element={<MissionPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/disclaimer" element={<DisclaimerPage />} />
+            <Route path="/refunds" element={<RefundsPage />} />
             <Route
               path="/app/*"
               element={

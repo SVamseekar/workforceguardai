@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { Menu, Moon, Sun, X } from 'lucide-react'
 import { LogoMark } from '../shared/LogoMark'
 import { CookieConsent } from './components/CookieConsent'
-import { SupportEmailLink } from './components/SupportEmailLink'
+import { LandingFooter } from './components/LandingFooter'
 import { useHashNavigation } from './hooks/useHashNavigation'
 import { NAV_LINKS } from './site'
 
@@ -173,58 +173,7 @@ export function LandingShell({ children }: LandingShellProps) {
 
       <LandingDemoContext.Provider value={{ openDemo, goToHash }}>{children}</LandingDemoContext.Provider>
 
-      <footer className="landing-footer">
-        <div className="landing-footer__inner">
-          <div className="landing-footer__brand">
-            <Link to="/" className="landing-nav__brand">
-              <LogoMark size={28} className="landing-nav__logo" />
-              <span>WorkforceGuard AI</span>
-            </Link>
-            <p>
-              EU workforce intelligence and pay-transparency compliance for HR, people analytics,
-              and compliance teams.
-            </p>
-            <p className="landing-footer__email">
-              <SupportEmailLink />
-            </p>
-          </div>
-          <div className="landing-footer__cols">
-            <div>
-              <h4>Product</h4>
-              <nav>
-                <a href={hashHref('#product-tour')} onClick={(e) => handleHashClick(e, '#product-tour')}>Product tour</a>
-                <a href={hashHref('#compliance')} onClick={(e) => handleHashClick(e, '#compliance')}>Compliance mapping</a>
-                <a href={hashHref('#demo')} onClick={(e) => handleHashClick(e, '#demo')}>See it live</a>
-                <Link to="/app">Dashboard</Link>
-              </nav>
-            </div>
-            <div>
-              <h4>More</h4>
-              <nav>
-                <Link to="/mission">Mission</Link>
-                <a href={hashHref('#onboarding')} onClick={(e) => handleHashClick(e, '#onboarding')}>Onboarding &amp; support</a>
-                <a href={hashHref('#research')} onClick={(e) => handleHashClick(e, '#research')}>Research</a>
-                <a href="https://mpra.ub.uni-muenchen.de/129330/" target="_blank" rel="noreferrer">
-                  Research paper
-                </a>
-              </nav>
-            </div>
-            <div>
-              <h4>Get started</h4>
-              <nav>
-                <a href={hashHref('#contact')} onClick={(e) => handleHashClick(e, '#contact')}>Request a demo</a>
-                <a href={hashHref('#faq')} onClick={(e) => handleHashClick(e, '#faq')}>FAQ</a>
-              </nav>
-            </div>
-            <div>
-              <h4>Legal</h4>
-              <nav>
-                <Link to="/privacy">Privacy Policy</Link>
-              </nav>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <LandingFooter hashHref={hashHref} onHashClick={handleHashClick} />
 
       <CookieConsent />
     </div>
