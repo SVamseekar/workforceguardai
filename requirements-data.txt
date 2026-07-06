@@ -4,5 +4,5 @@ duckdb>=1.5.4
 pandas>=3.0.3
 pyarrow>=18
 pyyaml>=6.0.3
-requests>=2.31
+requests>=2.34.2
 openpyxl>=3.1
