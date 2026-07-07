@@ -1,9 +1,3 @@
-import { createRequire } from 'node:module'
-
-const require = createRequire(import.meta.url)
-const nodemailer = require('nodemailer')
-
-const DEFAULT_TO = 'workforceguardai@souravamseekar.com'
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000
 const RATE_LIMIT_MAX = 5
@@ -99,70 +93,55 @@ function validateDemoRequest(body) {
   }
 }
 
-function buildEmailText(payload, meta) {
-  return [
-    'New WorkforceGuard demo request',
-    '',
-    `Name: ${payload.firstName} ${payload.lastName}`,
-    `Work email: ${payload.workEmail}`,
-    `Phone: ${payload.phone || '—'}`,
-    `Job title: ${payload.jobTitle}`,
-    `Company: ${payload.companyName}`,
-    `Company website: ${payload.companyWebsite || '—'}`,
-    `Company size: ${payload.companySize}`,
-    `Industry: ${payload.industry}`,
-    `Country: ${payload.country}`,
-    `HQ city: ${payload.headquartersCity || '—'}`,
-    `Reporting obligation: ${payload.reportingObligation}`,
-    `Primary interests: ${payload.primaryInterests.join(', ')}`,
-    `ESG / HR team size: ${payload.esgTeamSize}`,
-    `Payroll countries: ${payload.payrollCountries || '—'}`,
-    `Current tools: ${payload.currentTools || '—'}`,
-    `Timeline: ${payload.timeline}`,
-    `Budget range: ${payload.budgetRange || '—'}`,
-    `Referral source: ${payload.referralSource}`,
-    `Message: ${payload.message || '—'}`,
-    `Marketing consent: ${payload.marketingConsent ? 'Yes' : 'No'}`,
-    '',
-    `Submitted at: ${meta.submittedAt}`,
-    `Referer: ${meta.referer || '—'}`,
-    `User agent: ${meta.userAgent || '—'}`,
-    `IP: ${meta.ip || '—'}`,
-  ].join('\n')
+function buildDiscordEmbed(payload, meta) {
+  const field = (name, value) => ({ name, value: value || '—', inline: true })
+
+  return {
+    embeds: [{
+      title: `New demo request — ${payload.companyName}`,
+      description: `${payload.firstName} ${payload.lastName} · ${payload.jobTitle}`,
+      color: 0x4f46e5,
+      fields: [
+        field('Work email', payload.workEmail),
+        field('Phone', payload.phone),
+        field('Company website', payload.companyWebsite),
+        field('Company size', payload.companySize),
+        field('Industry', payload.industry),
+        field('Country', payload.country),
+        field('HQ city', payload.headquartersCity),
+        field('Reporting obligation', payload.reportingObligation),
+        field('Primary interests', payload.primaryInterests.join(', ')),
+        field('ESG / HR team size', payload.esgTeamSize),
+        field('Payroll countries', payload.payrollCountries),
+        field('Current tools', payload.currentTools),
+        field('Timeline', payload.timeline),
+        field('Budget range', payload.budgetRange),
+        field('Referral source', payload.referralSource),
+        field('Marketing consent', payload.marketingConsent ? 'Yes' : 'No'),
+        { name: 'Message', value: payload.message || '—', inline: false },
+      ],
+      footer: { text: `IP: ${meta.ip || '—'} · ${meta.userAgent || '—'}`.slice(0, 2048) },
+      timestamp: meta.submittedAt,
+    }],
+  }
 }
 
-async function sendDemoRequestEmail(payload, meta) {
-  const to = process.env.DEMO_REQUEST_TO || DEFAULT_TO
-  const from = process.env.DEMO_REQUEST_FROM
-    || `WorkforceGuard AI <${process.env.SMTP_USER || to}>`
+async function sendDemoRequestNotification(payload, meta) {
+  const webhookUrl = process.env.DISCORD_WEBHOOK_URL
 
-  const subject = `[Demo request] ${payload.companyName} — ${payload.firstName} ${payload.lastName}`
-  const text = buildEmailText(payload, meta)
-
-  const host = process.env.SMTP_HOST || 'smtp.gmail.com'
-  const port = Number(process.env.SMTP_PORT || 587)
-  const user = (process.env.SMTP_USER || '').trim()
-  const pass = (process.env.SMTP_PASS || '').replace(/\s+/g, '')
-
-  if (!user || !pass) {
-    throw new Error('SMTP_USER and SMTP_PASS are required')
+  if (!webhookUrl) {
+    throw new Error('DISCORD_WEBHOOK_URL is required')
   }
 
-  const transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    auth: { user, pass },
-    tls: { minVersion: 'TLSv1.2' },
+  const response = await fetch(webhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(buildDiscordEmbed(payload, meta)),
   })
 
-  await transporter.sendMail({
-    from,
-    to,
-    replyTo: payload.workEmail,
-    subject,
-    text,
-  })
+  if (!response.ok) {
+    throw new Error(`Discord webhook responded with ${response.status}`)
+  }
 }
 
 function getClientIp(req) {
@@ -207,7 +186,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    await sendDemoRequestEmail(parsed.data, {
+    await sendDemoRequestNotification(parsed.data, {
       submittedAt: new Date().toISOString(),
       userAgent: typeof req.headers['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
       referer: typeof req.headers.referer === 'string' ? req.headers.referer : undefined,
@@ -215,7 +194,7 @@ export default async function handler(req, res) {
     })
     return res.status(200).json({ ok: true })
   } catch (error) {
-    console.error('Demo request email failed:', error)
+    console.error('Demo request notification failed:', error)
     return res.status(503).json({
       error: 'Unable to send your request right now. Please email workforceguardai@souravamseekar.com directly.',
     })
