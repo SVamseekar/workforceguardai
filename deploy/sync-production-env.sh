@@ -31,9 +31,11 @@ upsert() {
 
 upsert CORS_ALLOWED_ORIGINS "${FRONTEND_ORIGIN}"
 upsert FRONTEND_URL "${FRONTEND_URL}"
-upsert OAUTH_REDIRECT_BASE_URL "https://${API_HOST}"
+upsert OAUTH_REDIRECT_BASE_URL "${FRONTEND_ORIGIN}"
+upsert OAUTH_AUTO_PROVISION "0"
 
 rm -f "${ENV_FILE}.bak"
 
 echo "Updated $ENV_FILE with production domain settings."
 echo "Restart the API: sudo systemctl restart workforceguard-api"
+echo "Then run the OAuth smoke test: deploy/oauth-production-smoke-test.md"

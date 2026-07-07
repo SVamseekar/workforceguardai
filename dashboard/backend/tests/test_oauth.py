@@ -24,6 +24,20 @@ class ProviderProfileTests(unittest.TestCase):
         subject, email, name = parse_provider_profile("microsoft", userinfo)
         self.assertEqual((subject, email, name), ("ms-456", "b@example.com", "Grace Hopper"))
 
+    def test_microsoft_profile_prefers_preferred_username(self):
+        userinfo = {"sub": "ms-789", "preferred_username": "c@contoso.com", "name": "Contoso User"}
+        subject, email, name = parse_provider_profile("microsoft", userinfo)
+        self.assertEqual((subject, email, name), ("ms-789", "c@contoso.com", "Contoso User"))
+
+    def test_microsoft_profile_falls_back_to_upn(self):
+        userinfo = {"sub": "ms-101", "upn": "d@fabrikam.com"}
+        subject, email, name = parse_provider_profile("microsoft", userinfo)
+        self.assertEqual((subject, email, name), ("ms-101", "d@fabrikam.com", "d@fabrikam.com"))
+
+    def test_missing_email_raises(self):
+        with self.assertRaises(ValueError):
+            parse_provider_profile("google", {"sub": "google-999"})
+
     def test_unknown_provider_raises(self):
         with self.assertRaises(ValueError):
             parse_provider_profile("github", {})

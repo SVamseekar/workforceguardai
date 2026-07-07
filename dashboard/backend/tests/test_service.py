@@ -252,6 +252,25 @@ class AnalyticsRepositoryTests(unittest.TestCase):
         self.assertTrue(prior_comparison["available"])
         self.assertEqual(prior_comparison["benchmark_status"], "official")
 
+    def test_build_research_panel_returns_paper_figures(self):
+        if not ANALYTICS_DB_PATH.exists():
+            self.skipTest("Analytics DB not available in this environment")
+
+        panel = self.repo.build_research_panel(trajectory_group="fast_recovery")
+
+        self.assertGreaterEqual(panel["panel"]["countries"], 20)
+        self.assertIn("employment_gpg_correlation", panel["panel"])
+        self.assertGreaterEqual(len(panel["figures"]["tightness_gpg_scatter"]["points"]), 20)
+        self.assertGreaterEqual(len(panel["figures"]["risk_quadrant"]["points"]), 20)
+        self.assertGreater(len(panel["figures"]["sector_heatmap"]["cells"]), 100)
+        self.assertGreaterEqual(len(panel["figures"]["finance_vs_overall"]["rows"]), 20)
+        self.assertGreaterEqual(len(panel["insights"]), 3)
+        self.assertEqual(panel["figures"]["employment_trajectories"]["group_id"], "fast_recovery")
+
+        deteriorating = self.repo.build_research_panel(trajectory_group="deteriorating")
+        self.assertEqual(deteriorating["figures"]["employment_trajectories"]["group_id"], "deteriorating")
+        self.assertGreaterEqual(len(deteriorating["figures"]["employment_trajectories"]["series"]), 1)
+
     def test_build_overview_supports_direct_market_comparison(self):
         overview = self.repo.build_overview(geography="DE", benchmark_geography="FR")
 

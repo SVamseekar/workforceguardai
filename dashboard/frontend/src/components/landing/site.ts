@@ -25,6 +25,8 @@ export const FOOTER_SECTIONS: FooterSection[] = [
     links: [
       { kind: 'hash', hash: '#product-tour', label: 'Product tour' },
       { kind: 'hash', hash: '#compliance', label: 'Compliance mapping' },
+      { kind: 'hash', hash: '#transposition', label: 'Transposition tracker' },
+      { kind: 'hash', hash: '#security', label: 'Security' },
       { kind: 'hash', hash: '#demo', label: 'See it live' },
       { kind: 'external', href: RESEARCH_PAPER_URL, label: 'Methodology' },
       { kind: 'hash', hash: '#onboarding', label: 'API & tenant provisioning' },
@@ -64,6 +66,7 @@ export type NavLink =
 export const NAV_LINKS: NavLink[] = [
   { kind: 'hash', hash: '#product-tour', label: 'Product' },
   { kind: 'hash', hash: '#compliance', label: 'Compliance' },
+  { kind: 'hash', hash: '#transposition', label: 'Transposition' },
   { kind: 'hash', hash: '#demo', label: 'See it live' },
   { kind: 'hash', hash: '#research', label: 'Research' },
   { kind: 'hash', hash: '#contact', label: 'Contact' },
