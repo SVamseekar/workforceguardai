@@ -29,10 +29,20 @@ def get_oauth_client(provider: str):
     return client
 
 
+def oauth_auto_provision_enabled() -> bool:
+    return os.environ.get("OAUTH_AUTO_PROVISION", "1").strip().lower() in ("1", "true", "yes")
+
+
 def parse_provider_profile(provider: str, userinfo: dict) -> Tuple[str, str, str]:
     if provider not in ("google", "microsoft"):
         raise ValueError(f"Unknown OAuth provider: {provider}")
     subject = userinfo["sub"]
-    email = userinfo["email"]
+    email = (
+        userinfo.get("email")
+        or userinfo.get("preferred_username")
+        or userinfo.get("upn")
+    )
+    if not email:
+        raise ValueError(f"OAuth provider {provider} did not return an email address")
     display_name = userinfo.get("name", email)
     return subject, email, display_name

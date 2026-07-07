@@ -6,11 +6,10 @@
 This system is described in:
 
 > Marti, S. V. (2026). *Why Tight Labour Markets Do Not Close Gender
-> Pay Gaps: Evidence from a 20-Country Eurostat Panel.*
-> Independent Researcher. May 2026.
-> SSRN: [ssrn.com/abstract=6826361](https://ssrn.com/abstract=6826361) | Zenodo: [doi.org/10.5281/zenodo.20455974](https://doi.org/10.5281/zenodo.20455974) | MPRA: [mpra.ub.uni-muenchen.de/129330](https://mpra.ub.uni-muenchen.de/129330/) (Paper No. 129330)
+> Pay Gaps: Evidence from a 27-Country Eurostat Panel* (2019–2024, 11 NACE sectors; r ≈ +0.44 employment–GPG correlation).
+> MPRA: [Paper No. 129330](https://mpra.ub.uni-muenchen.de/129330/) | SSRN: [abstract=6826361](https://ssrn.com/abstract=6826361) | Zenodo: [10.5281/zenodo.20455974](https://doi.org/10.5281/zenodo.20455974)
 
-**Live dashboard:** https://workforceguardai.souravamseekar.com/app
+**Live dashboard:** https://workforceguardai.souravamseekar.com/app · **Research views:** `/app/research`
 **Keywords:** gender pay gap · pay transparency · EU Pay Transparency Directive ·
 labour market tightness · Eurostat · composite indicators
 
@@ -47,7 +46,7 @@ WorkforceGuard turns public EU labour-market data and internal company payroll i
 
 ## EU regulatory context
 
-The [EU Pay Transparency Directive](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32023L0970) (2023/970) requires employers to report and justify pay differences by May 2026. CSRD and Article 9 SFDR impose parallel workforce disclosure obligations. WorkforceGuard is designed specifically for this compliance surface — not generic HR analytics.
+The [EU Pay Transparency Directive](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32023L0970) (2023/970) requires member-state transposition by **7 June 2026** and employer reporting from **June 2027** (≥250 employees). CSRD and Article 9 SFDR impose parallel workforce disclosure obligations. WorkforceGuard is designed specifically for this compliance surface — not generic HR analytics.
 
 ---
 

@@ -60,10 +60,20 @@ sector_signals as (
 ),
 
 default_sector_signals as (
+    -- A handful of countries report the country-wide aggregate under a
+    -- different NACE rollup than the EU27 majority uses (A-S for vacancy,
+    -- B-S for pay gap): B-S for vacancy, B-S_X_O for pay gap. Both
+    -- fallbacks are tried so these countries aren't silently scored as 0.
     select
         geo_id,
-        max(case when sector_id = 'A-S' and signal_name = 'job_vacancy_rate' then signal_value end) as default_vacancy_rate,
-        max(case when sector_id = 'B-S' and signal_name = 'gender_pay_gap' then signal_value end) as default_gender_pay_gap
+        coalesce(
+            max(case when sector_id = 'A-S' and signal_name = 'job_vacancy_rate' then signal_value end),
+            max(case when sector_id = 'B-S' and signal_name = 'job_vacancy_rate' then signal_value end)
+        ) as default_vacancy_rate,
+        coalesce(
+            max(case when sector_id = 'B-S' and signal_name = 'gender_pay_gap' then signal_value end),
+            max(case when sector_id = 'B-S_X_O' and signal_name = 'gender_pay_gap' then signal_value end)
+        ) as default_gender_pay_gap
     from latest_signals
     group by 1
 ),
@@ -269,12 +279,15 @@ unioned as (
 )
 
 select
-    concat_ws('::', geo_id, sector_id, metric_id) as semantic_metric_id,
-    geo_id,
-    sector_id,
-    metric_id,
-    cast(metric_value as double) as metric_value,
-    primary_source_id,
-    implementation_status,
-    evidence_summary
-from unioned
+    concat_ws('::', u.geo_id, u.sector_id, u.metric_id) as semantic_metric_id,
+    u.geo_id,
+    u.sector_id,
+    u.metric_id,
+    cast(u.metric_value as double) as metric_value,
+    u.primary_source_id,
+    u.implementation_status,
+    r.formula_version,
+    u.evidence_summary
+from unioned u
+left join {{ ref('dim_metric_registry') }} r
+    on u.metric_id = r.metric_id
