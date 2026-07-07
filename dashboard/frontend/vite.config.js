@@ -32,10 +32,11 @@ export default defineConfig(({ mode }) => {
           refunds: 'refunds.html',
         },
         output: {
-          manualChunks: {
-            charts: ['recharts'],
-            icons: ['lucide-react'],
-            network: ['axios'],
+          // Vite 8 / Rolldown expects manualChunks as a function, not a static map.
+          manualChunks(id) {
+            if (id.includes('node_modules/recharts')) return 'charts'
+            if (id.includes('node_modules/lucide-react')) return 'icons'
+            if (id.includes('node_modules/axios')) return 'network'
           },
         },
       },
