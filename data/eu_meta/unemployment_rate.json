@@ -1,7 +1,7 @@
 {
   "code": "une_rt_a",
   "label": "Unemployment by sex and age - annual data",
-  "updated": "2026-01-21T23:00:00+0100",
+  "updated": "2026-06-11T23:00:00+0200",
   "dimensions": [
     "freq",
     "age",
@@ -74,7 +74,8 @@
       "TR"
     ],
     "time": [
-      "2024"
+      "2025"
     ]
-  }
+  },
+  "pulled_at": "2026-07-01T17:15:10.082843+00:00"
 }

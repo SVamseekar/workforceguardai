@@ -15,7 +15,9 @@ standardized as (
         unit as unit_code,
         s_adj as seasonal_adjustment_code,
         cast(value as double) as metric_value,
-        'labour_market_flows' as dataset_name
+        'labour_market_flows' as dataset_name,
+        'lfsi_long_q' as dataset_code,
+        {{ get_pull_timestamp('labour_market_flows') }} as pulled_at
     from source
     where geo is not null
       and cast(value as double) is not null

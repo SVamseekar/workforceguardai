@@ -97,3 +97,6 @@ docs/figures/
 docs/paper-output.pdf
 docs/paper-output.html
 docs/SECURITY_AUDIT.md
+paper/
+data/eu_meta/
+data/eu_raw/

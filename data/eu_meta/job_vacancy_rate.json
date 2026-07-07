@@ -1,7 +1,7 @@
 {
   "code": "jvs_q_nace2",
   "label": "Job vacancy statistics by NACE Rev. 2 activity - quarterly data (from 2001 onwards)",
-  "updated": "2026-01-28T23:00:00+0100",
+  "updated": "2026-03-20T23:00:00+0100",
   "dimensions": [
     "freq",
     "s_adj",
@@ -63,6 +63,7 @@
     ],
     "geo": [
       "EU27_2020",
+      "EA21",
       "EA20",
       "BE",
       "BG",
@@ -99,7 +100,8 @@
       "TR"
     ],
     "time": [
-      "2025-Q3"
+      "2025-Q4"
     ]
-  }
+  },
+  "pulled_at": "2026-07-01T17:14:58.348232+00:00"
 }
