@@ -17,7 +17,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from auth import db as auth_db
 from auth import sessions as auth_sessions
 from auth.dependencies import AuthContext, require_role, require_session
-from auth.oauth import get_oauth_client, parse_provider_profile
+from auth.oauth import get_oauth_client, oauth_auto_provision_enabled, parse_provider_profile
 from auth.redirects import frontend_login_redirect
 from auth.repository import AuthRepository
 from service import AnalyticsRepository, RepositoryRegistry
@@ -184,6 +184,8 @@ async def auth_callback(provider: str, request: Request):
 
         memberships = await repo.list_memberships_for_user(user.id)
         if not memberships:
+            if not oauth_auto_provision_enabled():
+                return RedirectResponse(url=frontend_login_redirect("not_provisioned"))
             slug = email.split("@")[1].split(".")[0] + "-" + str(uuid.uuid4())[:8]
             tenant = await repo.create_tenant_with_admin(
                 name=email.split("@")[1], slug=slug, user_id=user.id
@@ -209,7 +211,7 @@ async def auth_callback(provider: str, request: Request):
             key=auth_sessions.SESSION_COOKIE_NAME,
             value=token_value,
             httponly=True,
-            secure=True,
+            secure=auth_sessions.session_cookie_secure(),
             samesite="lax",
             max_age=int((expires_at - datetime.now(timezone.utc)).total_seconds()),
         )
@@ -256,6 +258,14 @@ def health_check():
         "service": "WorkforceGuard Analytics API",
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
+
+
+@app.get("/api/research/panel")
+def get_research_panel(
+    trajectory_group: str = "fast_recovery",
+    repo: AnalyticsRepository = Depends(get_repository),
+):
+    return guarded(repo.build_research_panel, trajectory_group=trajectory_group)
 
 
 @app.get("/api/overview")

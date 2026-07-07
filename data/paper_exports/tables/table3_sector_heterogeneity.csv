@@ -1,0 +1,20 @@
+sector_name,sector_code,mean_gpg,sd_gpg,min_gpg,max_gpg,n
+Financial and insurance activities,K,24.955844155844154,6.615232837315232,8.4,40.3,154
+Information and communication,J,19.463636363636365,6.663232627139393,6.5,30.8,154
+Wholesale and retail trade; repair of motor vehicles and motorcycles,G,18.234415584415583,5.727714755720013,4.2,32.9,154
+Human health and social work activities,Q,17.068181818181817,8.56525665168358,-5.4,33.0,154
+Manufacturing,C,16.747402597402598,7.079605229309683,0.9,30.9,154
+"Arts, entertainment and recreation",R,16.5487012987013,13.578872656302389,-8.4,67.3,154
+"Professional, scientific and technical activities",M,16.308441558441558,7.120558024129403,-5.4,28.1,154
+Other service activities,S,12.837012987012988,8.343099777376217,-10.1,31.3,154
+Real estate activities,L,11.46948051948052,8.113615828955636,-21.3,36.7,154
+Education,P,9.945454545454545,5.726284893447662,-6.4,23.5,154
+Accommodation and food service activities,I,9.22012987012987,4.2864794255165215,1.5,28.0,154
+"Electricity, gas, steam and air conditioning supply",D,8.47887323943662,7.427654202260416,-9.1,23.5,142
+Public administration and defence; compulsory social security,O,8.071428571428571,5.277239538135172,-4.1,20.2,126
+Administrative and support service activities,N,7.433116883116884,9.991879416497715,-30.3,24.7,154
+Mining and quarrying,B,6.94391891891892,10.482348144992939,-18.5,39.2,148
+Transportation and storage,H,3.787012987012987,8.677065415337863,-21.0,32.3,154
+"Water supply; sewerage, waste management and remediation activities",E,-0.27894736842105267,12.279362062398164,-54.8,20.9,152
+Construction,F,-2.7181067465736413,11.507290019599148,-31.2,28.2,154
+"Agriculture, forestry and fishing",A,,,,,0

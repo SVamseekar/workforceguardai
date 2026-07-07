@@ -259,6 +259,10 @@ export function CompareSection() {
 
   const leftMetrics = (((leftData ?? {}) as AnyObj).metrics as AnyObj[]) ?? []
   const rightMetrics = (((rightData ?? {}) as AnyObj).metrics as AnyObj[]) ?? []
+  const peerGroup = (((leftData ?? {}) as AnyObj).comparisons as AnyObj | undefined)?.peer_group as AnyObj | undefined
+  const peerMembers = (peerGroup?.available && Array.isArray(peerGroup.members)
+    ? peerGroup.members as AnyObj[]
+    : []) as AnyObj[]
 
   const metricRows = leftMetrics.map((lm) => {
     const rm = rightMetrics.find((r) => r.id === lm.id)
@@ -295,6 +299,42 @@ export function CompareSection() {
           position="right"
         />
       </div>
+
+      {peerMembers.length > 0 && (
+        <section className="comparison-section" style={{ marginTop: 24 }}>
+          <div className="panel" style={{ minHeight: 'auto', padding: 22 }}>
+            <p className="panel__eyebrow" style={{ marginBottom: 8 }}>Peer-country basket</p>
+            <p style={{ margin: '0 0 14px', fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+              {String(peerGroup?.methodology ?? 'Nearest comparable labour-market profiles for the selected country.')}
+            </p>
+            <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+              {peerMembers.map((member) => (
+                <li
+                  key={String(member.geo_id)}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: '1px solid var(--border-subtle)',
+                    fontSize: '0.85rem',
+                  }}
+                >
+                  <strong>{String(member.label ?? member.geo_id)}</strong>
+                  {member.distance != null && (
+                    <span style={{ color: 'var(--text-muted)', marginLeft: 6 }}>
+                      · distance {Number(member.distance).toFixed(2)}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+            {Array.isArray(peerGroup?.notes) && peerGroup.notes.length > 0 && (
+              <p style={{ margin: '12px 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                {String(peerGroup.notes[0])}
+              </p>
+            )}
+          </div>
+        </section>
+      )}
 
       {metricRows.length > 0 && (
         <section className="comparison-section" style={{ marginTop: 24 }}>
