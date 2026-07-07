@@ -12,8 +12,11 @@ import { ContactSection } from './components/ContactSection'
 import { CountryExposureViz } from './components/CountryExposureViz'
 import { LiveProofBand } from './components/LiveProofBand'
 import { OnboardingSupportSection } from './components/OnboardingSupportSection'
+import { PartnerProofStrip } from './components/PartnerProofStrip'
 import { ProblemSection } from './components/ProblemSection'
 import { ProductTour } from './components/ProductTour'
+import { SecurityTrustSection } from './components/SecurityTrustSection'
+import { TranspositionStatusSection } from './components/TranspositionStatusSection'
 import { LandingShell, useLandingDemo } from './LandingShell'
 import { countrySample, LANDING_FACTS } from './landingFacts'
 import { RESEARCH_PAPER_LABEL, RESEARCH_PAPER_URL } from './site'
@@ -146,10 +149,13 @@ function LandingHomeContent() {
       </section>
 
       <LiveProofBand />
+      <PartnerProofStrip />
       <CountryExposureViz />
       <ProblemSection />
+      <TranspositionStatusSection />
       <ProductTour />
       <ComplianceMappingSection />
+      <SecurityTrustSection />
       <AnalystDemoTheater />
 
       <section className="landing-section landing-reveal">

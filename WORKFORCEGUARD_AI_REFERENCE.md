@@ -57,7 +57,7 @@ Customer payroll/HRIS (CSV) ─────────────► data/inte
                      │  DuckDB warehouse                     │
                      │  data/workforceguard_analytics.duckdb │
                      │  dbt project (analytics/)             │
-                     │  staging → marts (28 models)          │
+                     │  staging → marts (~31 models)         │
                      └──────────────────┬───────────────────┘
                                         │ read-only
                                         ▼
@@ -66,7 +66,7 @@ Customer payroll/HRIS (CSV) ─────────────► data/inte
                      │  main.py  +  service.py              │
                      │  AnalyticsRepository (4,458 lines)   │
                      │  9 HTTP endpoints                     │
-                     │  governance events (JSON file)        │
+                     │  governance events (SQLite, SHA-256)  │
                      └──────────────────┬───────────────────┘
                                         │ HTTPS / /api
                                         ▼
@@ -95,11 +95,11 @@ One process per customer. No message bus. No cache layer. No managed cloud datab
 | ---------------- | ----------------------------------------------------------- |
 | Ingestion        | Python 3.12, pandas, pyarrow, requests, pyyaml              |
 | Warehouse        | DuckDB (single file, read-only access from API)             |
-| Transformation   | dbt (28 models — staging views, mart tables)                |
+| Transformation   | dbt (~31 models — staging views, mart tables)               |
 | API              | FastAPI + uvicorn, Python 3.12                              |
 | Frontend         | React 19, Vite 7, Recharts 3, Axios, Lucide React, Tailwind |
 | Data format      | Parquet (eu_raw, internal, reference)                       |
-| Governance store | JSON file (governance_events.json, max 50 events)           |
+| Governance store | SQLite (`governance_events.sqlite`, SHA-256 hash chain)     |
 
 ### Runtime Ports
 
@@ -269,9 +269,9 @@ All four scores are clamped to [0, 100].
 
 ### 6.2 Governance Event Storage
 
-Events are persisted to `data/governance_events.json`. Current implementation:
-- Append to front, newest first
-- Hard cap at 50 events (older events discarded)
+Events are persisted to `data/governance_events.sqlite` (legacy JSON loader retained for migration). Current implementation:
+- SHA-256 hash chain: each event stores `event_hash` and `previous_hash` (GENESIS anchor)
+- Integrity verified on read via `_governance_integrity()` (`verified: false` on tampering)
 - Persisted synchronously on every `POST /api/governance-events`
 - Loaded on `AnalyticsRepository` initialisation
 
@@ -1915,7 +1915,7 @@ npm run lint       # ESLint
 The compiled DuckDB warehouse. Built by `dbt run` against the raw Parquet files.
 
 **Size:** ~9.7 MB (source: technical assessment)
-**Tables (when fully built):** 28 models from the dbt project, plus 3 seed tables
+**Tables (when fully built):** 31 models from the dbt project, plus 3 seed tables
 
 ### `data/governance_events.json`
 
@@ -2135,7 +2135,7 @@ All documentation lives in `docs/`. Key files:
 *End of WorkforceGuard AI Master Reference Document (4 parts)*
 
 *Generated: 2026-05-07*
-*Based on: complete codebase analysis — analytics dbt project (28 models), FastAPI backend (4,458 lines), React frontend (2,187 lines), ingestion scripts, documentation, and data assets*
+*Based on: complete codebase analysis — analytics dbt project (31 models), FastAPI backend (4,458 lines), React frontend (2,187 lines), ingestion scripts, documentation, and data assets*
 *Branch state: `main` (includes Phase 4 pay-transparency simulator merge)*
 
 
@@ -2151,7 +2151,7 @@ It covers every file, every component, every API endpoint, and every data model 
 | Part                                                 | Title                                                     | Key Sections                                                                                                     |
 | ---------------------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | [Part 1](./WORKFORCEGUARD_MASTER_REFERENCE_PART1.md) | Business Overview, Architecture & Data Strategy           | Product capabilities, system topology, data sources, metric registry, governance design, roadmap, known blockers |
-| [Part 2](./WORKFORCEGUARD_MASTER_REFERENCE_PART2.md) | Analytics Layer — dbt Project, Staging, Marts, Macros     | All 28 dbt models, macros, staging schemas, mart schemas, seed CSVs, ingestion scripts                           |
+| [Part 2](./WORKFORCEGUARD_MASTER_REFERENCE_PART2.md) | Analytics Layer — dbt Project, Staging, Marts, Macros     | ~31 dbt models (run `dbt ls` on deploy), macros, staging schemas, mart schemas, seed CSVs, ingestion scripts     |
 | [Part 3](./WORKFORCEGUARD_MASTER_REFERENCE_PART3.md) | Backend API — FastAPI Service, Repository, Endpoints      | All 9 API endpoints, AnalyticsRepository methods, response contracts, test suite                                 |
 | [Part 4](./WORKFORCEGUARD_MASTER_REFERENCE_PART4.md) | Frontend, Data Assets, Operations, Security & Gap Summary | Overview.jsx component map, CSS design system, data files, git history, security posture, startup, known issues  |
 
