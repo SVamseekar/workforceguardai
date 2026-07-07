@@ -75,6 +75,7 @@ jobs:
       PYTHONPATH: dashboard/backend
       WORKFORCEGUARD_DB_PATH: ${{ github.workspace }}/data/workforceguard_analytics.duckdb
       WORKFORCEGUARD_EU_RAW_PATH: ${{ github.workspace }}/data/eu_raw
+      WORKFORCEGUARD_EU_META_PATH: ${{ github.workspace }}/data/eu_meta
       WORKFORCEGUARD_INTERNAL_PATH: ${{ github.workspace }}/data/internal
       WORKFORCEGUARD_REFERENCE_PATH: ${{ github.workspace }}/data/reference
       WORKFORCEGUARD_PUBLIC_COMPANY_PATH: ${{ github.workspace }}/data/public_company
@@ -173,6 +174,7 @@ jobs:
     env:
       WORKFORCEGUARD_DB_PATH: ${{ github.workspace }}/data/workforceguard_analytics.duckdb
       WORKFORCEGUARD_EU_RAW_PATH: ${{ github.workspace }}/data/eu_raw
+      WORKFORCEGUARD_EU_META_PATH: ${{ github.workspace }}/data/eu_meta
       WORKFORCEGUARD_INTERNAL_PATH: ${{ github.workspace }}/data/internal
       WORKFORCEGUARD_REFERENCE_PATH: ${{ github.workspace }}/data/reference
       WORKFORCEGUARD_PUBLIC_COMPANY_PATH: ${{ github.workspace }}/data/public_company
