@@ -80,9 +80,9 @@ jobs:
       WORKFORCEGUARD_PUBLIC_COMPANY_PATH: ${{ github.workspace }}/data/public_company
 
     steps:
+      # Skip LFS smudge: account LFS quota is exhausted and CI only needs
+      # Parquet/CSV under data/ (xlsx reference inputs are not used in tests).
       - uses: actions/checkout@v7
-        with:
-          lfs: true
 
       - name: Skip — no Python changes
         if: needs.changes.outputs.python != 'true'
@@ -179,8 +179,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
-        with:
-          lfs: true
 
       - name: Skip — no analytics changes
         if: needs.changes.outputs.analytics != 'true'
