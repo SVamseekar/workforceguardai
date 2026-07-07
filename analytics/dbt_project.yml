@@ -19,6 +19,7 @@ clean-targets:
 
 vars:
   eu_raw_path: "{{ env_var('WORKFORCEGUARD_EU_RAW_PATH', '/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/eu_raw') }}"
+  eu_meta_path: "{{ env_var('WORKFORCEGUARD_EU_META_PATH', '/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/eu_meta') }}"
   internal_path: "{{ env_var('WORKFORCEGUARD_INTERNAL_PATH', '/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/internal') }}"
   reference_path: "{{ env_var('WORKFORCEGUARD_REFERENCE_PATH', '/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/reference') }}"
   public_company_path: "{{ env_var('WORKFORCEGUARD_PUBLIC_COMPANY_PATH', '/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/public_company') }}"

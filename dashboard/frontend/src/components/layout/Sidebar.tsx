@@ -1,11 +1,12 @@
 import { NavLink } from 'react-router-dom'
-import { BarChart2, Home, Scale, ShieldCheck, MessageSquare, GitCompare } from 'lucide-react'
+import { BarChart2, Home, Scale, ShieldCheck, MessageSquare, GitCompare, FlaskConical } from 'lucide-react'
 import { useSidebarData } from './SidebarContext'
 
 const NAV_ITEMS = [
   { to: '/app', label: 'Home', Icon: Home, end: true },
   { to: '/app/market', label: 'Market Intelligence', Icon: BarChart2 },
   { to: '/app/compare', label: 'Compare', Icon: GitCompare },
+  { to: '/app/research', label: 'Research', Icon: FlaskConical },
   { to: '/app/pay-analysis', label: 'Pay Analysis', Icon: Scale },
   { to: '/app/govern', label: 'Govern & Export', Icon: ShieldCheck },
 ]

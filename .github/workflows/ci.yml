@@ -75,14 +75,15 @@ jobs:
       PYTHONPATH: dashboard/backend
       WORKFORCEGUARD_DB_PATH: ${{ github.workspace }}/data/workforceguard_analytics.duckdb
       WORKFORCEGUARD_EU_RAW_PATH: ${{ github.workspace }}/data/eu_raw
+      WORKFORCEGUARD_EU_META_PATH: ${{ github.workspace }}/data/eu_meta
       WORKFORCEGUARD_INTERNAL_PATH: ${{ github.workspace }}/data/internal
       WORKFORCEGUARD_REFERENCE_PATH: ${{ github.workspace }}/data/reference
       WORKFORCEGUARD_PUBLIC_COMPANY_PATH: ${{ github.workspace }}/data/public_company
 
     steps:
+      # Skip LFS smudge: account LFS quota is exhausted and CI only needs
+      # Parquet/CSV under data/ (xlsx reference inputs are not used in tests).
       - uses: actions/checkout@v7
-        with:
-          lfs: true
 
       - name: Skip — no Python changes
         if: needs.changes.outputs.python != 'true'
@@ -119,6 +120,10 @@ jobs:
       - name: Run data pipeline tests
         if: needs.changes.outputs.python == 'true'
         run: python -m pytest tests/ -q --tb=short
+
+      - name: Verify landingFacts sync
+        if: needs.changes.outputs.python == 'true'
+        run: python scripts/sync_landing_facts.py --check
 
   frontend:
     name: Frontend checks
@@ -169,14 +174,13 @@ jobs:
     env:
       WORKFORCEGUARD_DB_PATH: ${{ github.workspace }}/data/workforceguard_analytics.duckdb
       WORKFORCEGUARD_EU_RAW_PATH: ${{ github.workspace }}/data/eu_raw
+      WORKFORCEGUARD_EU_META_PATH: ${{ github.workspace }}/data/eu_meta
       WORKFORCEGUARD_INTERNAL_PATH: ${{ github.workspace }}/data/internal
       WORKFORCEGUARD_REFERENCE_PATH: ${{ github.workspace }}/data/reference
       WORKFORCEGUARD_PUBLIC_COMPANY_PATH: ${{ github.workspace }}/data/public_company
 
     steps:
       - uses: actions/checkout@v7
-        with:
-          lfs: true
 
       - name: Skip — no analytics changes
         if: needs.changes.outputs.analytics != 'true'

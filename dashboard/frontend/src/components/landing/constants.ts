@@ -44,7 +44,7 @@ export const PRODUCT_TOUR_TABS: ProductTourTab[] = [
     desc: 'Delta tables across countries and sectors with auto-generated narrative comparing your selection to EU averages or peers.',
     screenshot: '/screenshots/compare.png',
     accentColor: '#8b5cf6',
-    bullets: ['Country × sector comparison', 'Prior-period and EU-average benchmarks', 'Combined risk quadrant insights'],
+    bullets: ['Country × sector comparison', 'Prior-period and EU-average benchmarks', 'Peer-country similarity baskets'],
   },
   {
     id: 'pay',
@@ -88,7 +88,7 @@ export const AI_ANALYST_HIGHLIGHTS = [
 
 export const MARKET_INTELLIGENCE_SCOPE = [
   { label: 'Market Intelligence', detail: 'Live Eurostat panels with country × sector filters', active: true },
-  { label: 'Compare', detail: 'Peer benchmarking and combined risk quadrant' },
+  { label: 'Compare', detail: 'Peer-country similarity baskets and side-by-side deltas' },
   { label: 'Pay Analysis', detail: 'Payroll gaps ranked with Directive threshold flagging' },
   { label: 'Govern & Export', detail: 'Tamper-evident audit log and evidence bundles' },
 ] as const
