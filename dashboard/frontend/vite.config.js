@@ -26,6 +26,10 @@ export default defineConfig(({ mode }) => {
         input: {
           main: 'index.html',
           mission: 'mission.html',
+          privacy: 'privacy.html',
+          terms: 'terms.html',
+          disclaimer: 'disclaimer.html',
+          refunds: 'refunds.html',
         },
         output: {
           manualChunks: {

@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-
-const STORAGE_KEY = 'wfg-cookie-consent'
+import {
+  COOKIE_CONSENT_EVENT,
+  COOKIE_CONSENT_STORAGE_KEY,
+  type CookieConsentChoice,
+} from '../../../lib/cookie-consent'
 
 export function CookieConsent() {
   const [visible, setVisible] = useState(false)
   const [entered, setEntered] = useState(false)
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
+    const stored = localStorage.getItem(COOKIE_CONSENT_STORAGE_KEY)
     if (stored) return
 
     const showTimer = window.setTimeout(() => {
@@ -21,8 +24,9 @@ export function CookieConsent() {
 
   if (!visible) return null
 
-  const accept = (choice: 'all' | 'essential') => {
-    localStorage.setItem(STORAGE_KEY, choice)
+  const accept = (choice: CookieConsentChoice) => {
+    localStorage.setItem(COOKIE_CONSENT_STORAGE_KEY, choice)
+    window.dispatchEvent(new CustomEvent(COOKIE_CONSENT_EVENT, { detail: choice }))
     setEntered(false)
     window.setTimeout(() => setVisible(false), 280)
   }

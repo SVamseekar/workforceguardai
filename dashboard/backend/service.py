@@ -4346,6 +4346,395 @@ class AnalyticsRepository:
             "all_size_bands": rows,
         }
 
+    RESEARCH_HEATMAP_SECTORS = [
+        {"id": "K", "label": "Finance (K)"},
+        {"id": "J", "label": "ICT (J)"},
+        {"id": "Q", "label": "Health (Q)"},
+        {"id": "F", "label": "Construction (F)"},
+        {"id": "C", "label": "Manufacturing (C)"},
+        {"id": "B-S_X_O", "label": "All sectors"},
+    ]
+
+    RESEARCH_TRAJECTORY_GROUPS = {
+        "fast_recovery": {
+            "label": "Fast recoverers",
+            "countries": ["HR", "IT", "IE", "ES"],
+            "note": "Strong 2019–2024 employment gains; GPGs often low for selection/participation reasons.",
+        },
+        "stable_high": {
+            "label": "Stable high employment",
+            "countries": ["DE", "NL", "CZ"],
+            "note": "Tight labour markets with persistently high gender pay gaps.",
+        },
+        "deteriorating": {
+            "label": "Deteriorating (2023–2024)",
+            "countries": ["SE", "FI", "DK"],
+            "note": "Nordic employment softening while sector gaps remain elevated.",
+        },
+    }
+
+    RESEARCH_INSIGHTS = [
+        {
+            "id": "tightness_equity",
+            "title": "Tightness–equity paradox",
+            "summary": "High employment does not imply low gender pay gaps.",
+            "detail": (
+                "Germany, Czechia, Hungary, Estonia, and Latvia combine tight labour markets "
+                "with double-digit overall gaps. Competitive hiring has not eroded occupational segregation."
+            ),
+            "countries": ["DE", "CZ", "HU", "EE", "LV"],
+        },
+        {
+            "id": "italy_selection",
+            "title": "Italy–Romania: low gap ≠ equality",
+            "summary": "Low measured GPG can reflect low female participation, not pay equity.",
+            "detail": (
+                "When fewer women remain in the workforce, the measured gap compresses through positive selection. "
+                "Directive category reporting will expose within-job differences."
+            ),
+            "countries": ["IT", "RO"],
+        },
+        {
+            "id": "finance_risk",
+            "title": "Finance sector concentration",
+            "summary": "NACE K shows the largest gaps in virtually every member state.",
+            "detail": (
+                "Bonus-heavy compensation and vertical segregation push finance gaps well above all-sector averages — "
+                "a primary joint pay assessment exposure under Directive 2023/970."
+            ),
+            "countries": ["CZ", "HU", "FR", "DE"],
+        },
+        {
+            "id": "construction_artifact",
+            "title": "Construction negative gap artefact",
+            "summary": "Negative sector averages mask discrimination under unadjusted metrics.",
+            "detail": (
+                "Women in construction are concentrated in higher-paid professional roles while men span the full pay range. "
+                "Within-category reporting reverses the apparent advantage."
+            ),
+            "countries": ["HR", "SI", "FR", "ES"],
+        },
+        {
+            "id": "nordic_paradox",
+            "title": "Nordic disappointment",
+            "summary": "Strong welfare policy does not automatically close sector gaps.",
+            "detail": (
+                "Finland's overall gap exceeds the EU27 average; Sweden's finance and health gaps remain elevated. "
+                "Sector-specific bargaining (e.g. Swedish ICT) is the mechanism that works."
+            ),
+            "countries": ["SE", "FI"],
+        },
+    ]
+
+    @staticmethod
+    def _pearson_correlation(xs: List[float], ys: List[float]) -> Optional[float]:
+        if len(xs) < 2 or len(xs) != len(ys):
+            return None
+        mean_x = sum(xs) / len(xs)
+        mean_y = sum(ys) / len(ys)
+        num = sum((x - mean_x) * (y - mean_y) for x, y in zip(xs, ys))
+        den_x = sum((x - mean_x) ** 2 for x in xs)
+        den_y = sum((y - mean_y) ** 2 for y in ys)
+        if den_x <= 0 or den_y <= 0:
+            return None
+        return round(num / math.sqrt(den_x * den_y), 3)
+
+    def _research_all_sector_id(self) -> str:
+        rows = self._query(
+            """
+            select sector_id, count(distinct geo_id) as country_count
+            from fct_labour_market_region_sector
+            where signal_name = 'gender_pay_gap'
+              and length(geo_id) = 2
+              and sector_id in ('B-S_X_O', 'B-S')
+            group by 1
+            order by country_count desc, sector_id
+            limit 1
+            """
+        )
+        return rows[0]["sector_id"] if rows else "B-S"
+
+    def _latest_country_signal_rows(self, signal_name: str, sector_id: Optional[str]) -> List[Dict[str, Any]]:
+        if sector_id is None:
+            sector_clause = "and sector_id is null"
+            filter_params: List[Any] = []
+        else:
+            sector_clause = "and sector_id = ?"
+            filter_params = [sector_id]
+
+        return self._query(
+            f"""
+            with latest as (
+                select geo_id, max(period_code) as period_code
+                from fct_labour_market_region_sector
+                where signal_name = ?
+                  and length(geo_id) = 2
+                  {sector_clause}
+                group by 1
+            )
+            select
+                f.geo_id,
+                g.region_name as country_label,
+                f.period_code,
+                round(cast(f.signal_value as double), 2) as value
+            from fct_labour_market_region_sector f
+            inner join latest l
+                on f.geo_id = l.geo_id
+               and f.period_code = l.period_code
+            inner join dim_geography g
+                on f.geo_id = g.geo_id
+            where f.signal_name = ?
+              and length(f.geo_id) = 2
+              {sector_clause.replace('sector_id', 'f.sector_id')}
+            order by g.region_name
+            """,
+            [signal_name, *filter_params, signal_name, *filter_params],
+        )
+
+    def build_research_panel(self, trajectory_group: str = "fast_recovery") -> Dict[str, Any]:
+        if "fct_labour_market_region_sector" not in self._available_tables():
+            raise FileNotFoundError("Labour market fact table is not available in the analytics warehouse.")
+
+        all_sector_id = self._research_all_sector_id()
+        paired_rows = self._query(
+            """
+            with paired as (
+                select
+                    e.geo_id,
+                    dg.region_name as country_label,
+                    e.period_code,
+                    round(cast(e.signal_value as double), 2) as employment_rate,
+                    round(cast(gpg.signal_value as double), 2) as gender_pay_gap,
+                    row_number() over (
+                        partition by e.geo_id
+                        order by e.period_code desc
+                    ) as row_num
+                from fct_labour_market_region_sector e
+                inner join fct_labour_market_region_sector gpg
+                    on e.geo_id = gpg.geo_id
+                   and e.period_code = gpg.period_code
+                inner join dim_geography dg
+                    on e.geo_id = dg.geo_id
+                where e.signal_name = 'employment_rate'
+                  and e.sector_id is null
+                  and gpg.signal_name = 'gender_pay_gap'
+                  and gpg.sector_id = ?
+                  and length(e.geo_id) = 2
+                  and e.signal_value is not null
+                  and gpg.signal_value is not null
+            )
+            select geo_id, country_label, period_code, employment_rate, gender_pay_gap
+            from paired
+            where row_num = 1
+            order by country_label
+            """,
+            [all_sector_id],
+        )
+        finance_rows = self._latest_country_signal_rows("gender_pay_gap", "K")
+        gpg_rows = self._latest_country_signal_rows("gender_pay_gap", all_sector_id)
+        employment_rows = self._latest_country_signal_rows("employment_rate", None)
+        finance_by_geo = {row["geo_id"]: row for row in finance_rows}
+        gpg_by_geo = {row["geo_id"]: row for row in gpg_rows}
+
+        scatter_points = []
+        for row in paired_rows:
+            finance_row = finance_by_geo.get(row["geo_id"])
+            scatter_points.append(
+                {
+                    "geo_id": row["geo_id"],
+                    "country_label": row["country_label"],
+                    "employment_rate": float(row["employment_rate"]),
+                    "gender_pay_gap": float(row["gender_pay_gap"]),
+                    "finance_gpg": float(finance_row["value"]) if finance_row and finance_row["value"] is not None else None,
+                    "period": row["period_code"],
+                }
+            )
+
+        scatter_points.sort(key=lambda row: row["gender_pay_gap"], reverse=True)
+        correlation = self._pearson_correlation(
+            [row["employment_rate"] for row in scatter_points],
+            [row["gender_pay_gap"] for row in scatter_points],
+        )
+
+        quadrant_points: List[Dict[str, Any]] = []
+        if "mart_semantic_metrics" in self._available_tables():
+            quadrant_rows = self._query(
+                """
+                select
+                    m.geo_id,
+                    g.region_name as country_label,
+                    max(case when m.metric_id = 'hiring_pressure_index' then m.metric_value end) as hpi,
+                    max(case when m.metric_id = 'equity_risk_score' then m.metric_value end) as ers,
+                    max(case when m.metric_id = 'labour_resilience' then m.metric_value end) as labour_resilience,
+                    max(case when m.metric_id = 'transition_readiness' then m.metric_value end) as transition_readiness
+                from mart_semantic_metrics m
+                inner join dim_geography g
+                    on m.geo_id = g.geo_id
+                where m.sector_id = 'ALL'
+                  and length(m.geo_id) = 2
+                group by 1, 2
+                order by g.region_name
+                """
+            )
+            for row in quadrant_rows:
+                if row["hpi"] is None or row["ers"] is None:
+                    continue
+                finance_row = finance_by_geo.get(row["geo_id"])
+                quadrant_points.append(
+                    {
+                        "geo_id": row["geo_id"],
+                        "country_label": row["country_label"],
+                        "hpi": float(row["hpi"]),
+                        "ers": float(row["ers"]),
+                        "labour_resilience": float(row["labour_resilience"]) if row["labour_resilience"] is not None else None,
+                        "transition_readiness": float(row["transition_readiness"]) if row["transition_readiness"] is not None else None,
+                        "finance_gpg": float(finance_row["value"]) if finance_row and finance_row["value"] is not None else None,
+                    }
+                )
+
+        heatmap_sectors = [
+            sector if sector["id"] != "B-S_X_O" else {"id": all_sector_id, "label": "All sectors"}
+            for sector in self.RESEARCH_HEATMAP_SECTORS
+        ]
+        heatmap_cells = []
+        for sector in heatmap_sectors:
+            sector_rows = self._latest_country_signal_rows("gender_pay_gap", sector["id"])
+            for row in sector_rows:
+                if row["value"] is None:
+                    continue
+                heatmap_cells.append(
+                    {
+                        "geo_id": row["geo_id"],
+                        "country_label": row["country_label"],
+                        "sector_id": sector["id"],
+                        "sector_label": sector["label"],
+                        "gender_pay_gap": float(row["value"]),
+                        "period": row["period_code"],
+                    }
+                )
+
+        finance_vs_overall = []
+        for geo_id, gpg_row in gpg_by_geo.items():
+            finance_row = finance_by_geo.get(geo_id)
+            if finance_row is None or finance_row["value"] is None or gpg_row["value"] is None:
+                continue
+            overall = float(gpg_row["value"])
+            finance = float(finance_row["value"])
+            finance_vs_overall.append(
+                {
+                    "geo_id": geo_id,
+                    "country_label": gpg_row["country_label"],
+                    "overall_gpg": overall,
+                    "finance_gpg": finance,
+                    "finance_premium_pp": round(finance - overall, 1),
+                    "period": finance_row["period_code"],
+                }
+            )
+        finance_vs_overall.sort(key=lambda row: row["finance_gpg"], reverse=True)
+
+        group_key = trajectory_group if trajectory_group in self.RESEARCH_TRAJECTORY_GROUPS else "fast_recovery"
+        group = self.RESEARCH_TRAJECTORY_GROUPS[group_key]
+        trajectory_series = []
+        for geo_id in group["countries"]:
+            rows = self._query(
+                """
+                select
+                    f.period_code as period,
+                    round(cast(f.signal_value as double), 2) as value
+                from fct_labour_market_region_sector f
+                where f.signal_name = 'employment_rate'
+                  and f.sector_id is null
+                  and f.geo_id = ?
+                  and f.period_code between '2019' and '2025'
+                order by f.period_code
+                """,
+                [geo_id],
+            )
+            if not rows:
+                continue
+            label_row = next((row for row in employment_rows if row["geo_id"] == geo_id), None)
+            trajectory_series.append(
+                {
+                    "geo_id": geo_id,
+                    "country_label": label_row["country_label"] if label_row else geo_id,
+                    "series": rows,
+                }
+            )
+
+        gpg_values = [row["gender_pay_gap"] for row in scatter_points]
+        eu27_gpg_mean = round(sum(gpg_values) / len(gpg_values), 1) if gpg_values else None
+        finance_values = [
+            float(row["value"])
+            for row in finance_rows
+            if row["value"] is not None
+        ]
+        eu27_finance_mean = round(sum(finance_values) / len(finance_values), 1) if finance_values else None
+
+        return {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "panel": {
+                "countries": len(scatter_points),
+                "sectors": len(heatmap_sectors),
+                "year_range": "2019–2025",
+                "all_sector_id": all_sector_id,
+                "employment_gpg_correlation": correlation,
+                "eu27_gpg_mean": eu27_gpg_mean,
+                "eu27_finance_gpg_mean": eu27_finance_mean,
+            },
+            "figures": {
+                "tightness_gpg_scatter": {
+                    "title": "Employment rate vs gender pay gap",
+                    "x_label": "Employment rate (%)",
+                    "y_label": "Gender pay gap (%)",
+                    "points": scatter_points,
+                    "correlation": correlation,
+                    "source_id": "eurostat_lfs",
+                },
+                "risk_quadrant": {
+                    "title": "Hiring Pressure Index vs Equity Risk Score",
+                    "x_label": "Hiring Pressure Index",
+                    "y_label": "Equity Risk Score",
+                    "points": quadrant_points,
+                    "quadrants": [
+                        {"id": "priority", "label": "High pressure + High risk", "x": "high", "y": "high"},
+                        {"id": "benchmark", "label": "High pressure + Low risk", "x": "high", "y": "low"},
+                        {"id": "structural", "label": "Low pressure + High risk", "x": "low", "y": "high"},
+                        {"id": "monitor", "label": "Low pressure + Low risk", "x": "low", "y": "low"},
+                    ],
+                    "source_id": "workforceguard_composite",
+                },
+                "sector_heatmap": {
+                    "title": "Sectoral gender pay gap heatmap",
+                    "sectors": heatmap_sectors,
+                    "cells": heatmap_cells,
+                    "source_id": "eurostat_ses",
+                },
+                "finance_vs_overall": {
+                    "title": "Finance sector gap vs all-sector gap",
+                    "rows": finance_vs_overall,
+                    "source_id": "eurostat_ses",
+                },
+                "employment_trajectories": {
+                    "title": "Post-COVID employment trajectories",
+                    "group_id": group_key,
+                    "group_label": group["label"],
+                    "note": group["note"],
+                    "groups": [
+                        {"id": key, "label": value["label"]}
+                        for key, value in self.RESEARCH_TRAJECTORY_GROUPS.items()
+                    ],
+                    "series": trajectory_series,
+                    "source_id": "eurostat_lfs",
+                },
+            },
+            "insights": self.RESEARCH_INSIGHTS,
+            "provenance": {
+                "warehouse": str(self.analytics_db_path),
+                "formula_registry": "analytics/seeds/reference/ref_metric_registry.csv",
+                "paper_exports": "data/paper_exports/",
+            },
+        }
+
     def build_overview(
         self,
         country: str = "ALL",

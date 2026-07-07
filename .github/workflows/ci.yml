@@ -120,6 +120,10 @@ jobs:
         if: needs.changes.outputs.python == 'true'
         run: python -m pytest tests/ -q --tb=short
 
+      - name: Verify landingFacts sync
+        if: needs.changes.outputs.python == 'true'
+        run: python scripts/sync_landing_facts.py --check
+
   frontend:
     name: Frontend checks
     needs: changes
