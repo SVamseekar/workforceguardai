@@ -13,7 +13,9 @@ standardized as (
         age as age_code,
         unit as unit_code,
         cast(value as double) as metric_value,
-        'unemployment_rate' as dataset_name
+        'unemployment_rate' as dataset_name,
+        'une_rt_a' as dataset_code,
+        {{ get_pull_timestamp('unemployment_rate') }} as pulled_at
     from source
     where geo is not null
       and cast(value as double) is not null
@@ -21,4 +23,3 @@ standardized as (
 
 select *
 from standardized
-

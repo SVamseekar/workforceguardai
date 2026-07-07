@@ -215,14 +215,15 @@ def main() -> None:
     args.output.mkdir(parents=True, exist_ok=True)
     args.meta.mkdir(parents=True, exist_ok=True)
 
-    manifest = {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-        "base_url": base_url,
-        "geo_level": geo_level,
-        "requested_datasets": [dataset["name"] for dataset in datasets],
-        "completed": [],
-        "failed": [],
-    }
+    manifest_path = args.meta / "manifest.json"
+    if manifest_path.exists():
+        with manifest_path.open("r", encoding="utf-8") as f:
+            manifest = json.load(f)
+    else:
+        manifest = {"datasets": {}}
+    manifest.setdefault("datasets", {})
+
+    run_started_at = datetime.now(timezone.utc).isoformat()
 
     for ds in datasets:
         name = ds["name"]
@@ -230,6 +231,7 @@ def main() -> None:
         filters = ds.get("filters", {})
 
         print(f"Fetching {name} ({code})...")
+        pulled_at = datetime.now(timezone.utc).isoformat()
         try:
             df, meta = fetch_dataset(
                 code=code,
@@ -243,19 +245,22 @@ def main() -> None:
             )
             df = apply_geo_filter(df, geo_codes, geo_level)
 
+            meta["pulled_at"] = pulled_at
             write_parquet(args.output / f"{name}.parquet", df)
             with (args.meta / f"{name}.json").open("w", encoding="utf-8") as f:
                 json.dump(meta, f, indent=2)
 
-            manifest["completed"].append(
-                {
-                    "dataset": name,
-                    "code": code,
-                    "rows": int(len(df)),
-                    "dimensions": meta.get("dimensions", []),
-                    "output": str((args.output / f"{name}.parquet").resolve()),
-                }
-            )
+            manifest["datasets"][name] = {
+                "dataset": name,
+                "code": code,
+                "status": "completed",
+                "pulled_at": pulled_at,
+                "base_url": base_url,
+                "geo_level": geo_level,
+                "rows": int(len(df)),
+                "dimensions": meta.get("dimensions", []),
+                "output": str((args.output / f"{name}.parquet").resolve()),
+            }
 
             print(f"Saved {name}: {len(df)} rows")
         except Exception as exc:
@@ -267,10 +272,19 @@ def main() -> None:
             errors.append({"dataset": name, "code": code, "error": str(exc)})
             with error_path.open("w", encoding="utf-8") as f:
                 json.dump(errors, f, indent=2)
-            manifest["failed"].append({"dataset": name, "code": code, "error": str(exc)})
+            manifest["datasets"][name] = {
+                "dataset": name,
+                "code": code,
+                "status": "failed",
+                "pulled_at": pulled_at,
+                "error": str(exc),
+            }
             print(f"Skipped {name} due to error: {exc}")
 
-    with (args.meta / "manifest.json").open("w", encoding="utf-8") as f:
+    manifest["last_run_at"] = run_started_at
+    manifest["last_run_requested_datasets"] = [dataset["name"] for dataset in datasets]
+
+    with manifest_path.open("w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
 
     print("Done.")
