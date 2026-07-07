@@ -1,0 +1,109 @@
+geo_id,sector_id,metric_id,metric_value,implementation_status,evidence_summary
+AT,ALL,equity_risk_score,97.0,proxy_live,Market pay-gap input 17.6%
+AT,ALL,hiring_pressure_index,88.0,proxy_live,"Vacancy 2.9%, unemployment 5.7%, slack 11.3"
+AT,ALL,labour_resilience,81.0,live,"Employment 77.6%, unemployment 5.7%"
+AT,ALL,transition_readiness,69.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+BE,ALL,equity_risk_score,4.0,proxy_live,Market pay-gap input 0.7%
+BE,ALL,hiring_pressure_index,85.0,proxy_live,"Vacancy 3.5%, unemployment 6.2%, slack 13.2"
+BE,ALL,labour_resilience,74.0,live,"Employment 72.8%, unemployment 6.2%"
+BE,ALL,transition_readiness,67.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+BG,ALL,equity_risk_score,63.0,proxy_live,Market pay-gap input 11.5%
+BG,ALL,hiring_pressure_index,81.0,proxy_live,"Vacancy 0.8%, unemployment 3.5%, slack 5.4"
+BG,ALL,labour_resilience,89.0,live,"Employment 77.0%, unemployment 3.5%"
+BG,ALL,transition_readiness,75.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+CY,ALL,equity_risk_score,68.0,proxy_live,Market pay-gap input 12.3%
+CY,ALL,hiring_pressure_index,90.0,proxy_live,"Vacancy 3.0%, unemployment 4.4%, slack 7.4"
+CY,ALL,labour_resilience,90.0,live,"Employment 81.3%, unemployment 4.4%"
+CY,ALL,transition_readiness,73.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+CZ,ALL,equity_risk_score,99.0,proxy_live,Market pay-gap input 18.0%
+CZ,ALL,hiring_pressure_index,93.0,proxy_live,"Vacancy 1.9%, unemployment 2.8%, slack 6.3"
+CZ,ALL,labour_resilience,98.0,live,"Employment 82.9%, unemployment 2.8%"
+CZ,ALL,transition_readiness,76.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+DE,ALL,equity_risk_score,81.0,proxy_live,Market pay-gap input 14.8%
+DE,ALL,hiring_pressure_index,98.0,proxy_live,"Vacancy 2.6%, unemployment 3.8%, slack 8.1"
+DE,ALL,labour_resilience,91.0,live,"Employment 81.1%, unemployment 3.8%"
+DE,ALL,transition_readiness,71.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+DK,ALL,equity_risk_score,74.0,proxy_live,Market pay-gap input 13.4%
+DK,ALL,hiring_pressure_index,55.0,proxy_live,"Vacancy 0.0%, unemployment 6.4%, slack 13.2"
+DK,ALL,labour_resilience,80.0,live,"Employment 79.8%, unemployment 6.4%"
+DK,ALL,transition_readiness,77.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+EE,ALL,equity_risk_score,100.0,proxy_live,Market pay-gap input 18.8%
+EE,ALL,hiring_pressure_index,69.0,proxy_live,"Vacancy 1.6%, unemployment 7.5%, slack 12.5"
+EE,ALL,labour_resilience,77.0,live,"Employment 81.7%, unemployment 7.5%"
+EE,ALL,transition_readiness,72.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+EL,ALL,equity_risk_score,74.0,proxy_live,Market pay-gap input 13.4%
+EL,ALL,hiring_pressure_index,42.0,proxy_live,"Vacancy 1.6%, unemployment 8.9%, slack 12.7"
+EL,ALL,labour_resilience,63.0,live,"Employment 71.0%, unemployment 8.9%"
+EL,ALL,transition_readiness,73.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+ES,ALL,equity_risk_score,39.0,proxy_live,Market pay-gap input 7.0%
+ES,ALL,hiring_pressure_index,48.0,proxy_live,"Vacancy 0.9%, unemployment 10.5%, slack 17.8"
+ES,ALL,labour_resilience,57.0,live,"Employment 72.4%, unemployment 10.5%"
+ES,ALL,transition_readiness,69.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+FI,ALL,equity_risk_score,87.0,proxy_live,Market pay-gap input 15.9%
+FI,ALL,hiring_pressure_index,44.0,proxy_live,"Vacancy 1.2%, unemployment 9.7%, slack 20.7"
+FI,ALL,labour_resilience,64.0,live,"Employment 76.3%, unemployment 9.7%"
+FI,ALL,transition_readiness,73.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+FR,ALL,equity_risk_score,67.0,proxy_live,Market pay-gap input 12.2%
+FR,ALL,hiring_pressure_index,67.0,proxy_live,"Vacancy 2.3%, unemployment 7.7%, slack 15.3"
+FR,ALL,labour_resilience,71.0,live,"Employment 75.4%, unemployment 7.7%"
+FR,ALL,transition_readiness,70.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+HR,ALL,equity_risk_score,32.0,proxy_live,Market pay-gap input 5.9%
+HR,ALL,hiring_pressure_index,68.0,proxy_live,"Vacancy 1.2%, unemployment 4.9%, slack 7.3"
+HR,ALL,labour_resilience,81.0,live,"Employment 74.4%, unemployment 4.9%"
+HR,ALL,transition_readiness,74.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+HU,ALL,equity_risk_score,90.0,proxy_live,Market pay-gap input 16.4%
+HU,ALL,hiring_pressure_index,88.0,proxy_live,"Vacancy 2.0%, unemployment 4.4%, slack 6.3"
+HU,ALL,labour_resilience,90.0,live,"Employment 81.1%, unemployment 4.4%"
+HU,ALL,transition_readiness,74.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+IE,ALL,equity_risk_score,44.0,proxy_live,Market pay-gap input 8.0%
+IE,ALL,hiring_pressure_index,79.0,proxy_live,"Vacancy 1.3%, unemployment 4.7%, slack 12.6"
+IE,ALL,labour_resilience,87.0,live,"Employment 80.2%, unemployment 4.7%"
+IE,ALL,transition_readiness,74.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+IT,ALL,equity_risk_score,34.0,proxy_live,Market pay-gap input 6.1%
+IT,ALL,hiring_pressure_index,71.0,proxy_live,"Vacancy 1.9%, unemployment 6.1%, slack 14.5"
+IT,ALL,labour_resilience,70.0,live,"Employment 67.6%, unemployment 6.1%"
+IT,ALL,transition_readiness,69.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+LT,ALL,equity_risk_score,52.0,proxy_live,Market pay-gap input 9.4%
+LT,ALL,hiring_pressure_index,78.0,proxy_live,"Vacancy 2.3%, unemployment 6.9%, slack 9.6"
+LT,ALL,labour_resilience,78.0,live,"Employment 80.0%, unemployment 6.9%"
+LT,ALL,transition_readiness,71.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+LU,ALL,equity_risk_score,0.0,proxy_live,Market pay-gap input 0.0%
+LU,ALL,hiring_pressure_index,54.0,proxy_live,"Vacancy 1.4%, unemployment 6.5%, slack 14.3"
+LU,ALL,labour_resilience,74.0,live,"Employment 73.9%, unemployment 6.5%"
+LU,ALL,transition_readiness,75.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+LV,ALL,equity_risk_score,71.0,proxy_live,Market pay-gap input 12.9%
+LV,ALL,hiring_pressure_index,76.0,proxy_live,"Vacancy 2.2%, unemployment 6.9%, slack 11.1"
+LV,ALL,labour_resilience,77.0,live,"Employment 78.2%, unemployment 6.9%"
+LV,ALL,transition_readiness,71.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+MT,ALL,equity_risk_score,27.0,proxy_live,Market pay-gap input 4.9%
+MT,ALL,hiring_pressure_index,80.0,proxy_live,"Vacancy 3.3%, unemployment 3.1%, slack 4.7"
+MT,ALL,labour_resilience,68.0,live,"Employment 83.6%, unemployment 3.1%"
+MT,ALL,transition_readiness,66.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+NL,ALL,equity_risk_score,56.0,proxy_live,Market pay-gap input 10.1%
+NL,ALL,hiring_pressure_index,100.0,proxy_live,"Vacancy 4.0%, unemployment 3.9%, slack 11.8"
+NL,ALL,labour_resilience,93.0,live,"Employment 83.4%, unemployment 3.9%"
+NL,ALL,transition_readiness,72.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+PL,ALL,equity_risk_score,23.0,proxy_live,Market pay-gap input 4.1%
+PL,ALL,hiring_pressure_index,82.0,proxy_live,"Vacancy 0.8%, unemployment 3.1%, slack 5.3"
+PL,ALL,labour_resilience,93.0,live,"Employment 78.8%, unemployment 3.1%"
+PL,ALL,transition_readiness,76.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+PT,ALL,equity_risk_score,39.0,proxy_live,Market pay-gap input 7.0%
+PT,ALL,hiring_pressure_index,69.0,proxy_live,"Vacancy 1.4%, unemployment 6.0%, slack 9.9"
+PT,ALL,labour_resilience,82.0,live,"Employment 79.6%, unemployment 6.0%"
+PT,ALL,transition_readiness,75.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+RO,ALL,equity_risk_score,18.0,proxy_live,Market pay-gap input 3.2%
+RO,ALL,hiring_pressure_index,42.0,proxy_live,"Vacancy 0.6%, unemployment 6.1%, slack 9.5"
+RO,ALL,labour_resilience,72.0,live,"Employment 69.0%, unemployment 6.1%"
+RO,ALL,transition_readiness,77.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+SE,ALL,equity_risk_score,58.0,proxy_live,Market pay-gap input 10.5%
+SE,ALL,hiring_pressure_index,56.0,proxy_live,"Vacancy 2.0%, unemployment 8.8%, slack 18.9"
+SE,ALL,labour_resilience,73.0,live,"Employment 81.8%, unemployment 8.8%"
+SE,ALL,transition_readiness,74.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+SI,ALL,equity_risk_score,42.0,proxy_live,Market pay-gap input 7.7%
+SI,ALL,hiring_pressure_index,99.0,proxy_live,"Vacancy 2.2%, unemployment 3.9%, slack 6.4"
+SI,ALL,labour_resilience,88.0,live,"Employment 78.3%, unemployment 3.9%"
+SI,ALL,transition_readiness,70.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"
+SK,ALL,equity_risk_score,83.0,proxy_live,Market pay-gap input 15.1%
+SK,ALL,hiring_pressure_index,45.0,proxy_live,"Vacancy 1.0%, unemployment 5.4%, slack 6.8"
+SK,ALL,labour_resilience,83.0,live,"Employment 78.1%, unemployment 5.4%"
+SK,ALL,transition_readiness,81.0,proxy_live,"ESCO skill coverage proxy: digital 80.6%, green 72.0%"

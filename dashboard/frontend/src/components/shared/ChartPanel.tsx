@@ -4,6 +4,7 @@ const SOURCE_LABELS: Record<string, string> = {
   eurostat_lfs: 'Eurostat LFS',
   eurostat_jvs: 'Eurostat JVS',
   eurostat_ses: 'Eurostat SES',
+  workforceguard_composite: 'WorkforceGuard composite indices',
 }
 
 export function ChartPanel({ title, sourceId, period, children }: { title: string; sourceId?: string; period?: string; children?: ReactNode }) {
