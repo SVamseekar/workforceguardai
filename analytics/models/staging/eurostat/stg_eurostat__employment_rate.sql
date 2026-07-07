@@ -15,7 +15,9 @@ standardized as (
         age as age_code,
         unit as unit_code,
         cast(value as double) as metric_value,
-        'employment_rate' as dataset_name
+        'employment_rate' as dataset_name,
+        'lfsi_emp_a' as dataset_code,
+        {{ get_pull_timestamp('employment_rate') }} as pulled_at
     from source
     where geo is not null
       and cast(value as double) is not null
@@ -23,4 +25,3 @@ standardized as (
 
 select *
 from standardized
-

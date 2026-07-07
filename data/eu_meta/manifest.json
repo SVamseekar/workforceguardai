@@ -1,15 +1,70 @@
 {
-  "generated_at": "2026-03-13T11:13:12.308811+00:00",
   "base_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data",
   "geo_level": "country",
-  "requested_datasets": [
-    "labour_market_flows",
-    "labour_market_slack"
-  ],
-  "completed": [
-    {
+  "datasets": {
+    "job_vacancy_rate": {
+      "dataset": "job_vacancy_rate",
+      "code": "jvs_q_nace2",
+      "status": "completed",
+      "pulled_at": "2026-07-01T17:14:58.348232+00:00",
+      "base_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data",
+      "geo_level": "country",
+      "rows": 267948,
+      "dimensions": [
+        "freq",
+        "s_adj",
+        "nace_r2",
+        "sizeclas",
+        "indic_em",
+        "geo",
+        "time"
+      ],
+      "output": "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/eu_raw/job_vacancy_rate.parquet"
+    },
+    "unemployment_rate": {
+      "dataset": "unemployment_rate",
+      "code": "une_rt_a",
+      "status": "completed",
+      "pulled_at": "2026-07-01T17:15:10.082843+00:00",
+      "base_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data",
+      "geo_level": "country",
+      "rows": 11832,
+      "dimensions": [
+        "freq",
+        "age",
+        "unit",
+        "sex",
+        "geo",
+        "time"
+      ],
+      "output": "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/eu_raw/unemployment_rate.parquet"
+    },
+    "employment_rate": {
+      "dataset": "employment_rate",
+      "code": "lfsi_emp_a",
+      "status": "completed",
+      "pulled_at": "2026-07-01T17:15:11.770120+00:00",
+      "base_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data",
+      "geo_level": "country",
+      "rows": 189,
+      "dimensions": [
+        "freq",
+        "indic_em",
+        "sex",
+        "age",
+        "unit",
+        "geo",
+        "time"
+      ],
+      "output": "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/eu_raw/employment_rate.parquet"
+    },
+    "labour_market_flows": {
       "dataset": "labour_market_flows",
       "code": "lfsi_long_q",
+      "status": "completed",
+      "pulled_at": "2026-07-01T17:15:13.110013+00:00",
+      "base_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data",
+      "geo_level": "country",
       "rows": 73800,
       "dimensions": [
         "freq",
@@ -22,10 +77,14 @@
       ],
       "output": "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/eu_raw/labour_market_flows.parquet"
     },
-    {
+    "labour_market_slack": {
       "dataset": "labour_market_slack",
       "code": "lfsi_sla_q",
-      "rows": 351644,
+      "status": "completed",
+      "pulled_at": "2026-07-01T17:15:19.507570+00:00",
+      "base_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data",
+      "geo_level": "country",
+      "rows": 351708,
       "dimensions": [
         "freq",
         "s_adj",
@@ -37,7 +96,32 @@
         "time"
       ],
       "output": "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/eu_raw/labour_market_slack.parquet"
+    },
+    "gender_pay_gap_sector": {
+      "dataset": "gender_pay_gap_sector",
+      "code": "earn_gr_gpgr2",
+      "status": "completed",
+      "pulled_at": "2026-07-01T17:15:34.651418+00:00",
+      "base_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data",
+      "geo_level": "country",
+      "rows": 3173,
+      "dimensions": [
+        "freq",
+        "unit",
+        "nace_r2",
+        "geo",
+        "time"
+      ],
+      "output": "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/eu_raw/gender_pay_gap_sector.parquet"
     }
-  ],
-  "failed": []
+  },
+  "last_run_at": "2026-07-01T17:14:58.348220+00:00",
+  "last_run_requested_datasets": [
+    "job_vacancy_rate",
+    "unemployment_rate",
+    "employment_rate",
+    "labour_market_flows",
+    "labour_market_slack",
+    "gender_pay_gap_sector"
+  ]
 }

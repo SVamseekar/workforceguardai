@@ -10,6 +10,7 @@ import { MarketSection } from './components/sections/MarketSection'
 import { PayAnalysisSection } from './components/sections/PayAnalysisSection'
 import { GovernSection } from './components/sections/GovernSection'
 import { CompareSection } from './components/sections/CompareSection'
+import { ResearchSection } from './components/sections/ResearchSection'
 import { LandingPage } from './components/landing/LandingPage'
 import { MissionPage } from './components/landing/MissionPage'
 import { PrivacyPage } from './components/landing/PrivacyPage'
@@ -92,6 +93,7 @@ function DashboardShell() {
               <Route path="/" element={<HomeSection />} />
               <Route path="/market" element={<MarketSection />} />
               <Route path="/compare" element={<CompareSection />} />
+              <Route path="/research" element={<ResearchSection />} />
               <Route path="/pay-analysis" element={<PayAnalysisSection />} />
               <Route path="/govern" element={<GovernSection />} />
             </Routes>

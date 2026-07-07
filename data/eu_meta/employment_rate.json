@@ -1,7 +1,7 @@
 {
   "code": "lfsi_emp_a",
-  "label": "Employment and activity by sex and age - annual data",
-  "updated": "2026-01-21T23:00:00+0100",
+  "label": "Employment and labour force by sex and age - annual data",
+  "updated": "2026-06-11T23:00:00+0200",
   "dimensions": [
     "freq",
     "indic_em",
@@ -77,7 +77,8 @@
       "TR"
     ],
     "time": [
-      "2024"
+      "2025"
     ]
-  }
+  },
+  "pulled_at": "2026-07-01T17:15:11.770120+00:00"
 }
