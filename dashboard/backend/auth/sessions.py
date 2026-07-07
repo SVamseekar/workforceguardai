@@ -7,6 +7,16 @@ from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 SESSION_COOKIE_NAME = "wfg_session"
 
 
+def session_cookie_secure() -> bool:
+    explicit = os.environ.get("SESSION_COOKIE_SECURE", "").strip().lower()
+    if explicit in ("1", "true", "yes"):
+        return True
+    if explicit in ("0", "false", "no"):
+        return False
+    redirect_base = os.environ.get("OAUTH_REDIRECT_BASE_URL", "")
+    return redirect_base.startswith("https://")
+
+
 def _serializer() -> URLSafeTimedSerializer:
     secret = os.environ["SESSION_SECRET"]
     return URLSafeTimedSerializer(secret, salt="wfg-session")

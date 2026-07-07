@@ -29,7 +29,7 @@ const BELIEFS = [
   {
     icon: Scale,
     title: 'Equity and labour markets are coupled',
-    body: 'Tight hiring conditions do not automatically close gender pay gaps. Our research across 20 EU countries shows the opposite in many cases. Intelligence must connect hiring pressure to equity risk, not treat them as separate dashboards.',
+    body: 'Tight hiring conditions do not automatically close gender pay gaps. Our 27-country Eurostat panel (r ≈ +0.44 employment–GPG correlation) shows the opposite in many cases. Intelligence must connect hiring pressure to equity risk, not treat them as separate dashboards.',
   },
   {
     icon: ShieldCheck,
