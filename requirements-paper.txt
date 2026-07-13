@@ -2,6 +2,6 @@ scikit-learn>=1.5
 scipy>=1.13
 matplotlib>=3.9
 seaborn>=0.13
-adjustText>=1.2
+adjustText>=1.4.0
 linearmodels>=6.0
 statsmodels>=0.14
