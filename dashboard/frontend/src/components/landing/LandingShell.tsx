@@ -2,9 +2,11 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { Link, useLocation } from 'react-router-dom'
 import { Menu, Moon, Sun, X } from 'lucide-react'
 import { LogoMark } from '../shared/LogoMark'
+import { AmbientEffects } from './components/AmbientEffects'
 import { CookieConsent } from './components/CookieConsent'
 import { LandingFooter } from './components/LandingFooter'
 import { useHashNavigation } from './hooks/useHashNavigation'
+import { usePointerSpotlight } from './hooks/usePointerSpotlight'
 import { NAV_LINKS } from './site'
 
 type LandingDemoContextValue = {
@@ -37,9 +39,11 @@ export function LandingShell({ children }: LandingShellProps) {
   const [navOpen, setNavOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const navRef = useRef<HTMLElement>(null)
+  const landingRef = useRef<HTMLDivElement>(null)
 
   const closeNav = () => setNavOpen(false)
   const { goToHash } = useHashNavigation(closeNav)
+  usePointerSpotlight(landingRef)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -75,11 +79,12 @@ export function LandingShell({ children }: LandingShellProps) {
   const hashHref = (hash: string) => (onHome ? hash : `/${hash}`)
 
   return (
-    <div className="landing">
+    <div className="landing" ref={landingRef}>
       <div className="landing-bg" aria-hidden="true">
         <div className="landing-bg__mesh" />
         <div className="landing-bg__grid" />
       </div>
+      <AmbientEffects />
 
       <header ref={navRef} className={`landing-nav ${scrolled ? 'is-scrolled' : ''}`}>
         <div className="landing-nav__inner">

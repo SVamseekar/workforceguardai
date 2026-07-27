@@ -62,7 +62,11 @@
   mask-image: linear-gradient(180deg, black 0%, transparent 70%);
 }
 
-.landing > *:not(.landing-bg) {
+/* Keep page content above fixed bg/ambient — but never override
+   position on fixed overlays (mobile nav, cookie) or they eat layout space. */
+.landing > section,
+.landing > footer,
+.landing > header {
   position: relative;
   z-index: 1;
 }
@@ -70,13 +74,49 @@
 /* ── Scroll reveal ─────────────────────────────────────────────────────── */
 .landing-reveal {
   opacity: 0;
-  transform: translateY(28px);
+  transform: translateY(24px);
   transition:
     opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .landing-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.landing-reveal--left {
+  transform: translateX(-28px);
+}
+
+.landing-reveal--right {
+  transform: translateX(28px);
+}
+
+.landing-reveal--scale {
+  transform: scale(0.98) translateY(12px);
+}
+
+.landing-reveal--left.is-visible,
+.landing-reveal--right.is-visible {
+  transform: translateX(0);
+}
+
+.landing-reveal--scale.is-visible {
+  transform: scale(1) translateY(0);
+}
+
+/* Stagger children (set --stagger-i via JS) */
+.landing-stagger__item {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--stagger-i, 0) * 70ms);
+}
+
+.landing-stagger__item.is-visible {
   opacity: 1;
   transform: translateY(0);
 }
@@ -207,7 +247,7 @@
 }
 
 /* ── Mobile nav ────────────────────────────────────────────────────────── */
-.landing .landing-mobile-nav {
+.landing-mobile-nav {
   position: fixed;
   inset: 0;
   z-index: 25;
@@ -216,6 +256,7 @@
   padding: 88px 28px 32px;
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
   transition:
     opacity 0.3s ease,
     visibility 0.3s ease;
@@ -224,6 +265,7 @@
 .landing-mobile-nav.is-open {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
 }
 
 .landing-mobile-nav nav {
@@ -257,9 +299,11 @@
   font-size: 0.88rem;
   border: 1px solid transparent;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.28s cubic-bezier(0.22, 1, 0.36, 1),
     background 0.2s ease,
     border-color 0.2s ease;
   white-space: nowrap;
@@ -272,12 +316,56 @@
     color-mix(in srgb, var(--accent-teal) 40%, var(--accent-primary))
   );
   color: #fff;
-  box-shadow: 0 4px 20px var(--accent-primary-glow);
+  box-shadow:
+    0 4px 20px var(--accent-primary-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .landing-cta--primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 28px var(--accent-primary-glow);
+  box-shadow:
+    0 12px 36px var(--accent-primary-glow),
+    0 0 0 1px color-mix(in srgb, var(--accent-primary) 40%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.landing-cta--primary:active {
+  transform: translateY(0);
+}
+
+.landing-cta__arrow {
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-cta:hover .landing-cta__arrow {
+  transform: translateX(4px);
+}
+
+/* Shimmer sweep on primary CTAs */
+.landing-cta--shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.28) 50%,
+    transparent 60%
+  );
+  transform: translateX(-120%);
+  animation: landing-shimmer 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes landing-shimmer {
+  0%,
+  55% {
+    transform: translateX(-120%);
+  }
+  75%,
+  100% {
+    transform: translateX(120%);
+  }
 }
 
 .landing-cta--secondary {
@@ -456,17 +544,96 @@
 
 /* ── Product showcase (hero) ───────────────────────────────────────────── */
 .landing-showcase {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
+.landing-showcase__glow {
+  position: absolute;
+  inset: -12% -8% -8%;
+  z-index: 0;
+  background:
+    radial-gradient(
+      ellipse 55% 50% at 50% 40%,
+      color-mix(in srgb, var(--accent-primary) 28%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 40% 35% at 70% 70%,
+      color-mix(in srgb, var(--landing-teal) 18%, transparent),
+      transparent 70%
+    );
+  filter: blur(28px);
+  animation: landing-glow-breathe 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes landing-glow-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.04);
+  }
+}
+
 .landing-showcase__frame {
+  position: relative;
+  z-index: 1;
   border: 1px solid var(--border-medium);
   border-radius: 16px;
   background: var(--bg-surface);
-  box-shadow: var(--shadow-soft);
+  box-shadow:
+    var(--shadow-soft),
+    0 0 0 1px color-mix(in srgb, var(--accent-primary) 8%, transparent);
   overflow: hidden;
+  animation: landing-float 7s ease-in-out infinite;
+  transition:
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.4s ease;
+}
+
+.landing-showcase:hover .landing-showcase__frame {
+  animation-play-state: paused;
+  transform: translateY(-6px) scale(1.01);
+  box-shadow:
+    0 28px 64px rgba(0, 0, 0, 0.45),
+    0 0 0 1px color-mix(in srgb, var(--accent-primary) 22%, transparent),
+    0 0 48px color-mix(in srgb, var(--accent-primary) 12%, transparent);
+}
+
+@keyframes landing-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.landing-showcase__shine {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.06) 48%,
+    transparent 62%
+  );
+  transform: translateX(-130%);
+  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-showcase:hover .landing-showcase__shine {
+  transform: translateX(130%);
 }
 
 .landing-showcase__chrome {
@@ -542,6 +709,36 @@
   padding: 28px 26px;
   background: var(--landing-surface);
   backdrop-filter: blur(8px);
+  position: relative;
+  transition:
+    background 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.landing-stat::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    120px 80px at var(--spot-x, 50%) var(--spot-y, 30%),
+    color-mix(in srgb, var(--landing-gold) 10%, transparent),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+
+.landing-stat:hover {
+  background: color-mix(
+    in srgb,
+    var(--landing-surface) 70%,
+    var(--bg-elevated)
+  );
+}
+
+.landing-stat:hover::before {
+  opacity: 1;
 }
 
 .landing-stat__value {
@@ -551,6 +748,8 @@
   letter-spacing: -0.03em;
   color: var(--landing-gold);
   line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 28px color-mix(in srgb, var(--landing-gold) 25%, transparent);
 }
 
 .landing-stat__label {
@@ -1959,10 +2158,30 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .landing-reveal {
-    opacity: 1;
-    transform: none;
-    transition: none;
+  .landing-reveal,
+  .landing-stagger__item,
+  .landing-hero-enter {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .landing-ambient,
+  .landing-showcase__glow,
+  .landing-showcase__shine,
+  .landing-cta--shimmer::after,
+  .landing-cta-section__ring {
+    display: none !important;
+  }
+
+  .landing-showcase__frame,
+  .landing-ambient__orb,
+  .landing-ambient__beam,
+  .landing-hero__badge-icon,
+  .landing-research__dot,
+  .landing-research__zone {
+    animation: none !important;
   }
 
   .landing-feature-card:hover,
@@ -1972,7 +2191,11 @@
   .landing-compliance-card:hover .landing-compliance-card__arrow,
   .landing-cta--primary:hover,
   .landing-cta--secondary:hover,
-  .landing-cta--ghost:hover {
+  .landing-cta--ghost:hover,
+  .landing-showcase:hover .landing-showcase__frame,
+  .landing-problem-card:hover,
+  .landing-onboarding-card:hover,
+  .landing-problem-insight:hover {
     transform: none;
   }
 }
@@ -3328,4 +3551,444 @@
   .landing-product-tour__tab {
     white-space: nowrap;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Motion system — ambient, hero enter, interactive polish (Marcel-style craft)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Pointer spotlight origin (set by usePointerSpotlight) */
+.landing {
+  --spot-x: 50%;
+  --spot-y: 30%;
+}
+
+/* ── Ambient layer ─────────────────────────────────────────────────────── */
+.landing-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.landing-ambient__orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.45;
+  will-change: transform;
+}
+
+.landing-ambient__orb--a {
+  width: min(52vw, 560px);
+  height: min(52vw, 560px);
+  top: -12%;
+  left: -8%;
+  background: color-mix(in srgb, var(--accent-primary) 35%, transparent);
+  animation: landing-orb-drift-a 22s ease-in-out infinite;
+}
+
+.landing-ambient__orb--b {
+  width: min(42vw, 440px);
+  height: min(42vw, 440px);
+  top: 35%;
+  right: -10%;
+  background: color-mix(in srgb, var(--landing-teal) 28%, transparent);
+  animation: landing-orb-drift-b 28s ease-in-out infinite;
+}
+
+.landing-ambient__orb--c {
+  width: min(36vw, 380px);
+  height: min(36vw, 380px);
+  bottom: -8%;
+  left: 30%;
+  background: color-mix(in srgb, var(--landing-gold) 16%, transparent);
+  animation: landing-orb-drift-c 26s ease-in-out infinite;
+}
+
+@keyframes landing-orb-drift-a {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  40% {
+    transform: translate(8%, 12%) scale(1.08);
+  }
+  70% {
+    transform: translate(3%, 6%) scale(0.96);
+  }
+}
+
+@keyframes landing-orb-drift-b {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  35% {
+    transform: translate(-10%, -8%) scale(1.06);
+  }
+  65% {
+    transform: translate(-4%, 6%) scale(0.94);
+  }
+}
+
+@keyframes landing-orb-drift-c {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(10%, -14%) scale(1.1);
+  }
+}
+
+.landing-ambient__spotlight {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    640px 480px at var(--spot-x) var(--spot-y),
+    color-mix(in srgb, var(--accent-primary) 10%, transparent),
+    transparent 55%
+  );
+  transition: background 0.15s linear;
+  opacity: 0.85;
+}
+
+.landing-ambient__grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  mix-blend-mode: overlay;
+}
+
+.landing-ambient__beam {
+  position: absolute;
+  top: -20%;
+  left: 50%;
+  width: 2px;
+  height: 70%;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--accent-primary) 35%, transparent),
+    transparent
+  );
+  transform: translateX(-50%) rotate(18deg);
+  opacity: 0.25;
+  animation: landing-beam-sweep 12s ease-in-out infinite;
+  filter: blur(1px);
+}
+
+@keyframes landing-beam-sweep {
+  0%,
+  100% {
+    opacity: 0.12;
+    transform: translateX(-50%) rotate(12deg) scaleY(0.9);
+  }
+  50% {
+    opacity: 0.35;
+    transform: translateX(-30%) rotate(22deg) scaleY(1.05);
+  }
+}
+
+[data-theme="light"] .landing-ambient__orb {
+  opacity: 0.28;
+}
+
+[data-theme="light"] .landing-ambient__grain {
+  opacity: 0.02;
+}
+
+/* ── Hero entrance sequence ────────────────────────────────────────────── */
+.landing-hero-enter {
+  opacity: 0;
+  transform: translateY(18px);
+  animation: landing-hero-in 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.landing-hero-enter--1 {
+  animation-delay: 0.05s;
+}
+.landing-hero-enter--2 {
+  animation-delay: 0.14s;
+}
+.landing-hero-enter--3 {
+  animation-delay: 0.24s;
+}
+.landing-hero-enter--4 {
+  animation-delay: 0.32s;
+}
+.landing-hero-enter--5 {
+  animation-delay: 0.4s;
+}
+.landing-hero-enter--visual {
+  animation-delay: 0.18s;
+  transform: translateY(22px) scale(0.985);
+}
+
+@keyframes landing-hero-in {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Icon-only pulse — never override the parent hero-enter animation */
+.landing-hero__badge-icon {
+  animation: landing-sparkle 2.8s ease-in-out 1s infinite;
+}
+
+@keyframes landing-sparkle {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.85;
+  }
+  40% {
+    transform: scale(1.12) rotate(6deg);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(0.96) rotate(-3deg);
+    opacity: 0.9;
+  }
+}
+
+/* ── Research quadrant pulse ───────────────────────────────────────────── */
+.landing-research__dot {
+  animation: landing-dot-pulse 2.8s ease-in-out infinite;
+}
+
+.landing-research__dot--a {
+  animation-delay: 0s;
+}
+.landing-research__dot--b {
+  animation-delay: 0.45s;
+}
+.landing-research__dot--c {
+  animation-delay: 0.9s;
+}
+
+@keyframes landing-dot-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.35);
+    filter: brightness(1.15);
+  }
+}
+
+.landing-research__zone {
+  animation: landing-zone-blink 3.2s ease-in-out infinite;
+}
+
+@keyframes landing-zone-blink {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ── CTA band ring ─────────────────────────────────────────────────────── */
+.landing-cta-section__inner {
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-cta-section__ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(90%, 520px);
+  height: min(90%, 520px);
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 22%, transparent);
+  transform: translate(-50%, -50%);
+  animation: landing-ring-expand 5s ease-out infinite;
+  pointer-events: none;
+}
+
+.landing-cta-section__ring::after {
+  content: "";
+  position: absolute;
+  inset: 18%;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--landing-teal) 18%, transparent);
+  animation: landing-ring-expand 5s ease-out 1.2s infinite;
+}
+
+@keyframes landing-ring-expand {
+  0% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(0.72);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.25);
+  }
+}
+
+/* ── Interactive cards ─────────────────────────────────────────────────── */
+.landing-feature-card,
+.landing-bento__card,
+.landing-trust-card,
+.landing-problem-card,
+.landing-onboarding-card,
+.landing-compliance-card,
+.landing-problem-insight {
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
+}
+
+.landing-feature-card:hover,
+.landing-bento__card:hover,
+.landing-trust-card:hover,
+.landing-problem-card:hover,
+.landing-onboarding-card:hover,
+.landing-problem-insight:hover {
+  transform: translateY(-5px);
+  border-color: color-mix(
+    in srgb,
+    var(--accent-primary) 28%,
+    var(--border-medium)
+  );
+  box-shadow:
+    var(--shadow-soft),
+    0 0 0 1px color-mix(in srgb, var(--accent-primary) 10%, transparent);
+}
+
+.landing-faq-item {
+  transition:
+    border-color 0.25s ease,
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.25s ease;
+}
+
+.landing-faq-item:hover {
+  border-color: var(--border-medium);
+  transform: translateY(-1px);
+}
+
+.landing-faq-item[open] {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+}
+
+.landing-faq-item[open] summary::after {
+  transform: rotate(45deg);
+}
+
+/* ── Grid parallax on mesh ─────────────────────────────────────────────── */
+.landing-bg__mesh {
+  animation: landing-mesh-shift 18s ease-in-out infinite alternate;
+}
+
+@keyframes landing-mesh-shift {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-2%, 3%) scale(1.04);
+    opacity: 0.9;
+  }
+}
+
+.landing-bg__grid {
+  animation: landing-grid-fade 10s ease-in-out infinite alternate;
+}
+
+@keyframes landing-grid-fade {
+  0% {
+    opacity: 0.28;
+  }
+  100% {
+    opacity: 0.42;
+  }
+}
+
+/* ── Nav polish ────────────────────────────────────────────────────────── */
+.landing-nav {
+  transition:
+    background 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease,
+    backdrop-filter 0.35s ease;
+}
+
+.landing-nav.is-scrolled {
+  box-shadow:
+    var(--shadow-sm),
+    0 1px 0 color-mix(in srgb, var(--accent-primary) 6%, transparent);
+}
+
+/* ── Mobile nav cascade ────────────────────────────────────────────────── */
+.landing-mobile-nav.is-open nav a,
+.landing-mobile-nav.is-open nav .landing-cta,
+.landing-mobile-nav.is-open nav button {
+  animation: landing-mobile-item 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.landing-mobile-nav.is-open nav a:nth-child(1) {
+  animation-delay: 0.04s;
+}
+.landing-mobile-nav.is-open nav a:nth-child(2) {
+  animation-delay: 0.08s;
+}
+.landing-mobile-nav.is-open nav a:nth-child(3) {
+  animation-delay: 0.12s;
+}
+.landing-mobile-nav.is-open nav a:nth-child(4) {
+  animation-delay: 0.16s;
+}
+.landing-mobile-nav.is-open nav a:nth-child(5) {
+  animation-delay: 0.2s;
+}
+.landing-mobile-nav.is-open nav a:nth-child(6) {
+  animation-delay: 0.24s;
+}
+.landing-mobile-nav.is-open nav .landing-cta,
+.landing-mobile-nav.is-open nav button {
+  animation-delay: 0.28s;
+}
+
+@keyframes landing-mobile-item {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Problem insight value glow ────────────────────────────────────────── */
+.landing-problem-insight__value {
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 24px
+    color-mix(in srgb, var(--accent-primary) 20%, transparent);
+}
+
+/* ── Product tour / tabs subtle active pulse ───────────────────────────── */
+.landing-product-tour__tab[aria-selected="true"],
+.landing-product-tour__tab.is-active {
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--accent-primary) 30%, transparent);
+}
+
+/* ── Selection highlight ───────────────────────────────────────────────── */
+.landing ::selection {
+  background: color-mix(in srgb, var(--accent-primary) 35%, transparent);
+  color: var(--text-strong);
 }

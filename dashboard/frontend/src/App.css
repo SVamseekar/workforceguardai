@@ -354,17 +354,42 @@
 
 .metric-card {
   cursor: pointer;
-  animation: panel-rise 0.4s ease-out both;
+  animation: panel-rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.metric-card:nth-child(1) {
+  animation-delay: 0.02s;
+}
+.metric-card:nth-child(2) {
+  animation-delay: 0.07s;
+}
+.metric-card:nth-child(3) {
+  animation-delay: 0.12s;
+}
+.metric-card:nth-child(4) {
+  animation-delay: 0.17s;
+}
+.metric-card:nth-child(5) {
+  animation-delay: 0.22s;
+}
+.metric-card:nth-child(6) {
+  animation-delay: 0.27s;
 }
 
 .metric-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-soft);
+  transform: translateY(-4px);
+  box-shadow:
+    var(--shadow-soft),
+    0 0 0 1px color-mix(in srgb, var(--accent-primary) 14%, transparent);
   border-color: var(--border-medium);
 }
 
 .panel {
-  animation: panel-rise 0.5s ease-out both;
+  animation: panel-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .metric-card__value {
@@ -374,6 +399,13 @@
   color: var(--text-strong);
   letter-spacing: -0.03em;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
+  transition: text-shadow 0.3s ease;
+}
+
+.metric-card:hover .metric-card__value {
+  text-shadow: 0 0 24px
+    color-mix(in srgb, var(--accent-primary) 18%, transparent);
 }
 
 .metric-card__delta {
@@ -1581,11 +1613,39 @@ h3.analyst-console__response-top {
 @keyframes panel-rise {
   0% {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(14px);
+    filter: blur(2px);
   }
   100% {
     opacity: 1;
     transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes soft-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  50% {
+    box-shadow: 0 0 24px
+      color-mix(in srgb, var(--accent-primary) 12%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .metric-card,
+  .panel,
+  .drawer,
+  .skeleton {
+    animation: none !important;
+    filter: none !important;
+    transition: none !important;
+  }
+
+  .metric-card:hover {
+    transform: none;
   }
 }
 

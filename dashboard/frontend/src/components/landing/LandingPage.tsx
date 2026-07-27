@@ -51,8 +51,10 @@ const FAQS = [
 
 function ProductShowcase() {
   return (
-    <div className="landing-showcase">
+    <div className="landing-showcase landing-hero-enter landing-hero-enter--visual">
+      <div className="landing-showcase__glow" aria-hidden="true" />
       <div className="landing-showcase__frame">
+        <div className="landing-showcase__shine" aria-hidden="true" />
         <div className="landing-showcase__chrome">
           <span className="landing-showcase__dot" />
           <span className="landing-showcase__dot" />
@@ -92,22 +94,22 @@ function LandingHomeContent() {
       <section className="landing-hero">
         <div className="landing-hero__inner">
           <div className="landing-hero__copy">
-            <div className="landing-hero__badge">
-              <Sparkles size={14} />
+            <div className="landing-hero__badge landing-hero-enter landing-hero-enter--1">
+              <Sparkles size={14} className="landing-hero__badge-icon" />
               <span>Directive (EU) 2023/970</span>
               <span className="landing-hero__badge-sep" />
               <span className="landing-hero__badge-deadline">Transposition · 7 Jun 2026</span>
             </div>
-            <h1>
+            <h1 className="landing-hero-enter landing-hero-enter--2">
               Pay transparency compliance,
               <em> built on Eurostat data</em>
               {' '}and a hash-chained audit trail
             </h1>
-            <p className="landing-hero__lede">
+            <p className="landing-hero__lede landing-hero-enter landing-hero-enter--3">
               Map Eurostat labour-market data and your payroll to Directive (EU) 2023/970 workflows —
               composite indices, category-level review, and evidence export with provenance on every figure.
             </p>
-            <p className="landing-hero__proof">
+            <p className="landing-hero__proof landing-hero-enter landing-hero-enter--4">
               <Database size={14} aria-hidden="true" />
               {' '}
               {market.euMemberStates} member states · {market.naceSectors} NACE sectors · {market.yearRange}
@@ -117,14 +119,14 @@ function LandingHomeContent() {
           <div className="landing-hero__visual">
             <ProductShowcase />
           </div>
-          <div className="landing-hero__bar">
+          <div className="landing-hero__bar landing-hero-enter landing-hero-enter--5">
             <div className="landing-hero__actions">
               <button
                 type="button"
-                className="landing-cta landing-cta--primary landing-cta--large"
+                className="landing-cta landing-cta--primary landing-cta--large landing-cta--shimmer"
                 onClick={openDemo}
               >
-                Request a demo <ArrowRight size={18} />
+                Request a demo <ArrowRight size={18} className="landing-cta__arrow" />
               </button>
               <Link
                 to="/app"
@@ -214,9 +216,9 @@ function LandingHomeContent() {
               Legal scope, payroll isolation, methodology, and access.
             </p>
           </div>
-          <div className="landing-faq-list">
+          <div className="landing-faq-list landing-stagger">
             {FAQS.map((item) => (
-              <details className="landing-faq-item" key={item.q}>
+              <details className="landing-faq-item landing-stagger__item" key={item.q}>
                 <summary>{item.q}</summary>
                 <p>{item.a}</p>
               </details>
@@ -228,6 +230,7 @@ function LandingHomeContent() {
       <section className="landing-cta-section landing-reveal">
         <div className="landing-cta-section__inner">
           <div className="landing-cta-section__glow" aria-hidden="true" />
+          <div className="landing-cta-section__ring" aria-hidden="true" />
           <MessageSquare size={28} />
           <h2>See where your organisation stands</h2>
           <p>
@@ -237,10 +240,10 @@ function LandingHomeContent() {
           <div className="landing-cta-section__actions">
             <button
               type="button"
-              className="landing-cta landing-cta--primary landing-cta--large"
+              className="landing-cta landing-cta--primary landing-cta--large landing-cta--shimmer"
               onClick={openDemo}
             >
-              Request a demo <ArrowRight size={18} />
+              Request a demo <ArrowRight size={18} className="landing-cta__arrow" />
             </button>
             <Link
               to="/app"
