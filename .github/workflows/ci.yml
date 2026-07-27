@@ -89,7 +89,7 @@ jobs:
         if: needs.changes.outputs.python != 'true'
         run: echo "No Python changes in this diff."
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         if: needs.changes.outputs.python == 'true'
         with:
           python-version: "3.12"
@@ -186,7 +186,7 @@ jobs:
         if: needs.changes.outputs.analytics != 'true'
         run: echo "No analytics changes in this diff."
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         if: needs.changes.outputs.analytics == 'true'
         with:
           python-version: "3.12"
