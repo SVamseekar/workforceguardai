@@ -1,5 +1,6 @@
 import { AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { LANDING_FACTS } from '../landingFacts'
+import { AnimatedStatValue } from './AnimatedStatValue'
 import { SectionLabel } from './SectionLabel'
 
 const CHAOS = [
@@ -53,10 +54,13 @@ export function ProblemSection() {
         </p>
       </div>
 
-      <div className="landing-problem-insights">
+      <div className="landing-problem-insights landing-stagger">
         {INSIGHTS.map((item) => (
-          <article key={item.label} className="landing-problem-insight">
-            <span className="landing-problem-insight__value">{item.value}</span>
+          <article key={item.label} className="landing-problem-insight landing-stagger__item">
+            <AnimatedStatValue
+              display={item.value}
+              className="landing-problem-insight__value"
+            />
             <span className="landing-problem-insight__label">{item.label}</span>
             <p>{item.detail}</p>
           </article>
