@@ -1,11 +1,13 @@
 import io
+import logging
 import os
 import re
 import subprocess
 import tempfile
 import uuid
-from pathlib import Path
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
@@ -17,10 +19,17 @@ from starlette.middleware.sessions import SessionMiddleware
 from auth import db as auth_db
 from auth import sessions as auth_sessions
 from auth.dependencies import AuthContext, require_role, require_session
-from auth.oauth import get_oauth_client, oauth_auto_provision_enabled, parse_provider_profile
+from auth.oauth import (
+    authorize_access_token_kwargs,
+    get_oauth_client,
+    oauth_auto_provision_enabled,
+    parse_provider_profile,
+)
 from auth.redirects import frontend_login_redirect
 from auth.repository import AuthRepository
 from service import AnalyticsRepository, RepositoryRegistry
+
+logger = logging.getLogger("workforceguard.api")
 
 
 class AskRequest(BaseModel):
@@ -98,7 +107,22 @@ repository_registry = RepositoryRegistry(root_dir)
 def get_repository(ctx: AuthContext = Depends(require_session)) -> AnalyticsRepository:
     return repository_registry.get_for_tenant(ctx.tenant_id)
 
-app = FastAPI(title="WorkforceGuard Analytics API")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Ensure auth schema exists before serving OAuth / session routes."""
+    if os.environ.get("DATABASE_URL"):
+        try:
+            pool = await auth_db.get_pool()
+            await auth_db.run_migrations(pool)
+            logger.info("Auth database migrations applied")
+        except Exception:
+            logger.exception("Auth database migrations failed at startup")
+            raise
+    yield
+
+
+app = FastAPI(title="WorkforceGuard Analytics API", lifespan=lifespan)
 
 app.add_middleware(SessionMiddleware, secret_key=os.environ["SESSION_SECRET"])
 
@@ -170,7 +194,11 @@ async def auth_callback(provider: str, request: Request):
 
     try:
         client = get_oauth_client(provider)
-        token = await client.authorize_access_token(request)
+        # Microsoft /common multi-tenant: personal + work issuers differ from
+        # discovery template; see authorize_access_token_kwargs.
+        token = await client.authorize_access_token(
+            request, **authorize_access_token_kwargs(provider)
+        )
         userinfo = token.get("userinfo") or await client.userinfo(token=token)
         provider_subject, email, display_name = parse_provider_profile(provider, userinfo)
 
@@ -198,11 +226,15 @@ async def auth_callback(provider: str, request: Request):
         expires_at = datetime.now(timezone.utc) + timedelta(days=7)
         async with pool.acquire() as conn:
             await conn.execute(
-                "insert into sessions (id, user_id, tenant_id, expires_at) values ($1, $2, $3, $4)",
+                """
+                insert into sessions (id, user_id, tenant_id, expires_at, auth_provider)
+                values ($1, $2, $3, $4, $5)
+                """,
                 session_id,
                 user.id,
                 tenant_id,
                 expires_at,
+                provider,
             )
 
         response = RedirectResponse(url=frontend_login_redirect())
@@ -217,6 +249,7 @@ async def auth_callback(provider: str, request: Request):
         )
         return response
     except Exception:  # pragma: no cover - token exchange or persistence failure
+        logger.exception("OAuth callback failed for provider=%s", provider)
         return RedirectResponse(url=frontend_login_redirect("sign_in_failed"))
 
 
@@ -236,7 +269,30 @@ async def auth_logout(request: Request):
 
 @app.get("/api/auth/me")
 async def auth_me(ctx: AuthContext = Depends(require_session)):
-    return {"user_id": ctx.user_id, "tenant_id": ctx.tenant_id, "role": ctx.role}
+    pool = await auth_db.get_pool()
+    linked_providers: list[str] = []
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            select provider from oauth_identities
+            where user_id = $1
+            order by provider
+            """,
+            ctx.user_id,
+        )
+        linked_providers = [r["provider"] for r in rows]
+
+    return {
+        "user_id": ctx.user_id,
+        "tenant_id": ctx.tenant_id,
+        "role": ctx.role,
+        "email": ctx.email,
+        "display_name": ctx.display_name,
+        # How this browser session was created (google | microsoft | null if legacy).
+        "auth_provider": ctx.auth_provider,
+        # All identity providers linked to this user account.
+        "linked_providers": linked_providers,
+    }
 
 
 @app.get("/")

@@ -31,9 +31,27 @@ export function TopBar({ theme, onToggleTheme }: TopBarProps) {
           <span className="topbar__context-label">{context}</span>
         </div>
         {user && (
-          <span className="topbar__role" title={`Tenant ${user.tenantId}`}>
-            {isAdmin ? 'Admin' : 'Member'}
-          </span>
+          <div
+            className="topbar__identity"
+            title={`Tenant ${user.tenantId}${
+              user.linkedProviders.length
+                ? ` · Linked: ${user.linkedProviders.join(', ')}`
+                : ''
+            }`}
+          >
+            <span className="topbar__identity-name">
+              {user.displayName || user.email || 'Signed in'}
+            </span>
+            {user.email && user.displayName ? (
+              <span className="topbar__identity-email">{user.email}</span>
+            ) : null}
+            <span className="topbar__identity-meta">
+              {isAdmin ? 'Admin' : 'Member'}
+              {user.authProvider
+                ? ` · via ${user.authProvider === 'google' ? 'Google' : 'Microsoft'}`
+                : ''}
+            </span>
+          </div>
         )}
         <button className="theme-toggle-btn" onClick={onToggleTheme} aria-label="Toggle Theme">
           {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}

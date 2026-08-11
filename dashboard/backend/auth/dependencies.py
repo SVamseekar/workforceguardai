@@ -13,6 +13,9 @@ class AuthContext:
     user_id: str
     tenant_id: str
     role: str
+    email: str = ""
+    display_name: str = ""
+    auth_provider: str | None = None
 
 
 async def require_session(request: Request) -> AuthContext:
@@ -28,9 +31,11 @@ async def require_session(request: Request) -> AuthContext:
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
             """
-            select s.user_id, s.tenant_id, m.role
+            select s.user_id, s.tenant_id, s.auth_provider, m.role,
+                   u.email, u.display_name
             from sessions s
             join memberships m on m.user_id = s.user_id and m.tenant_id = s.tenant_id
+            join users u on u.id = s.user_id
             where s.id = $1 and s.expires_at > now()
             """,
             session_id,
@@ -39,7 +44,14 @@ async def require_session(request: Request) -> AuthContext:
     if row is None:
         raise HTTPException(status_code=401, detail="Session expired or invalid")
 
-    return AuthContext(user_id=str(row["user_id"]), tenant_id=str(row["tenant_id"]), role=row["role"])
+    return AuthContext(
+        user_id=str(row["user_id"]),
+        tenant_id=str(row["tenant_id"]),
+        role=row["role"],
+        email=row["email"] or "",
+        display_name=row["display_name"] or "",
+        auth_provider=row["auth_provider"],
+    )
 
 
 def require_role(min_role: str):
