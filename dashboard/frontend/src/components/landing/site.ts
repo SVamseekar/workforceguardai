@@ -63,6 +63,7 @@ export type NavLink =
   | { kind: 'route'; to: string; label: string }
   | { kind: 'hash'; hash: string; label: string }
 
+/** Full set — mobile drawer + footer-style complete list */
 export const NAV_LINKS: NavLink[] = [
   { kind: 'hash', hash: '#product-tour', label: 'Product' },
   { kind: 'hash', hash: '#compliance', label: 'Compliance' },
@@ -72,6 +73,24 @@ export const NAV_LINKS: NavLink[] = [
   { kind: 'hash', hash: '#contact', label: 'Contact' },
   { kind: 'hash', hash: '#faq', label: 'FAQ' },
   { kind: 'route', to: '/mission', label: 'Mission' },
+]
+
+/**
+ * Compact desktop strip: keeps the top bar one row on laptop widths.
+ * Remaining items live under "More" (and the mobile drawer still has everything).
+ */
+export const NAV_LINKS_PRIMARY: NavLink[] = [
+  { kind: 'hash', hash: '#product-tour', label: 'Product' },
+  { kind: 'hash', hash: '#compliance', label: 'Compliance' },
+  { kind: 'hash', hash: '#research', label: 'Research' },
+  { kind: 'hash', hash: '#contact', label: 'Contact' },
+  { kind: 'route', to: '/mission', label: 'Mission' },
+]
+
+export const NAV_LINKS_MORE: NavLink[] = [
+  { kind: 'hash', hash: '#transposition', label: 'Transposition' },
+  { kind: 'hash', hash: '#demo', label: 'See it live' },
+  { kind: 'hash', hash: '#faq', label: 'FAQ' },
 ]
 
 export const PAGE_SECTIONS = [

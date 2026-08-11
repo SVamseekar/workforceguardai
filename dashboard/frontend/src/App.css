@@ -2267,6 +2267,46 @@ h3.analyst-console__response-top {
   border: 1px solid var(--border-light);
 }
 
+.topbar__identity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  max-width: 240px;
+  padding: 4px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-elevated);
+  line-height: 1.25;
+}
+
+.topbar__identity-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.topbar__identity-email {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.topbar__identity-meta {
+  font-size: 0.66rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
 .topbar__logout {
   display: inline-flex;
   align-items: center;

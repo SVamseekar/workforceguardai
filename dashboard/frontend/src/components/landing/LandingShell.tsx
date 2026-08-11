@@ -1,11 +1,19 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, Moon, Sun, X } from 'lucide-react'
+import { ChevronDown, Menu, Moon, Sun, X } from 'lucide-react'
 import { LogoMark } from '../shared/LogoMark'
 import { CookieConsent } from './components/CookieConsent'
 import { LandingFooter } from './components/LandingFooter'
 import { useHashNavigation } from './hooks/useHashNavigation'
-import { NAV_LINKS } from './site'
+import { NAV_LINKS, NAV_LINKS_MORE, NAV_LINKS_PRIMARY, type NavLink } from './site'
 
 type LandingDemoContextValue = {
   openDemo: () => void
@@ -25,9 +33,51 @@ type LandingShellProps = {
   children: ReactNode
 }
 
+function NavLinkItem({
+  link,
+  pathname,
+  hashHref,
+  onHashClick,
+  onNavigate,
+  className,
+}: {
+  link: NavLink
+  pathname: string
+  hashHref: (hash: string) => string
+  onHashClick: (event: React.MouseEvent<HTMLAnchorElement>, hash: string) => void
+  onNavigate?: () => void
+  className?: string
+}) {
+  if (link.kind === 'route') {
+    return (
+      <Link
+        to={link.to}
+        className={className}
+        aria-current={pathname === link.to ? 'page' : undefined}
+        onClick={onNavigate}
+      >
+        {link.label}
+      </Link>
+    )
+  }
+  return (
+    <a
+      href={hashHref(link.hash)}
+      className={className}
+      onClick={(e) => {
+        onHashClick(e, link.hash)
+        onNavigate?.()
+      }}
+    >
+      {link.label}
+    </a>
+  )
+}
+
 export function LandingShell({ children }: LandingShellProps) {
   const location = useLocation()
   const onHome = location.pathname === '/'
+  const moreMenuId = useId()
 
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('theme')
@@ -35,8 +85,10 @@ export function LandingShell({ children }: LandingShellProps) {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   })
   const [navOpen, setNavOpen] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const navRef = useRef<HTMLElement>(null)
+  const moreRef = useRef<HTMLDivElement>(null)
 
   const closeNav = () => setNavOpen(false)
   const { goToHash } = useHashNavigation(closeNav)
@@ -62,8 +114,27 @@ export function LandingShell({ children }: LandingShellProps) {
     }
   }, [navOpen])
 
+  useEffect(() => {
+    if (!moreOpen) return
+    const onPointerDown = (event: MouseEvent) => {
+      if (moreRef.current && !moreRef.current.contains(event.target as Node)) {
+        setMoreOpen(false)
+      }
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMoreOpen(false)
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [moreOpen])
+
   const toggleTheme = () => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
   const openDemo = () => {
+    setMoreOpen(false)
     goToHash('#contact')
   }
 
@@ -84,30 +155,48 @@ export function LandingShell({ children }: LandingShellProps) {
       <header ref={navRef} className={`landing-nav ${scrolled ? 'is-scrolled' : ''}`}>
         <div className="landing-nav__inner">
           <Link to="/" className="landing-nav__brand" onClick={closeNav}>
-            <LogoMark size={38} className="landing-nav__logo" />
+            <LogoMark size={32} className="landing-nav__logo" />
             <span className="landing-nav__wordmark">WorkforceGuard AI</span>
           </Link>
 
           <nav className="landing-nav__links" aria-label="Primary">
-            {NAV_LINKS.map((link) =>
-              link.kind === 'route' ? (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  aria-current={location.pathname === link.to ? 'page' : undefined}
-                >
-                  {link.label}
-                </Link>
-              ) : (
-                <a
-                  key={link.hash}
-                  href={hashHref(link.hash)}
-                  onClick={(e) => handleHashClick(e, link.hash)}
-                >
-                  {link.label}
-                </a>
-              ),
-            )}
+            {NAV_LINKS_PRIMARY.map((link) => (
+              <NavLinkItem
+                key={link.kind === 'route' ? link.to : link.hash}
+                link={link}
+                pathname={location.pathname}
+                hashHref={hashHref}
+                onHashClick={handleHashClick}
+              />
+            ))}
+
+            <div className="landing-nav__more" ref={moreRef}>
+              <button
+                type="button"
+                className="landing-nav__more-btn"
+                aria-expanded={moreOpen}
+                aria-controls={moreMenuId}
+                onClick={() => setMoreOpen((v) => !v)}
+              >
+                More
+                <ChevronDown size={14} className={moreOpen ? 'is-open' : undefined} aria-hidden />
+              </button>
+              {moreOpen ? (
+                <div id={moreMenuId} className="landing-nav__more-menu" role="menu">
+                  {NAV_LINKS_MORE.map((link) => (
+                    <NavLinkItem
+                      key={link.kind === 'route' ? link.to : link.hash}
+                      link={link}
+                      pathname={location.pathname}
+                      hashHref={hashHref}
+                      onHashClick={handleHashClick}
+                      onNavigate={() => setMoreOpen(false)}
+                      className="landing-nav__more-item"
+                    />
+                  ))}
+                </div>
+              ) : null}
+            </div>
           </nav>
 
           <div className="landing-nav__actions">
@@ -123,10 +212,11 @@ export function LandingShell({ children }: LandingShellProps) {
             </Link>
             <button
               type="button"
-              className="landing-cta landing-cta--primary landing-nav__cta"
+              className="landing-cta landing-cta--primary landing-nav__cta landing-nav__cta--demo"
               onClick={openDemo}
             >
-              Request a demo
+              <span className="landing-nav__cta-full">Request a demo</span>
+              <span className="landing-nav__cta-short">Demo</span>
             </button>
             <button
               className="landing-nav__menu-btn"
@@ -142,21 +232,16 @@ export function LandingShell({ children }: LandingShellProps) {
 
       <div className={`landing-mobile-nav ${navOpen ? 'is-open' : ''}`} aria-hidden={!navOpen}>
         <nav aria-label="Mobile">
-          {NAV_LINKS.map((link) =>
-            link.kind === 'route' ? (
-              <Link key={link.to} to={link.to} onClick={closeNav}>
-                {link.label}
-              </Link>
-            ) : (
-              <a
-                key={link.hash}
-                href={hashHref(link.hash)}
-                onClick={(e) => handleHashClick(e, link.hash)}
-              >
-                {link.label}
-              </a>
-            ),
-          )}
+          {NAV_LINKS.map((link) => (
+            <NavLinkItem
+              key={link.kind === 'route' ? link.to : link.hash}
+              link={link}
+              pathname={location.pathname}
+              hashHref={hashHref}
+              onHashClick={handleHashClick}
+              onNavigate={closeNav}
+            />
+          ))}
           <Link
             to="/app"
             className="landing-cta landing-nav__cta--signin"

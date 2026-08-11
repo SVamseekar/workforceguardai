@@ -1,3 +1,6 @@
+-- Prefer extension first so DEFAULT gen_random_uuid() is always available.
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE IF NOT EXISTS tenants (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
@@ -35,7 +38,10 @@ CREATE TABLE IF NOT EXISTS sessions (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    expires_at TIMESTAMPTZ NOT NULL
+    expires_at TIMESTAMPTZ NOT NULL,
+    -- google | microsoft | null for legacy sessions created before this column
+    auth_provider TEXT
 );
 
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
+-- Idempotent upgrade for databases created before auth_provider existed.
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS auth_provider TEXT;
