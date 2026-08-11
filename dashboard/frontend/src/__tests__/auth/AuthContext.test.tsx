@@ -26,7 +26,15 @@ describe('AuthContext', () => {
 
   it('renders signed-in state when /api/auth/me succeeds', async () => {
     ;(api.get as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: { user_id: 'u1', tenant_id: 't1', role: 'admin' },
+      data: {
+        user_id: 'u1',
+        tenant_id: 't1',
+        role: 'admin',
+        email: 'a@example.com',
+        display_name: 'Ada',
+        auth_provider: 'google',
+        linked_providers: ['google'],
+      },
     })
 
     render(

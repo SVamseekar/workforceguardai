@@ -5,6 +5,7 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+!.env.docker.example
 !deploy/.env.production.example
 analytics/.user.yml
 **/*.duckdb
