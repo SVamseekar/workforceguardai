@@ -1,4 +1,4 @@
-scikit-learn>=1.5
+scikit-learn>=1.9.0
 scipy>=1.13
 matplotlib>=3.9
 seaborn>=0.13
