@@ -111,6 +111,7 @@ export default function App() {
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
+          <GoogleAnalytics />
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/mission" element={<MissionPage />} />
@@ -129,7 +130,6 @@ export default function App() {
             />
           </Routes>
         </BrowserRouter>
-        <GoogleAnalytics />
       </QueryClientProvider>
     </HelmetProvider>
   )

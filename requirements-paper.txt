@@ -1,7 +1,23 @@
-scikit-learn>=1.5
-scipy>=1.13
-matplotlib>=3.9
-seaborn>=0.13
+# Paper replication stack (statistical pipeline behind main.tex).
+# Install into a venv:
+#   python3.12 -m venv .venv && source .venv/bin/activate
+#   pip install -r requirements.txt -r requirements-paper.txt
+#
+# Versions below match a clean install that reproduces Table 2 / robustness D
+# reference coefficients exactly (verified 2026-08).
+numpy>=1.26,<3
+pandas>=2.2,<4
+pyarrow>=14
+scikit-learn>=1.5,<2
+scipy>=1.13,<2
+matplotlib>=3.9,<4
+seaborn>=0.13,<1
 adjustText>=1.2
-linearmodels>=6.0
-statsmodels>=0.14
+linearmodels>=6.0,<8
+statsmodels>=0.14,<1
+wildboottest>=0.3.0
+numba>=0.59
+tabulate>=0.9
+duckdb>=1.0
+# Optional full warehouse rebuild:
+# dbt-duckdb>=1.8

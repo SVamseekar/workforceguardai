@@ -122,6 +122,20 @@ dbt run
 dbt test
 ```
 
+### Paper replication (tables/figures in `main.tex`)
+
+See **[paper/README.md](paper/README.md)** for the full replication recipe
+(setup, one-command table/figure rebuild, expected runtime, wild-cluster
+bootstrap, and Zenodo status). Short version:
+
+```bash
+python3.12 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt -r requirements-paper.txt
+python paper/scripts/panel_fe_regression.py   # Table 2
+python paper/scripts/robustness_checks.py     # vacancy-rate robustness
+python paper/scripts/wild_cluster_bootstrap.py
+```
+
 ---
 
 ## Stack
