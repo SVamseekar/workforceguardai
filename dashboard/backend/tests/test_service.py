@@ -1183,19 +1183,20 @@ class AnalyticsRepositoryTests(unittest.TestCase):
             ROOT_DIR / "analytics" / "models" / "marts" / "core" / "mart_semantic_metrics.sql"
         ).read_text(encoding="utf-8")
 
-        expected_weights = [
-            "0.4500",
-            "0.2500",
-            "0.1500",
-            "0.1500",
+        expected_formula_fragments = [
+            "labour_resilience * 0.4500",
+            "hiring_pressure_index) * 0.2500",
+            "digital_employer_share * 3) * 0.1500",
+            "green_demand_share * 38) * 0.1500",
         ]
-        for weight in expected_weights:
+        for fragment in expected_formula_fragments:
             self.assertIn(
-                weight,
+                fragment,
                 formula_sql,
-                f"Expected transition_readiness weight {weight} not found in "
-                "mart_semantic_metrics.sql -- formula may have drifted from "
-                "the validated weights without this test being updated.",
+                f"Expected transition_readiness formula fragment {fragment!r} "
+                "not found in mart_semantic_metrics.sql -- formula may have "
+                "drifted from the validated weights without this test being "
+                "updated.",
             )
 
     def test_transition_readiness_unavailable_when_digital_demand_signal_missing(self):

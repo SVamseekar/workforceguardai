@@ -119,7 +119,9 @@ def build_panel(conn: duckdb.DuckDBPyConnection) -> tuple[list[str], np.ndarray]
 
     rows = []
     for geo in countries:
-        green_share = (green_fte[geo] / employed[geo]) * 100
+        # green_sector_fte is raw FTE headcount; employed_persons_total is
+        # thousands of persons (THS_PER). Match mart_semantic_metrics.sql.
+        green_share = (green_fte[geo] / (employed[geo] * 1000)) * 100
         hiring_pressure_raw = (
             vacancy[geo] * 11
             + max(0, 9 - unemployment[geo]) * 4
