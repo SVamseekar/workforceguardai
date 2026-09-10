@@ -245,3 +245,13 @@ jobs:
         run: |
           dbt parse --profiles-dir .
           dbt compile --profiles-dir .
+
+      - name: Build models
+        if: needs.changes.outputs.analytics == 'true'
+        run: |
+          dbt seed --profiles-dir .
+          dbt run --profiles-dir . --exclude tag:internal
+
+      - name: Run dbt tests
+        if: needs.changes.outputs.analytics == 'true'
+        run: dbt test --profiles-dir . --exclude tag:internal
