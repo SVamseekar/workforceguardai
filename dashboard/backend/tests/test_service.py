@@ -21,7 +21,7 @@ ANALYTICS_DB_PATH = ROOT_DIR / "data" / "workforceguard_analytics.duckdb"
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
-from service import AnalyticsRepository  # noqa: E402
+from service import AnalyticsRepository, OBSERVED_METRIC_IDS  # noqa: E402
 
 try:  # noqa: E402
     import main
@@ -311,6 +311,39 @@ class AnalyticsRepositoryTests(unittest.TestCase):
         )
         self.assertIn("France", benchmark_recommendation["title"])
         self.assertIn("France", benchmark_recommendation["detail"])
+
+    def test_intelligence_reports_unavailable_semantic_metrics_honestly(self):
+        # Regression guard for issue #79: an unavailable semantic metric (None,
+        # e.g. because mart_semantic_metrics had no real data to score) must
+        # never be silently coerced into a fabricated 0, which would read as
+        # a false "no risk" / "resilient market" signal instead of an honest
+        # "unavailable" one.
+        filters, _ = self.repo.resolve_filters("DE", "DE", "ALL", "latest")
+        observed_metrics_list = [
+            self.repo._build_metric(metric_id, filters) for metric_id in OBSERVED_METRIC_IDS
+        ]
+        observed_metrics = {metric["id"]: metric for metric in observed_metrics_list if metric}
+        comparisons = self.repo._build_comparative_intelligence(filters, observed_metrics)
+        charts = self.repo._build_charts(filters)
+        semantic_metrics_list = self.repo._build_semantic_metrics(observed_metrics, filters)
+        semantic_metrics = {metric["id"]: metric for metric in semantic_metrics_list}
+        for metric in semantic_metrics.values():
+            metric["value"] = None
+            metric["implementation_status"] = "unavailable"
+
+        intelligence = self.repo._build_intelligence(filters, observed_metrics, semantic_metrics, charts, comparisons)
+
+        self.assertEqual(
+            intelligence["headline"],
+            "Not enough external market data is available to summarize conditions for this filter.",
+        )
+        for signal in intelligence["signals"]:
+            self.assertEqual(signal["tone"], "neutral")
+            for evidence_item in signal["evidence_bundle"]["evidence"]:
+                self.assertNotIn("None", str(evidence_item["value"]))
+        for score in intelligence["scores"]:
+            self.assertIsNone(score["score"])
+            self.assertEqual(score["tone"], "neutral")
 
     def test_selected_sector_benchmark_surfaces_partial_coverage(self):
         overview = self.repo.build_overview(geography="DE", sector="C", benchmark_sector="F")

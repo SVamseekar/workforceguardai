@@ -2953,9 +2953,19 @@ class AnalyticsRepository:
         def format_percentage(value: Optional[float]) -> str:
             return f"{value:.1f}%" if value is not None else "Unavailable"
 
-        hiring_pressure = int((semantic_metrics.get("hiring_pressure_index") or {}).get("value") or 0)
-        labour_resilience = int((semantic_metrics.get("labour_resilience") or {}).get("value") or 0)
-        equity_risk = int((semantic_metrics.get("equity_risk_score") or {}).get("value") or 0)
+        def score_or_none(metric_id: str) -> Optional[int]:
+            value = (semantic_metrics.get(metric_id) or {}).get("value")
+            return int(value) if value is not None else None
+
+        def format_score(value: Optional[int]) -> str:
+            return f"{value}/100" if value is not None else "Unavailable"
+
+        # None means the underlying data is missing (see mart_semantic_metrics,
+        # issue #79) and must be treated as "unavailable", not coerced to a
+        # fabricated 0 that would read as a false "no risk" signal below.
+        hiring_pressure = score_or_none("hiring_pressure_index")
+        labour_resilience = score_or_none("labour_resilience")
+        equity_risk = score_or_none("equity_risk_score")
 
         vacancy_rate = metric_value("vacancy_rate")
         employment_rate = metric_value("employment_rate")
@@ -2998,11 +3008,13 @@ class AnalyticsRepository:
                 "lead_metric": active_benchmark_lead,
             }
 
-        if hiring_pressure >= 70 and labour_resilience >= 65:
+        if hiring_pressure is None and labour_resilience is None and equity_risk is None:
+            headline = "Not enough external market data is available to summarize conditions for this filter."
+        elif hiring_pressure is not None and labour_resilience is not None and hiring_pressure >= 70 and labour_resilience >= 65:
             headline = "The market looks resilient, but hiring pressure is intensifying."
-        elif equity_risk >= 70:
+        elif equity_risk is not None and equity_risk >= 70:
             headline = "The clearest external risk signal is pay-equity pressure."
-        elif labour_resilience < 55:
+        elif labour_resilience is not None and labour_resilience < 55:
             headline = "Labour resilience is softening and needs closer review."
         else:
             headline = "Conditions are stable overall, with a few hotspots worth acting on first."
@@ -3040,7 +3052,11 @@ class AnalyticsRepository:
             {
                 "id": "signal_hiring_pressure",
                 "title": "Hiring pressure",
-                "tone": "watch" if hiring_pressure >= 70 else "neutral" if hiring_pressure >= 45 else "good",
+                "tone": (
+                    "watch" if hiring_pressure is not None and hiring_pressure >= 70
+                    else "good" if hiring_pressure is not None and hiring_pressure < 45
+                    else "neutral"
+                ),
                 "detail": (
                     f"Vacancy intensity is {format_percentage(vacancy_rate)} and the tightest sector is {top_vacancy['sector_label']}."
                     if top_vacancy
@@ -3054,7 +3070,7 @@ class AnalyticsRepository:
                     "Hiring pressure",
                     "Grounded summary of the current labour-demand environment.",
                     [
-                        {"label": "Hiring pressure index", "value": f"{hiring_pressure}/100"},
+                        {"label": "Hiring pressure index", "value": format_score(hiring_pressure)},
                         {"label": "Observed vacancy rate", "value": format_percentage(vacancy_rate)},
                         {"label": "Leading vacancy hotspot", "value": top_vacancy["sector_label"] if top_vacancy else "Unavailable"},
                     ],
@@ -3068,13 +3084,17 @@ class AnalyticsRepository:
             {
                 "id": "signal_labour_resilience",
                 "title": "Labour resilience",
-                "tone": "good" if labour_resilience >= 70 else "neutral" if labour_resilience >= 45 else "watch",
+                "tone": (
+                    "good" if labour_resilience is not None and labour_resilience >= 70
+                    else "watch" if labour_resilience is not None and labour_resilience < 45
+                    else "neutral"
+                ),
                 "detail": f"Employment is {format_percentage(employment_rate)} and unemployment is {format_percentage(unemployment_rate)}.",
                 "evidence_bundle": bundle(
                     "Labour resilience",
                     "Combined labour-market strength for the selected geography.",
                     [
-                        {"label": "Labour resilience", "value": f"{labour_resilience}/100"},
+                        {"label": "Labour resilience", "value": format_score(labour_resilience)},
                         {"label": "Employment", "value": format_percentage(employment_rate)},
                         {"label": "Unemployment", "value": format_percentage(unemployment_rate)},
                     ],
@@ -3089,7 +3109,11 @@ class AnalyticsRepository:
             {
                 "id": "signal_equity_risk",
                 "title": "Pay equity pressure",
-                "tone": "watch" if equity_risk >= 70 else "neutral" if equity_risk >= 45 else "good",
+                "tone": (
+                    "watch" if equity_risk is not None and equity_risk >= 70
+                    else "good" if equity_risk is not None and equity_risk < 45
+                    else "neutral"
+                ),
                 "detail": (
                     f"Market pay gap is {pay_gap:.1f}% and the widest hotspot is {top_gap['sector_label']}."
                     if top_gap
@@ -3103,7 +3127,7 @@ class AnalyticsRepository:
                     "Pay equity pressure",
                     "Market-level pay-gap pressure for the selected geography and sector scope.",
                     [
-                        {"label": "Equity risk score", "value": f"{equity_risk}/100"},
+                        {"label": "Equity risk score", "value": format_score(equity_risk)},
                         {"label": "Observed pay gap", "value": format_percentage(pay_gap)},
                         {"label": "Leading pay-gap hotspot", "value": top_gap["sector_label"] if top_gap else "Unavailable"},
                     ],
@@ -3188,7 +3212,7 @@ class AnalyticsRepository:
                 {
                     "id": "recommendation_hiring_focus",
                     "title": f"Focus hiring analysis on {top_vacancy['sector_label']}",
-                    "priority": "high" if hiring_pressure >= 70 else "medium",
+                    "priority": "high" if hiring_pressure is not None and hiring_pressure >= 70 else "medium",
                     "detail": (
                         f"{top_vacancy['sector_label']} has the strongest vacancy signal at {top_vacancy['value']:.1f}%. "
                         "Investigate talent supply, compensation competitiveness, and channel mix there first."
@@ -3198,7 +3222,7 @@ class AnalyticsRepository:
                         f"Focus hiring analysis on {top_vacancy['sector_label']}",
                         "This recommendation is grounded in current vacancy pressure.",
                         [
-                            {"label": "Hiring pressure index", "value": f"{hiring_pressure}/100"},
+                            {"label": "Hiring pressure index", "value": format_score(hiring_pressure)},
                             {"label": "Top vacancy sector", "value": f"{top_vacancy['sector_label']} ({top_vacancy['value']:.1f}%)"},
                             {"label": "Selected geography", "value": filters.geography_label},
                         ],
@@ -3242,7 +3266,7 @@ class AnalyticsRepository:
                 {
                     "id": "recommendation_equity_review",
                     "title": f"Review pay-equity risk in {top_gap['sector_label']}",
-                    "priority": "high" if equity_risk >= 70 else "medium",
+                    "priority": "high" if equity_risk is not None and equity_risk >= 70 else "medium",
                     "detail": (
                         f"{top_gap['sector_label']} shows the widest market pay gap at {top_gap['value']:.1f}%. "
                         "Use this as a benchmark for internal pay-review readiness."
@@ -3252,7 +3276,7 @@ class AnalyticsRepository:
                         f"Review pay-equity risk in {top_gap['sector_label']}",
                         "Grounded in observed market pay-gap signals.",
                         [
-                            {"label": "Equity risk score", "value": f"{equity_risk}/100"},
+                            {"label": "Equity risk score", "value": format_score(equity_risk)},
                             {"label": "Top pay-gap sector", "value": f"{top_gap['sector_label']} ({top_gap['value']:.1f}%)"},
                             {"label": "Selected geography", "value": filters.geography_label},
                         ],
@@ -3287,7 +3311,7 @@ class AnalyticsRepository:
             {
                 "id": "watch_equity_hotspot",
                 "label": "Largest pay-gap hotspot",
-                "tone": "watch" if equity_risk >= 70 else "neutral",
+                "tone": "watch" if equity_risk is not None and equity_risk >= 70 else "neutral",
                 "value": top_gap["sector_label"] if top_gap else "Unavailable",
                 "detail": f"{top_gap['value']:.1f}% gap in the latest annual release." if top_gap else "No pay-gap hotspot available.",
                 "evidence_bundle": bundle(
