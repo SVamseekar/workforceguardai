@@ -10,3 +10,4 @@ asyncpg
 itsdangerous
 authlib
 httpx
+reportlab
