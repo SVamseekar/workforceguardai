@@ -58,7 +58,10 @@ def key_id(private_key: Ed25519PrivateKey) -> str:
 
 
 def _canonical_bytes(payload: Dict[str, Any]) -> bytes:
-    return json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    # allow_nan=False: a stray float('nan') (DuckDB/pandas can produce these)
+    # would otherwise serialize to the literal `NaN`, which is not valid
+    # JSON and no external verifier could re-parse — fail loudly instead.
+    return json.dumps(payload, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
 
 
 def sign_pack(pack: Dict[str, Any], private_key: Ed25519PrivateKey) -> Dict[str, str]:
