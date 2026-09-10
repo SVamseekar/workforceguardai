@@ -17,6 +17,9 @@ License: MIT — [LICENSE](LICENSE).
    `feat:` `fix:` `refactor:` `perf:` `test:` `docs:` `build:` `ci:` `chore:`
 
    No messages like "update", "changes", "fix", "stuff", or "final".
+   Authorship is the maintainer only. Never add `Co-authored-by`,
+   `Co-committed-by`, or any agent/tool attribution (Cursor, Claude,
+   Copilot, Codex, Grok, …). The commit-msg hook and CI reject them.
 5. Open a focused PR into `main`. The **PR title** must be a Conventional
    Commit — squash-merge uses it as the commit subject. Describe what
    changed and why in the body.
@@ -80,7 +83,7 @@ Pre-commit checks file hygiene (whitespace, YAML/JSON/TOML, merge
 conflicts, case clashes, shebangs, Python syntax, debug leftovers),
 private keys, Gitleaks, files larger than 5 MB, LF line endings, and
 commits to `main`. The `commit-msg` hook requires a Conventional Commit
-subject (`feat:`, `fix:`, `chore:`, …).
+subject (`feat:`, `fix:`, `chore:`, …) and rejects co-author trailers.
 
 Never commit:
 
@@ -163,7 +166,8 @@ Auth tests require `DATABASE_URL`; others may skip if Postgres is unavailable.
 PRs and pushes to `main` run pre-commit on the changed files (same hooks
 as locally), secret scan, plus path-filtered Python, frontend (including
 production build), and dbt compile. PR titles are checked as Conventional
-Commits. Jobs fail on errors.
+Commits. Commit messages and the PR body must not contain co-author
+trailers. Jobs fail on errors.
 
 Deploy (GCP + Vercel) runs only after CI succeeds on `main`.
 

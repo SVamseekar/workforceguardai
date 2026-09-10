@@ -18,6 +18,7 @@
 
 - [ ] CI passes locally or I verified the relevant checks
 - [ ] Pre-commit hooks pass (`pre-commit run --all-files`)
+- [ ] No `Co-authored-by` / agent attribution in commits or this body
 - [ ] No secrets, credentials, or tenant data committed
 - [ ] Tests added or updated for behavior changes
 - [ ] README or docs updated if user-facing behavior changed

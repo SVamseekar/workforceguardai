@@ -51,6 +51,16 @@ repos:
     hooks:
       - id: gitleaks
 
+  - repo: local
+    hooks:
+      - id: no-coauthored-by
+        name: forbid Co-authored-by
+        language: python
+        entry: python scripts/check_commit_attribution.py
+        stages: [commit-msg]
+        always_run: true
+        pass_filenames: true
+
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v4.4.0
     hooks:
