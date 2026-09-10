@@ -28,6 +28,7 @@ from auth.oauth import (
 from auth.redirects import frontend_login_redirect
 from auth.repository import AuthRepository
 from service import AnalyticsRepository, RepositoryRegistry
+import evidence_signing
 
 logger = logging.getLogger("workforceguard.api")
 
@@ -383,6 +384,18 @@ def get_evidence_pack(
         benchmark_sector=benchmark_sector,
         actor=ctx.user_id,
     )
+
+
+@app.get("/api/evidence-pack/public-key")
+def get_evidence_pack_public_key(
+    ctx: AuthContext = Depends(require_session),
+):
+    signing_key = evidence_signing.load_signing_key()
+    return {
+        "public_key_pem": evidence_signing.public_key_pem(signing_key),
+        "signing_key_id": evidence_signing.key_id(signing_key),
+        "signature_algorithm": "ed25519",
+    }
 
 
 @app.get("/api/brief")

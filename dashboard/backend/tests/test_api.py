@@ -387,6 +387,14 @@ class EvidencePackRouteTests(unittest.TestCase):
         response = _client.get("/api/evidence-pack")
         self.assertEqual(response.status_code, 200)
 
+    def test_evidence_pack_public_key_returns_pem(self):
+        response = _client.get("/api/evidence-pack/public-key")
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertIn("-----BEGIN PUBLIC KEY-----", body["public_key_pem"])
+        self.assertEqual(body["signature_algorithm"], "ed25519")
+        self.assertEqual(len(body["signing_key_id"]), 8)
+
 
 if __name__ == "__main__":
     unittest.main()
