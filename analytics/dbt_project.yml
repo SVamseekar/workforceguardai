@@ -1,3 +1,6 @@
+# CI runs `dbt seed` + `dbt run --exclude tag:internal` + `dbt test
+# --exclude tag:internal` on any change under analytics/ — see
+# .github/workflows/ci.yml's `analytics` job (issue #85).
 name: workforceguard_analytics
 version: 0.1.0
 config-version: 2

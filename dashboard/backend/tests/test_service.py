@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 import json
+import uuid
 from pathlib import Path
 
 os.environ.setdefault("SESSION_SECRET", "test-secret-not-for-production-use-only")
@@ -21,7 +22,10 @@ ANALYTICS_DB_PATH = ROOT_DIR / "data" / "workforceguard_analytics.duckdb"
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
-from service import AnalyticsRepository  # noqa: E402
+from service import AnalyticsRepository, OBSERVED_METRIC_IDS, tenant_schema_name  # noqa: E402
+import evidence_signing  # noqa: E402
+
+os.environ.setdefault(evidence_signing.SIGNING_KEY_ENV_VAR, evidence_signing.generate_signing_key_b64())
 
 try:  # noqa: E402
     import main
@@ -312,6 +316,39 @@ class AnalyticsRepositoryTests(unittest.TestCase):
         self.assertIn("France", benchmark_recommendation["title"])
         self.assertIn("France", benchmark_recommendation["detail"])
 
+    def test_intelligence_reports_unavailable_semantic_metrics_honestly(self):
+        # Regression guard for issue #79: an unavailable semantic metric (None,
+        # e.g. because mart_semantic_metrics had no real data to score) must
+        # never be silently coerced into a fabricated 0, which would read as
+        # a false "no risk" / "resilient market" signal instead of an honest
+        # "unavailable" one.
+        filters, _ = self.repo.resolve_filters("DE", "DE", "ALL", "latest")
+        observed_metrics_list = [
+            self.repo._build_metric(metric_id, filters) for metric_id in OBSERVED_METRIC_IDS
+        ]
+        observed_metrics = {metric["id"]: metric for metric in observed_metrics_list if metric}
+        comparisons = self.repo._build_comparative_intelligence(filters, observed_metrics)
+        charts = self.repo._build_charts(filters)
+        semantic_metrics_list = self.repo._build_semantic_metrics(observed_metrics, filters)
+        semantic_metrics = {metric["id"]: metric for metric in semantic_metrics_list}
+        for metric in semantic_metrics.values():
+            metric["value"] = None
+            metric["implementation_status"] = "unavailable"
+
+        intelligence = self.repo._build_intelligence(filters, observed_metrics, semantic_metrics, charts, comparisons)
+
+        self.assertEqual(
+            intelligence["headline"],
+            "Not enough external market data is available to summarize conditions for this filter.",
+        )
+        for signal in intelligence["signals"]:
+            self.assertEqual(signal["tone"], "neutral")
+            for evidence_item in signal["evidence_bundle"]["evidence"]:
+                self.assertNotIn("None", str(evidence_item["value"]))
+        for score in intelligence["scores"]:
+            self.assertIsNone(score["score"])
+            self.assertEqual(score["tone"], "neutral")
+
     def test_selected_sector_benchmark_surfaces_partial_coverage(self):
         overview = self.repo.build_overview(geography="DE", sector="C", benchmark_sector="F")
 
@@ -348,6 +385,83 @@ class AnalyticsRepositoryTests(unittest.TestCase):
         self.assertIn("copilot", evidence_pack)
         self.assertIn("brief", evidence_pack)
         self.assertIn("automation", evidence_pack)
+
+    def test_evidence_pack_is_signed_and_verifiable(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.environ[evidence_signing.SIGNING_KEY_ENV_VAR] = evidence_signing.generate_signing_key_b64()
+            events_path = Path(temp_dir) / "governance_events.json"
+            repo = AnalyticsRepository(ROOT_DIR, governance_events_path=events_path)
+
+            pack = repo.build_evidence_pack(actor="test-actor")
+
+            self.assertIn("chain_tip_hash", pack)
+            self.assertIn("integrity", pack)
+            self.assertEqual(pack["integrity"]["signature_algorithm"], "ed25519")
+            signing_key = evidence_signing.load_signing_key()
+            self.assertTrue(
+                evidence_signing.verify_pack(pack, evidence_signing.public_key_pem(signing_key))
+            )
+
+    def test_evidence_pack_chain_tip_hash_excludes_its_own_export_event(self):
+        """build_evidence_pack captures chain_tip_hash BEFORE recording its
+        own 'exported' governance event, so the signed chain_tip_hash never
+        references the export event it is itself about to create (avoiding
+        a self-referential hash). Guards against a future refactor silently
+        reordering the hash-capture and the record_governance_event call."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.environ[evidence_signing.SIGNING_KEY_ENV_VAR] = evidence_signing.generate_signing_key_b64()
+            events_path = Path(temp_dir) / "governance_events.json"
+            repo = AnalyticsRepository(ROOT_DIR, governance_events_path=events_path)
+
+            repo.record_governance_event(
+                {
+                    "action_code": "approved",
+                    "target_type": "evidence_pack",
+                    "target_id": "pre-export-event",
+                    "actor": "test-actor",
+                }
+            )
+            hash_before_export = repo._latest_governance_hash()
+            self.assertNotEqual(hash_before_export, "GENESIS")
+
+            pack = repo.build_evidence_pack(actor="test-actor")
+
+            self.assertEqual(pack["chain_tip_hash"], hash_before_export)
+            # Sanity check: the export call did append its own event, and
+            # the chain tip has moved on beyond what was signed into the pack.
+            self.assertEqual(len(repo.governance_events), 2)
+            self.assertNotEqual(repo._latest_governance_hash(), hash_before_export)
+
+    def test_evidence_pack_export_writes_governance_event(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.environ[evidence_signing.SIGNING_KEY_ENV_VAR] = evidence_signing.generate_signing_key_b64()
+            events_path = Path(temp_dir) / "governance_events.json"
+            repo = AnalyticsRepository(ROOT_DIR, governance_events_path=events_path)
+
+            self.assertEqual(len(repo.governance_events), 0)
+            repo.build_evidence_pack(actor="test-actor")
+
+            self.assertEqual(len(repo.governance_events), 1)
+            event = repo.governance_events[0]
+            self.assertEqual(event["action_code"], "exported")
+            self.assertEqual(event["target_type"], "evidence_pack")
+            self.assertEqual(event["actor"], "test-actor")
+
+    def test_evidence_pack_verification_fails_if_tampered_after_export(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.environ[evidence_signing.SIGNING_KEY_ENV_VAR] = evidence_signing.generate_signing_key_b64()
+            events_path = Path(temp_dir) / "governance_events.json"
+            repo = AnalyticsRepository(ROOT_DIR, governance_events_path=events_path)
+
+            pack = repo.build_evidence_pack(actor="test-actor")
+            signing_key = evidence_signing.load_signing_key()
+            public_pem = evidence_signing.public_key_pem(signing_key)
+
+            tampered = dict(pack)
+            tampered["summary"] = {**pack["summary"], "headline": "Everything is fine, trust us."}
+
+            self.assertTrue(evidence_signing.verify_pack(pack, public_pem))
+            self.assertFalse(evidence_signing.verify_pack(tampered, public_pem))
 
     def test_phase5_copilot_briefs_and_workflows_are_governed(self):
         overview = self.repo.build_overview(geography="DE")
@@ -481,6 +595,60 @@ class AnalyticsRepositoryTests(unittest.TestCase):
             self.assertTrue(payload["export"]["includes_hash_chain"])
             self.assertEqual(payload["events"][0]["target_id"], "phase4_pack")
             self.assertEqual(payload["events"][0]["actor"], "compliance_lead")
+
+    def test_governance_event_id_is_a_uuid(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            events_path = Path(temp_dir) / "governance_events.sqlite"
+            repo = AnalyticsRepository(ROOT_DIR, governance_events_path=events_path)
+
+            created = repo.record_governance_event(
+                {
+                    "action_code": "overridden",
+                    "target_type": "recommendation",
+                    "target_id": "recommendation_benchmark",
+                    "reason": "Manual override for a UUID event_id test.",
+                }
+            )
+
+            self.assertNotRegex(created["event_id"], r"^evt_\d+$")
+            # Raises ValueError if not a valid UUID string.
+            parsed = uuid.UUID(created["event_id"])
+            self.assertEqual(str(parsed), created["event_id"])
+
+    def test_governance_event_ids_stay_unique_across_simulated_restarts(self):
+        """event_id must not collide after the process restarts (a fresh
+        AnalyticsRepository instance against the same store), since the old
+        evt_{sequence} scheme derived IDs from in-memory list length, which
+        resets to 0 on every restart -- colliding with IDs already written
+        by a prior process."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            events_path = Path(temp_dir) / "governance_events.sqlite"
+
+            first_process = AnalyticsRepository(ROOT_DIR, governance_events_path=events_path)
+            first_event = first_process.record_governance_event(
+                {
+                    "action_code": "overridden",
+                    "target_type": "recommendation",
+                    "target_id": "before-restart",
+                    "reason": "Event recorded before the simulated restart.",
+                }
+            )
+
+            second_process = AnalyticsRepository(ROOT_DIR, governance_events_path=events_path)
+            second_event = second_process.record_governance_event(
+                {
+                    "action_code": "overridden",
+                    "target_type": "recommendation",
+                    "target_id": "after-restart",
+                    "reason": "Event recorded after the simulated restart.",
+                }
+            )
+
+            self.assertNotEqual(first_event["event_id"], second_event["event_id"])
+            # Chain integrity (hash-based) is unaffected by IDs being
+            # references rather than integrity material.
+            payload = second_process.build_governance_payload()
+            self.assertTrue(payload["integrity"]["verified"])
 
     def test_build_overview_supports_company_benchmark_when_internal_benchmark_mart_has_rows(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -621,6 +789,108 @@ class AnalyticsRepositoryTests(unittest.TestCase):
             self.assertEqual(compliance_answer["category"], "compliance")
             self.assertEqual(compliance_answer["evidence_basis"], "blended")
             self.assertIn("unresolved review items", compliance_answer["answer"])
+
+    def test_build_internal_data_status_finds_tables_in_a_real_tenant_schema(self):
+        """Every real tenant's internal-tagged dbt models land in their own
+        tenant_<id> DuckDB schema, never in 'main' (dbt_project.yml gates
+        internal models on tenant_schema being set). A repo constructed
+        with tenant_id=... must see those tables via _available_tables(),
+        not just via _query()/_connect() -- otherwise
+        _build_internal_data_status() reports company data as permanently
+        unavailable for every real tenant, since the required internal
+        tables never exist in 'main'. Regression test for that gap (issue
+        #83's demo-tenant health check surfaced it: identical shape to
+        what every production tenant with real uploaded data hits)."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            db_path = self._copy_analytics_db(temp_dir)
+            tenant_id = "demo-tenant-schema-test"
+            schema = tenant_schema_name(tenant_id)
+            with duckdb.connect(str(db_path)) as connection:
+                connection.execute(f"create schema if not exists {schema}")
+                connection.execute(
+                    f"""
+                    create table {schema}.stg_internal__payroll_snapshot as
+                    select *
+                    from (
+                        values
+                            ('emp-1', 'SE-1', 'Software Engineer', 'DE', 'eng_ic', 'female', 90000, 'EUR', '2026-03-31'::date, 'active', 'local', 'internal_payroll_snapshot')
+                    ) as seeded(
+                        employee_id, job_code, job_title, country_code, worker_category_id, gender,
+                        base_pay_amount, pay_currency, snapshot_date, employment_status, source_version, dataset_name
+                    )
+                    """
+                )
+                connection.execute(
+                    f"""
+                    create table {schema}.stg_internal__job_architecture as
+                    select *
+                    from (
+                        values
+                            ('SE-1', 'Engineering', 'IC3', 'eng_ic', 'Engineering Individual Contributor', 'urn:esco:occupation:1', 'J62', 'local', 'internal_job_architecture')
+                    ) as seeded(
+                        job_code, job_family, job_level, worker_category_id, worker_category_label,
+                        esco_uri, nace_code, source_version, dataset_name
+                    )
+                    """
+                )
+                connection.execute(
+                    f"""
+                    create table {schema}.fct_internal_pay_snapshot as
+                    select *
+                    from (
+                        values
+                            ('DE::eng_ic::2026-03-31', 'DE', '2026-03-31'::date, 'eng_ic', 'J62', 'urn:esco:occupation:1', 'EUR', 1, 1, 0, 90000, 90000, null, null)
+                    ) as seeded(
+                        internal_pay_snapshot_id, country_code, snapshot_date, worker_category_id, nace_code,
+                        esco_uri, pay_currency, headcount, female_count, male_count, avg_base_pay,
+                        female_avg_base_pay, male_avg_base_pay, internal_gender_pay_gap
+                    )
+                    """
+                )
+                connection.execute(
+                    f"""
+                    create table {schema}.dim_worker_category as
+                    select *
+                    from (
+                        values
+                            ('eng_ic', 'Engineering Individual Contributor', 'Engineering', 'IC3', 'urn:esco:occupation:1', 'J62', 1)
+                    ) as seeded(
+                        worker_category_id, worker_category_label, primary_job_family, representative_job_level,
+                        representative_esco_uri, representative_nace_code, mapped_job_code_count
+                    )
+                    """
+                )
+                connection.execute(
+                    f"""
+                    create table {schema}.mart_internal_market_pay_benchmark as
+                    select *
+                    from (
+                        values
+                            ('DE::eng_ic::2026-03-31', 'DE', '2026-03-31'::date, 'eng_ic', 'Engineering Individual Contributor', 'Engineering', 'IC3', 'J62', 1, 1, 0, null, null, null, null, false)
+                    ) as seeded(
+                        benchmark_row_id, country_code, snapshot_date, worker_category_id, worker_category_label,
+                        primary_job_family, representative_job_level, representative_nace_code, headcount,
+                        female_count, male_count, internal_gender_pay_gap, market_sector_id, market_period_code,
+                        market_gender_pay_gap, market_benchmark_available
+                    )
+                    """
+                )
+
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True, exist_ok=True)
+            self._write_internal_manifest(temp_dir, trusted=True)
+            events_path = Path(temp_dir) / "governance_events.json"
+            repo = AnalyticsRepository(
+                ROOT_DIR,
+                governance_events_path=events_path,
+                internal_data_dir=internal_dir,
+                analytics_db_path=db_path,
+                tenant_id=tenant_id,
+            )
+
+            status = repo._build_internal_data_status()
+
+            self.assertTrue(status["available"], status)
 
     def test_local_sample_internal_rows_do_not_activate_company_claims_without_trust_manifest(self):
         # Uses an isolated repo pointing at the real analytics DB (which has mart rows)
@@ -896,7 +1166,7 @@ class AnalyticsRepositoryTests(unittest.TestCase):
         evidence_pack = self.repo.build_evidence_pack()
 
         self.assertEqual(evidence_pack["pack_type"], "workforceguard_compliance_evidence_pack")
-        self.assertEqual(evidence_pack["pack_version"], "phase-4-v1")
+        self.assertEqual(evidence_pack["pack_version"], "phase-4-v2")
         self.assertIn("compliance_review", evidence_pack)
         self.assertIn("export_contract", evidence_pack["compliance_review"])
         self.assertFalse(evidence_pack["compliance_review"]["export_contract"]["contains_person_level_data"])
@@ -1052,7 +1322,10 @@ class IngestUploadedPayrollTests(unittest.TestCase):
             self.assertEqual(len(df), 10)
             self.assertIn("base_pay_amount", df.columns)
 
-    def test_manifest_updated_with_trusted_flag(self):
+    def test_manifest_updated_as_untrusted_until_promoted(self):
+        """Upload alone must never flip trust -- ADR-5 gates company claims
+        on trusted_for_company_claims, and promotion is a separate,
+        governance-logged admin action (issue #82)."""
         with tempfile.TemporaryDirectory() as temp_dir:
             internal_dir = Path(temp_dir) / "internal"
             internal_dir.mkdir(parents=True)
@@ -1066,7 +1339,7 @@ class IngestUploadedPayrollTests(unittest.TestCase):
             payroll_asset = next(
                 a for a in manifest["assets"] if a["asset_type"] == "internal_payroll_snapshot"
             )
-            self.assertTrue(payroll_asset["trusted_for_company_claims"])
+            self.assertFalse(payroll_asset["trusted_for_company_claims"])
             self.assertEqual(payroll_asset["record_count"], 10)
 
     def test_rejects_upload_with_fewer_than_10_rows(self):
@@ -1238,7 +1511,10 @@ class IngestUploadedJobArchitectureTests(unittest.TestCase):
             self.assertEqual(len(df), 2)
             self.assertEqual(df["nace_code"].tolist(), ["K64", "K64"])
 
-    def test_manifest_updated_with_trusted_flag(self):
+    def test_manifest_updated_as_untrusted_until_promoted(self):
+        """Upload alone must never flip trust -- ADR-5 gates company claims
+        on trusted_for_company_claims, and promotion is a separate,
+        governance-logged admin action (issue #82)."""
         with tempfile.TemporaryDirectory() as temp_dir:
             internal_dir = Path(temp_dir) / "internal"
             internal_dir.mkdir(parents=True)
@@ -1252,7 +1528,7 @@ class IngestUploadedJobArchitectureTests(unittest.TestCase):
             job_arch_asset = next(
                 a for a in manifest["assets"] if a["asset_type"] == "internal_job_architecture"
             )
-            self.assertTrue(job_arch_asset["trusted_for_company_claims"])
+            self.assertFalse(job_arch_asset["trusted_for_company_claims"])
             self.assertEqual(job_arch_asset["record_count"], 2)
 
     def test_rejects_duplicate_job_codes(self):
@@ -1295,6 +1571,141 @@ class IngestUploadedJobArchitectureTests(unittest.TestCase):
             self.assertEqual(result["status"], "accepted")
             self.assertTrue(len(result["validation"]["warnings"]) > 0)
             self.assertIn("payroll job_codes", result["validation"]["warnings"][0])
+
+
+class InternalAssetTrustPromotionTests(unittest.TestCase):
+    """Tests for promote_internal_asset_trust / revoke_internal_asset_trust
+    (issue #82): upload alone must never flip trust, promotion/revocation
+    must each write a governance event, and claims stay unavailable until
+    both required assets are promoted."""
+
+    def _make_csv(self, rows: list[dict]) -> bytes:
+        return pd.DataFrame(rows).to_csv(index=False).encode("utf-8")
+
+    def _valid_payroll_rows(self, n: int = 10) -> list[dict]:
+        return [
+            {
+                "employee_id": f"emp-{i:03d}",
+                "job_code": "SE-1",
+                "country_code": "FR",
+                "worker_category_id": "eng_ic",
+                "gender": "female" if i % 2 == 0 else "male",
+                "base_salary": 60000 + i * 100,
+                "currency": "EUR",
+                "snapshot_date": "2026-03-31",
+            }
+            for i in range(n)
+        ]
+
+    def _valid_job_architecture_rows(self, n: int = 2) -> list[dict]:
+        return [
+            {
+                "job_code": f"SE-{i}",
+                "job_family": "Engineering",
+                "job_level": "IC2",
+                "worker_category_id": "eng_ic",
+                "worker_category_label": "Engineering Individual Contributor",
+                "esco_uri": "urn:esco:occupation:2512",
+                "nace_code": "J62",
+            }
+            for i in range(n)
+        ]
+
+    def test_promote_flips_trust_and_writes_governance_event(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            events_path = Path(temp_dir) / "governance_events.sqlite"
+            repo = AnalyticsRepository(
+                ROOT_DIR, internal_data_dir=internal_dir, governance_events_path=events_path
+            )
+            repo.ingest_uploaded_payroll(self._make_csv(self._valid_payroll_rows()))
+
+            before = repo._internal_claim_trust_status()
+            self.assertIn("internal_payroll_snapshot", before["untrusted_assets"])
+
+            status = repo.promote_internal_asset_trust("internal_payroll_snapshot", actor="admin_user")
+
+            self.assertIn("internal_payroll_snapshot", status["trusted_assets"])
+            manifest = json.loads(repo._internal_manifest_path().read_text())
+            asset = next(a for a in manifest["assets"] if a["asset_type"] == "internal_payroll_snapshot")
+            self.assertTrue(asset["trusted_for_company_claims"])
+
+            events = repo.build_governance_payload()["events"]
+            promotion_events = [e for e in events if e["action_code"] == "trust_promoted"]
+            self.assertEqual(len(promotion_events), 1)
+            self.assertEqual(promotion_events[0]["target_type"], "internal_data_asset")
+            self.assertEqual(promotion_events[0]["target_id"], "internal_payroll_snapshot")
+            self.assertEqual(promotion_events[0]["actor"], "admin_user")
+
+    def test_revoke_requires_reason_and_flips_trust_back(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            events_path = Path(temp_dir) / "governance_events.sqlite"
+            repo = AnalyticsRepository(
+                ROOT_DIR, internal_data_dir=internal_dir, governance_events_path=events_path
+            )
+            repo.ingest_uploaded_payroll(self._make_csv(self._valid_payroll_rows()))
+            repo.promote_internal_asset_trust("internal_payroll_snapshot", actor="admin_user")
+
+            with self.assertRaises(ValueError):
+                repo.revoke_internal_asset_trust("internal_payroll_snapshot", actor="admin_user", reason="")
+
+            status = repo.revoke_internal_asset_trust(
+                "internal_payroll_snapshot", actor="admin_user", reason="Vendor flagged a data quality issue."
+            )
+
+            self.assertIn("internal_payroll_snapshot", status["untrusted_assets"])
+            manifest = json.loads(repo._internal_manifest_path().read_text())
+            asset = next(a for a in manifest["assets"] if a["asset_type"] == "internal_payroll_snapshot")
+            self.assertFalse(asset["trusted_for_company_claims"])
+
+            events = repo.build_governance_payload()["events"]
+            revoke_events = [e for e in events if e["action_code"] == "trust_revoked"]
+            self.assertEqual(len(revoke_events), 1)
+            self.assertEqual(revoke_events[0]["reason"], "Vendor flagged a data quality issue.")
+
+    def test_promote_rejects_unknown_asset_type(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+
+            with self.assertRaises(ValueError):
+                repo.promote_internal_asset_trust("internal_hris_workforce_snapshot", actor="admin_user")
+
+    def test_promote_rejects_asset_never_uploaded(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+
+            with self.assertRaises(ValueError):
+                repo.promote_internal_asset_trust("internal_payroll_snapshot", actor="admin_user")
+
+    def test_company_claims_stay_unavailable_until_both_assets_promoted(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            events_path = Path(temp_dir) / "governance_events.sqlite"
+            repo = AnalyticsRepository(
+                ROOT_DIR, internal_data_dir=internal_dir, governance_events_path=events_path
+            )
+            repo.ingest_uploaded_payroll(self._make_csv(self._valid_payroll_rows()))
+            repo.ingest_uploaded_job_architecture(self._make_csv(self._valid_job_architecture_rows()))
+
+            status = repo._internal_claim_trust_status()
+            self.assertFalse(status["trusted"])
+
+            repo.promote_internal_asset_trust("internal_payroll_snapshot", actor="admin_user")
+            still_partial = repo._internal_claim_trust_status()
+            self.assertFalse(still_partial["trusted"])
+            self.assertIn("internal_job_architecture", still_partial["untrusted_assets"])
+
+            repo.promote_internal_asset_trust("internal_job_architecture", actor="admin_user")
+            fully_trusted = repo._internal_claim_trust_status()
+            self.assertTrue(fully_trusted["trusted"])
 
 
 @unittest.skipIf(main is None, f"FastAPI app unavailable in test env: {MAIN_IMPORT_ERROR}")
