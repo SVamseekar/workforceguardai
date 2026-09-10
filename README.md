@@ -1,5 +1,7 @@
 # WorkforceGuard AI
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 **EU workforce intelligence and pay-transparency compliance platform for HR, people analytics, and strategy teams.**
 ## Research Paper
 
@@ -23,11 +25,11 @@ Live at → **[workforceguardai.souravamseekar.com](https://workforceguardai.sou
 | | |
 |---|---|
 | **Command Centre** — signal scores, executive brief, live market indicators | **Market Intelligence** — unemployment trend, vacancy by sector, gender pay gap charts |
-| ![Home](docs/demos/home.gif) | ![Market Intelligence](docs/demos/market.gif) |
+| ![Home](assets/demos/home.gif) | ![Market Intelligence](assets/demos/market.gif) |
 | **Compare** — side-by-side country and sector benchmarking | **Pay Analysis** — company vs market pay gap with derived scores |
-| ![Compare](docs/demos/compare.gif) | ![Pay Analysis](docs/demos/pay-analysis.gif) |
+| ![Compare](assets/demos/compare.gif) | ![Pay Analysis](assets/demos/pay-analysis.gif) |
 | **Govern & Export** — hash-chained audit log and compliance evidence pack | **AI Analyst** — natural language questions with grounded evidence |
-| ![Govern & Export](docs/demos/govern.gif) | ![AI Analyst](docs/demos/ai-analyst.gif) |
+| ![Govern & Export](assets/demos/govern.gif) | ![AI Analyst](assets/demos/ai-analyst.gif) |
 
 ---
 
@@ -68,7 +70,7 @@ Eurostat API  ──►  Python ingestion  ──►  DuckDB  ──►  dbt mod
 
 **Frontend:** React 18 + TypeScript + Vite, TanStack Query for data fetching, Recharts for time-series visualisation, Tailwind CSS. Deployed on Vercel.
 
-**CI/CD:** GitHub Actions — PRs and pushes to `main` run CI (tests, lint, secret scan). Deploy to GCP and Vercel runs only after CI passes on `main`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the git workflow.
+**CI/CD:** GitHub Actions — PRs and pushes to `main` run CI (tests, lint, frontend production build, secret scan). Deploy to GCP and Vercel runs only after CI passes on `main`. Releases are SemVer Git tags (`vX.Y.Z`) with GitHub Releases. Git and release process: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
@@ -98,7 +100,9 @@ Eurostat API  ──►  Python ingestion  ──►  DuckDB  ──►  dbt mod
 
 ## Local setup
 
-**Prerequisites:** Python 3.11+, Node 20+, dbt-duckdb
+**Prerequisites:** Python 3.11+, Node 20+, dbt-duckdb.
+CI uses **Python 3.12** and **Node 22**. Env templates: [`.env.example`](.env.example).
+Versioning: SemVer — [CONTRIBUTING.md](CONTRIBUTING.md) (no production tags yet).
 
 ```bash
 # Clone
@@ -127,3 +131,9 @@ dbt test
 ## Stack
 
 `Python` `FastAPI` `DuckDB` `dbt` `Parquet` `React` `TypeScript` `Vite` `TanStack Query` `Recharts` `Tailwind CSS` `Docker` `GCP` `Vercel` `GitHub Actions`
+
+---
+
+## License
+
+MIT. See [LICENSE](LICENSE).

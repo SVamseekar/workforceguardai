@@ -16,6 +16,7 @@
 - [ ] No secrets, credentials, or tenant data committed
 - [ ] Tests added or updated for behavior changes
 - [ ] README or docs updated if user-facing behavior changed
+- [ ] CHANGELOG.md updated if this is user-facing or will be released
 
 ## Test plan
 
