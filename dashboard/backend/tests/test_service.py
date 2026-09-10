@@ -22,7 +22,7 @@ ANALYTICS_DB_PATH = ROOT_DIR / "data" / "workforceguard_analytics.duckdb"
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
-from service import AnalyticsRepository, OBSERVED_METRIC_IDS  # noqa: E402
+from service import AnalyticsRepository, OBSERVED_METRIC_IDS, tenant_schema_name  # noqa: E402
 import evidence_signing  # noqa: E402
 
 os.environ.setdefault(evidence_signing.SIGNING_KEY_ENV_VAR, evidence_signing.generate_signing_key_b64())
@@ -789,6 +789,108 @@ class AnalyticsRepositoryTests(unittest.TestCase):
             self.assertEqual(compliance_answer["category"], "compliance")
             self.assertEqual(compliance_answer["evidence_basis"], "blended")
             self.assertIn("unresolved review items", compliance_answer["answer"])
+
+    def test_build_internal_data_status_finds_tables_in_a_real_tenant_schema(self):
+        """Every real tenant's internal-tagged dbt models land in their own
+        tenant_<id> DuckDB schema, never in 'main' (dbt_project.yml gates
+        internal models on tenant_schema being set). A repo constructed
+        with tenant_id=... must see those tables via _available_tables(),
+        not just via _query()/_connect() -- otherwise
+        _build_internal_data_status() reports company data as permanently
+        unavailable for every real tenant, since the required internal
+        tables never exist in 'main'. Regression test for that gap (issue
+        #83's demo-tenant health check surfaced it: identical shape to
+        what every production tenant with real uploaded data hits)."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            db_path = self._copy_analytics_db(temp_dir)
+            tenant_id = "demo-tenant-schema-test"
+            schema = tenant_schema_name(tenant_id)
+            with duckdb.connect(str(db_path)) as connection:
+                connection.execute(f"create schema if not exists {schema}")
+                connection.execute(
+                    f"""
+                    create table {schema}.stg_internal__payroll_snapshot as
+                    select *
+                    from (
+                        values
+                            ('emp-1', 'SE-1', 'Software Engineer', 'DE', 'eng_ic', 'female', 90000, 'EUR', '2026-03-31'::date, 'active', 'local', 'internal_payroll_snapshot')
+                    ) as seeded(
+                        employee_id, job_code, job_title, country_code, worker_category_id, gender,
+                        base_pay_amount, pay_currency, snapshot_date, employment_status, source_version, dataset_name
+                    )
+                    """
+                )
+                connection.execute(
+                    f"""
+                    create table {schema}.stg_internal__job_architecture as
+                    select *
+                    from (
+                        values
+                            ('SE-1', 'Engineering', 'IC3', 'eng_ic', 'Engineering Individual Contributor', 'urn:esco:occupation:1', 'J62', 'local', 'internal_job_architecture')
+                    ) as seeded(
+                        job_code, job_family, job_level, worker_category_id, worker_category_label,
+                        esco_uri, nace_code, source_version, dataset_name
+                    )
+                    """
+                )
+                connection.execute(
+                    f"""
+                    create table {schema}.fct_internal_pay_snapshot as
+                    select *
+                    from (
+                        values
+                            ('DE::eng_ic::2026-03-31', 'DE', '2026-03-31'::date, 'eng_ic', 'J62', 'urn:esco:occupation:1', 'EUR', 1, 1, 0, 90000, 90000, null, null)
+                    ) as seeded(
+                        internal_pay_snapshot_id, country_code, snapshot_date, worker_category_id, nace_code,
+                        esco_uri, pay_currency, headcount, female_count, male_count, avg_base_pay,
+                        female_avg_base_pay, male_avg_base_pay, internal_gender_pay_gap
+                    )
+                    """
+                )
+                connection.execute(
+                    f"""
+                    create table {schema}.dim_worker_category as
+                    select *
+                    from (
+                        values
+                            ('eng_ic', 'Engineering Individual Contributor', 'Engineering', 'IC3', 'urn:esco:occupation:1', 'J62', 1)
+                    ) as seeded(
+                        worker_category_id, worker_category_label, primary_job_family, representative_job_level,
+                        representative_esco_uri, representative_nace_code, mapped_job_code_count
+                    )
+                    """
+                )
+                connection.execute(
+                    f"""
+                    create table {schema}.mart_internal_market_pay_benchmark as
+                    select *
+                    from (
+                        values
+                            ('DE::eng_ic::2026-03-31', 'DE', '2026-03-31'::date, 'eng_ic', 'Engineering Individual Contributor', 'Engineering', 'IC3', 'J62', 1, 1, 0, null, null, null, null, false)
+                    ) as seeded(
+                        benchmark_row_id, country_code, snapshot_date, worker_category_id, worker_category_label,
+                        primary_job_family, representative_job_level, representative_nace_code, headcount,
+                        female_count, male_count, internal_gender_pay_gap, market_sector_id, market_period_code,
+                        market_gender_pay_gap, market_benchmark_available
+                    )
+                    """
+                )
+
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True, exist_ok=True)
+            self._write_internal_manifest(temp_dir, trusted=True)
+            events_path = Path(temp_dir) / "governance_events.json"
+            repo = AnalyticsRepository(
+                ROOT_DIR,
+                governance_events_path=events_path,
+                internal_data_dir=internal_dir,
+                analytics_db_path=db_path,
+                tenant_id=tenant_id,
+            )
+
+            status = repo._build_internal_data_status()
+
+            self.assertTrue(status["available"], status)
 
     def test_local_sample_internal_rows_do_not_activate_company_claims_without_trust_manifest(self):
         # Uses an isolated repo pointing at the real analytics DB (which has mart rows)
