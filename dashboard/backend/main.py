@@ -371,6 +371,7 @@ def get_evidence_pack(
     benchmark_geography: Optional[str] = None,
     benchmark_sector: Optional[str] = None,
     repo: AnalyticsRepository = Depends(get_repository),
+    ctx: AuthContext = Depends(require_session),
 ):
     return guarded(
         repo.build_evidence_pack,
@@ -380,6 +381,7 @@ def get_evidence_pack(
         period=period,
         benchmark_geography=benchmark_geography,
         benchmark_sector=benchmark_sector,
+        actor=ctx.user_id,
     )
 
 
