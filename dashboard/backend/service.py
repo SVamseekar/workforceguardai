@@ -574,11 +574,19 @@ class AnalyticsRepository:
         return required_tables.issubset(available)
 
     def _available_tables(self) -> set[str]:
+        """Cannot call self._connect() here -- _connect() calls
+        self._modeled_database_ready(), which calls this method, which
+        would recurse forever. Connect directly, then replicate just the
+        tenant-schema search_path piece of _connect() so a tenant-scoped
+        repo sees its own internal-tagged tables (which live only in
+        tenant_<id>, never in 'main') instead of only ever seeing 'main'."""
         if not self.analytics_db_path.exists():
             return set()
 
         try:
             with self._connect_with_lock_retry() as connection:
+                if self.tenant_schema is not None and self._tenant_schema_exists(connection):
+                    connection.execute(f"set search_path = '{self.tenant_schema},main'")
                 rows = connection.execute("show tables").fetchall()
         except duckdb.Error:
             return set()
