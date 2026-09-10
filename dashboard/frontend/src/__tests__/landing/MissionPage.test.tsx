@@ -16,14 +16,6 @@ describe('MissionPage', () => {
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
     })))
-    vi.stubGlobal(
-      'IntersectionObserver',
-      vi.fn().mockImplementation(() => ({
-        observe: vi.fn(),
-        unobserve: vi.fn(),
-        disconnect: vi.fn(),
-      })),
-    )
   })
 
   it('renders the mission headline and convictions', () => {

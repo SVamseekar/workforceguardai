@@ -37,14 +37,6 @@ describe('landing hash navigation', () => {
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
     })))
-    vi.stubGlobal(
-      'IntersectionObserver',
-      vi.fn().mockImplementation(() => ({
-        observe: vi.fn(),
-        unobserve: vi.fn(),
-        disconnect: vi.fn(),
-      })),
-    )
     if (!HTMLElement.prototype.scrollIntoView) {
       HTMLElement.prototype.scrollIntoView = () => {}
     }

@@ -19,7 +19,7 @@ describe('DemoRequestForm', () => {
 
   it('shows success state after a valid submission', async () => {
     const user = userEvent.setup()
-    vi.spyOn(global, 'fetch').mockResolvedValue({
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: async () => ({ ok: true }),
     } as Response)
@@ -47,7 +47,7 @@ describe('DemoRequestForm', () => {
       expect(screen.getByRole('status')).toHaveTextContent(/request received/i)
     })
 
-    expect(global.fetch).toHaveBeenCalledWith(
+    expect(globalThis.fetch).toHaveBeenCalledWith(
       '/api/request-demo',
       expect.objectContaining({ method: 'POST' }),
     )

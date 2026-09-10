@@ -33,7 +33,7 @@ describe('LoginScreen', () => {
 
   it('shows a network error when the sign-in service is unreachable', async () => {
     const user = userEvent.setup()
-    vi.spyOn(global, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'))
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'))
 
     renderLogin()
 
@@ -49,7 +49,7 @@ describe('LoginScreen', () => {
     const user = userEvent.setup()
     const assign = vi.fn()
     vi.stubGlobal('location', { ...window.location, assign })
-    vi.spyOn(global, 'fetch').mockResolvedValue({
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       status: 302,
       type: 'basic',
     } as Response)
