@@ -17,7 +17,9 @@ License: MIT — [LICENSE](LICENSE).
    `feat:` `fix:` `refactor:` `perf:` `test:` `docs:` `build:` `ci:` `chore:`
 
    No messages like "update", "changes", "fix", "stuff", or "final".
-5. Open a focused PR into `main`. Describe what changed and why.
+5. Open a focused PR into `main`. The **PR title** must be a Conventional
+   Commit — squash-merge uses it as the commit subject. Describe what
+   changed and why in the body.
 6. Required CI must pass. Do not merge with failing required checks.
 7. Delete the branch after merge unless there is a reason to keep it.
 
@@ -68,12 +70,17 @@ pip install pre-commit
 pre-commit install
 ```
 
+`pre-commit install` sets up both the `pre-commit` and `commit-msg` hooks (Conventional Commits). GitHub Actions re-runs those file hooks on the PR diff, so skipping locally with `--no-verify` still fails CI.
+
 Environment templates: [`.env.example`](.env.example).
 
 ## Before you commit
 
-Pre-commit checks trailing whitespace, YAML/JSON, private keys, Gitleaks,
-files larger than 5 MB, and commits to `main`.
+Pre-commit checks file hygiene (whitespace, YAML/JSON/TOML, merge
+conflicts, case clashes, shebangs, Python syntax, debug leftovers),
+private keys, Gitleaks, files larger than 5 MB, LF line endings, and
+commits to `main`. The `commit-msg` hook requires a Conventional Commit
+subject (`feat:`, `fix:`, `chore:`, …).
 
 Never commit:
 
@@ -153,8 +160,10 @@ Auth tests require `DATABASE_URL`; others may skip if Postgres is unavailable.
 
 ## CI
 
-PRs and pushes to `main` run secret scan plus path-filtered Python, frontend
-(including production build), and dbt compile. Jobs fail on errors.
+PRs and pushes to `main` run pre-commit on the changed files (same hooks
+as locally), secret scan, plus path-filtered Python, frontend (including
+production build), and dbt compile. PR titles are checked as Conventional
+Commits. Jobs fail on errors.
 
 Deploy (GCP + Vercel) runs only after CI succeeds on `main`.
 

@@ -38,6 +38,12 @@
           },
           {
             "context": "Secret scan"
+          },
+          {
+            "context": "Pre-commit"
+          },
+          {
+            "context": "Conventional title"
           }
         ]
       }

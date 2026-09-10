@@ -28,4 +28,5 @@ Do not open a public issue for security reports.
 ## Automated checks
 
 - Pre-commit: Gitleaks + private-key detection (see `.pre-commit-config.yaml`).
-- CI: Gitleaks on every pull request and push to `main`.
+- CI: the same pre-commit file hooks on every pull request, plus Gitleaks
+  on every pull request and push to `main`.
