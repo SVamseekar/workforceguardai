@@ -66,7 +66,7 @@ def render_evidence_pack_pdf(pack: Dict[str, Any]) -> bytes:
     story: List[Any] = []
 
     story.append(Paragraph("WorkforceGuard Compliance Evidence Pack", _STYLES["Title"]))
-    filters = pack.get("filters", {})
+    filters = pack.get("filters") or {}
     story.append(
         Paragraph(
             f"Generated {pack.get('generated_at', '')} &middot; "
@@ -78,21 +78,21 @@ def render_evidence_pack_pdf(pack: Dict[str, Any]) -> bytes:
     )
     story.append(Spacer(1, 6 * mm))
 
-    summary = pack.get("summary", {})
+    summary = pack.get("summary") or {}
     story.append(Paragraph("Summary", _STYLES["Heading2"]))
     story.append(Paragraph(summary.get("headline", ""), _STYLES["Normal"]))
     story.append(Paragraph(summary.get("summary", ""), _STYLES["Normal"]))
     story.append(Spacer(1, 6 * mm))
 
     story.append(Paragraph("Observed metrics", _STYLES["Heading2"]))
-    story.append(_metrics_table(pack.get("metrics", [])))
+    story.append(_metrics_table(pack.get("metrics") or []))
     story.append(Spacer(1, 6 * mm))
 
     story.append(Paragraph("Modeled semantic metrics", _STYLES["Heading2"]))
-    story.append(_metrics_table(pack.get("semantic_metrics", [])))
+    story.append(_metrics_table(pack.get("semantic_metrics") or []))
     story.append(Spacer(1, 6 * mm))
 
-    compliance_review = pack.get("compliance_review", {})
+    compliance_review = pack.get("compliance_review") or {}
     story.append(Paragraph("Pay-transparency review", _STYLES["Heading2"]))
     story.append(Paragraph(f"Status: {compliance_review.get('status', 'unavailable')}", _STYLES["Normal"]))
     review_items = compliance_review.get("review_items") or []
@@ -117,7 +117,7 @@ def render_evidence_pack_pdf(pack: Dict[str, Any]) -> bytes:
         story.append(Paragraph("No open review items.", _STYLES["Normal"]))
     story.append(Spacer(1, 6 * mm))
 
-    governance_integrity = pack.get("governance", {}).get("integrity", {})
+    governance_integrity = (pack.get("governance") or {}).get("integrity", {})
     story.append(Paragraph("Governance decision log", _STYLES["Heading2"]))
     story.append(
         Paragraph(
@@ -129,7 +129,7 @@ def render_evidence_pack_pdf(pack: Dict[str, Any]) -> bytes:
     )
     story.append(Spacer(1, 6 * mm))
 
-    integrity = pack.get("integrity", {})
+    integrity = pack.get("integrity") or {}
     story.append(Paragraph("Pack integrity", _STYLES["Heading2"]))
     story.append(
         Paragraph(

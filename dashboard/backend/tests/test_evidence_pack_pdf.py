@@ -48,6 +48,17 @@ class EvidencePackPdfTests(unittest.TestCase):
         self.assertGreater(len(pdf_bytes), 0)
         self.assertTrue(pdf_bytes.startswith(b"%PDF-"))
 
+    def test_renders_pdf_with_none_values(self):
+        """Regression test: pack with explicit None values should render without crashing."""
+        pack = self._sample_pack()
+        pack["governance"] = None
+        pack["compliance_review"] = None
+        pack["metrics"] = None
+        pack["semantic_metrics"] = None
+        pdf_bytes = render_evidence_pack_pdf(pack)
+        self.assertGreater(len(pdf_bytes), 0)
+        self.assertTrue(pdf_bytes.startswith(b"%PDF-"))
+
 
 if __name__ == "__main__":
     unittest.main()
