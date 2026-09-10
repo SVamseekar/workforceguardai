@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import { api } from '../lib/api'
 import { normalizeOverview } from '../lib/normalizeOverview'
-import { useAuth } from './useAuth'
 
 export interface Filters {
   country: string
@@ -39,7 +38,6 @@ async function fetchOverview(filters: Filters): Promise<unknown> {
 export function useOverviewData() {
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { isAdmin } = useAuth()
 
   const [filters, setFilters] = useState<Filters>({
     country: searchParams.get('country') ?? 'ALL',
