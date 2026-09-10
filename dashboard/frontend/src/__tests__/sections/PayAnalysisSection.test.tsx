@@ -1,4 +1,5 @@
 import { screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server, MOCK_OVERVIEW } from '../handlers.js'
@@ -78,5 +79,48 @@ describe('PayAnalysisSection', () => {
       expect(screen.getByText('France Égapro Index')).toBeInTheDocument(),
     )
     expect(screen.getByText('120 companies')).toBeInTheDocument()
+  })
+
+  it('shows a Promote button for untrusted company data and calls the promote endpoint', async () => {
+    let promoteCalled = false
+    server.use(
+      http.get('/api/overview', () =>
+        HttpResponse.json({
+          ...MOCK_OVERVIEW,
+          internal_data: {
+            available: false,
+            trust: { trusted: false, trusted_assets: [], untrusted_assets: ['internal_payroll_snapshot'] },
+          },
+        }),
+      ),
+      http.post('/api/internal-data/internal_payroll_snapshot/promote', () => {
+        promoteCalled = true
+        return HttpResponse.json({ trusted: true, trusted_assets: ['internal_payroll_snapshot'], untrusted_assets: [] })
+      }),
+    )
+
+    renderInRouter(<PayAnalysisSection />)
+
+    const button = await screen.findByText('Promote payroll to trusted')
+    await userEvent.click(button)
+
+    await waitFor(() => expect(promoteCalled).toBe(true))
+  })
+
+  it('shows a Revoke button for trusted company data', async () => {
+    server.use(
+      http.get('/api/overview', () =>
+        HttpResponse.json({
+          ...MOCK_OVERVIEW,
+          internal_data: {
+            available: true,
+            trust: { trusted: true, trusted_assets: ['internal_payroll_snapshot'], untrusted_assets: [] },
+          },
+        }),
+      ),
+    )
+
+    renderInRouter(<PayAnalysisSection />)
+    expect(await screen.findByText('Revoke trust — payroll')).toBeInTheDocument()
   })
 })
