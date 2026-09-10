@@ -101,3 +101,22 @@ datasets:
   - name: "commuting_time"
     code: "lfso_19plwk28"
     filters: {}
+  - name: "ict_specialist_employers"
+    code: "isoc_ske_itspe"
+    filters:
+      size_emp: ["GE10"]
+      unit: ["PC_ENT"]
+  - name: "green_sector_employment"
+    code: "env_ac_egss1"
+    filters:
+      nace_r2: ["TOTAL"]
+      ceparema: ["TOT_CEPA"]
+      ty: ["TOT_EGSS"]
+      unit: ["FTE"]
+  - name: "employed_persons_total"
+    code: "lfsi_emp_a"
+    filters:
+      indic_em: ["EMP_LFS"]
+      sex: ["T"]
+      age: ["Y20-64"]
+      unit: ["THS_PER"]

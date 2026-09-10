@@ -113,6 +113,64 @@
         "time"
       ],
       "output": "/Users/souravamseekarmarti/Projects/WorkforceGuard-AI/data/eu_raw/gender_pay_gap_sector.parquet"
+    },
+    "ict_specialist_employers": {
+      "dataset": "ict_specialist_employers",
+      "code": "isoc_ske_itspe",
+      "status": "completed",
+      "pulled_at": "2026-09-10T19:56:06.799602+00:00",
+      "base_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data",
+      "geo_level": "country",
+      "rows": 108,
+      "dimensions": [
+        "freq",
+        "size_emp",
+        "nace_r2",
+        "indic_is",
+        "unit",
+        "geo",
+        "time"
+      ],
+      "output": "data/eu_raw/ict_specialist_employers.parquet"
+    },
+    "green_sector_employment": {
+      "dataset": "green_sector_employment",
+      "code": "env_ac_egss1",
+      "status": "completed",
+      "pulled_at": "2026-09-10T19:55:57.959334+00:00",
+      "base_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data",
+      "geo_level": "country",
+      "rows": 109,
+      "dimensions": [
+        "freq",
+        "nace_r2",
+        "ceparema",
+        "na_item",
+        "ty",
+        "unit",
+        "geo",
+        "time"
+      ],
+      "output": "data/eu_raw/green_sector_employment.parquet"
+    },
+    "employed_persons_total": {
+      "dataset": "employed_persons_total",
+      "code": "lfsi_emp_a",
+      "status": "completed",
+      "pulled_at": "2026-09-10T19:55:59.892276+00:00",
+      "base_url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data",
+      "geo_level": "country",
+      "rows": 189,
+      "dimensions": [
+        "freq",
+        "indic_em",
+        "sex",
+        "age",
+        "unit",
+        "geo",
+        "time"
+      ],
+      "output": "data/eu_raw/employed_persons_total.parquet"
     }
   },
   "last_run_at": "2026-07-01T17:14:58.348220+00:00",

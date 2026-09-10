@@ -1,9 +1,21 @@
 with latest_signal_periods as (
+    -- Per (signal_name, geo_id), not just per signal_name: Eurostat reporting
+    -- is staggered across countries (e.g. green_sector_fte -- most countries
+    -- reported 2022, a handful reported 2023), so a single global max period
+    -- per signal would silently drop every country that hasn't yet reported
+    -- the very latest period, even though their prior-year value is real,
+    -- current data. Keeping the grain at (signal_name, geo_id) rather than
+    -- also including sector_id is intentional: sector-grain signals
+    -- (job_vacancy_rate, gender_pay_gap) are already fully synced across
+    -- sectors/countries at their global max period, so expanding the grain
+    -- further isn't needed and would require touching the sector_pairs /
+    -- default_sector_signals / geo_sector_letter_signals fallback CTEs.
     select
         signal_name,
+        geo_id,
         max(period_code) as period_code
     from {{ ref('fct_labour_market_region_sector') }}
-    group by 1
+    group by 1, 2
 ),
 
 latest_signals as (
@@ -16,6 +28,7 @@ latest_signals as (
     from {{ ref('fct_labour_market_region_sector') }} f
     inner join latest_signal_periods p
         on f.signal_name = p.signal_name
+       and f.geo_id = p.geo_id
        and f.period_code = p.period_code
 ),
 
@@ -27,7 +40,10 @@ country_signals as (
         max(case when signal_name = 'labour_market_slack_rate' then signal_value end) as labour_slack_rate,
         max(case when signal_name = 'labour_flow_to_employment' then signal_value end) as flow_to_employment,
         max(case when signal_name = 'labour_flow_to_inactivity' then signal_value end) as flow_to_inactivity,
-        max(case when signal_name = 'employment_continuity' then signal_value end) as employment_continuity
+        max(case when signal_name = 'employment_continuity' then signal_value end) as employment_continuity,
+        max(case when signal_name = 'digital_employer_share' then signal_value end) as digital_employer_share,
+        max(case when signal_name = 'green_sector_fte' then signal_value end) as green_sector_fte,
+        max(case when signal_name = 'employed_persons_total' then signal_value end) as employed_persons_total
     from latest_signals
     where sector_id = 'ALL'
     group by 1
@@ -163,7 +179,16 @@ scored_context as (
         c.flow_to_inactivity,
         c.employment_continuity,
         coalesce(k.digital_skill_coverage, o.digital_skill_coverage) as digital_skill_coverage,
-        coalesce(k.green_skill_coverage, o.green_skill_coverage) as green_skill_coverage
+        coalesce(k.green_skill_coverage, o.green_skill_coverage) as green_skill_coverage,
+        c.digital_employer_share,
+        -- green_sector_fte (env_ac_egss1) is reported as a raw FTE headcount,
+        -- while employed_persons_total (lfsi_emp_a, unit THS_PER) is in
+        -- thousands of persons -- multiply by 1,000 to put both sides of the
+        -- ratio in the same units before taking the percentage.
+        case
+            when c.green_sector_fte is null or c.employed_persons_total is null or c.employed_persons_total = 0 then null
+            else c.green_sector_fte / (c.employed_persons_total * 1000) * 100
+        end as green_demand_share
     from sector_pairs p
     left join country_signals c
         on p.geo_id = c.geo_id
@@ -193,6 +218,8 @@ raw_scores as (
         employment_continuity,
         digital_skill_coverage,
         green_skill_coverage,
+        digital_employer_share,
+        green_demand_share,
         vacancy_rate * 11
             + greatest(0, 9 - unemployment_rate) * 4
             + case when labour_slack_rate is not null then greatest(0, 12 - labour_slack_rate) * 2.8 else 0 end
@@ -235,19 +262,36 @@ final_scores as (
         employment_continuity,
         digital_skill_coverage,
         green_skill_coverage,
+        digital_employer_share,
+        green_demand_share,
         hiring_pressure_index,
         labour_resilience,
         equity_risk_score,
         case
-            when labour_resilience is null or hiring_pressure_index is null then null
+            when labour_resilience is null
+                 or hiring_pressure_index is null
+                 or digital_employer_share is null
+                 or green_demand_share is null
+            then null
             else least(
                 100,
                 greatest(
                     0,
                     round(
-                        labour_resilience * 0.45
-                        + greatest(0, 100 - hiring_pressure_index) * 0.25
-                        + least(100, (digital_skill_coverage + green_skill_coverage) * 4) * 0.30
+                        labour_resilience * 0.4500
+                        + greatest(0, 100 - hiring_pressure_index) * 0.2500
+                        + least(100, digital_employer_share * 3) * 0.1500
+                        -- digital_employer_share runs 12.4%-34.1% across the
+                        -- 27-country panel, so * 3 (37.2-100+) already lands
+                        -- in a comparable 0-100 band. green_demand_share is a
+                        -- much narrower slice of the workforce (0.8%-2.6%
+                        -- across the same panel) -- a * 3 scale would leave
+                        -- it at 2.4-7.8, negligible at this weight. * 38
+                        -- brings the same real range to ~30-99, a comparable
+                        -- band to digital's scaled range, without ever
+                        -- exceeding the least(100, ...) clamp for realistic
+                        -- values.
+                        + least(100, green_demand_share * 38) * 0.1500
                     )
                 )
             )
@@ -311,15 +355,13 @@ unioned as (
         sector_id,
         'transition_readiness' as metric_id,
         transition_readiness as metric_value,
-        'esco_taxonomy' as primary_source_id,
+        'eurostat_isoc' as primary_source_id,
         case when transition_readiness is null then 'unavailable' else 'proxy_live' end as implementation_status,
         case
-            when transition_readiness is null then 'Underlying hiring pressure or labour resilience unavailable; transition readiness not scored.'
+            when transition_readiness is null then 'Digital-employer share, green-employment share, hiring pressure, or labour resilience unavailable; transition readiness not scored.'
             else concat(
-                'ESCO skill coverage proxy: digital ',
-                round(digital_skill_coverage, 1),
-                '%, green ',
-                round(green_skill_coverage, 1),
+                'Digital-employer share ', round(digital_employer_share, 1),
+                '%, green-employment share ', round(green_demand_share, 1),
                 '%'
             )
         end as evidence_summary

@@ -1172,6 +1172,66 @@ class AnalyticsRepositoryTests(unittest.TestCase):
         self.assertFalse(evidence_pack["compliance_review"]["export_contract"]["contains_person_level_data"])
         self.assertIn("governance_integrity", evidence_pack["compliance_review"])
 
+    def test_transition_readiness_formula_weights_match_validated_values(self):
+        """Guards against silent drift: if someone hand-edits
+        transition_readiness's weights in mart_semantic_metrics.sql
+        without re-running scripts/validate_transition_readiness_weights.py,
+        this test fails. The expected values here are a hardcoded copy of
+        what Task 5 (issue #80) transcribed from the validation report --
+        docs/ is gitignored, so this test can't read that report directly."""
+        formula_sql = (
+            ROOT_DIR / "analytics" / "models" / "marts" / "core" / "mart_semantic_metrics.sql"
+        ).read_text(encoding="utf-8")
+
+        expected_formula_fragments = [
+            "labour_resilience * 0.4500",
+            "hiring_pressure_index) * 0.2500",
+            "digital_employer_share * 3) * 0.1500",
+            "green_demand_share * 38) * 0.1500",
+        ]
+        for fragment in expected_formula_fragments:
+            self.assertIn(
+                fragment,
+                formula_sql,
+                f"Expected transition_readiness formula fragment {fragment!r} "
+                "not found in mart_semantic_metrics.sql -- formula may have "
+                "drifted from the validated weights without this test being "
+                "updated.",
+            )
+
+    def test_transition_readiness_unavailable_when_digital_demand_signal_missing(self):
+        """A geo/sector with real hiring-pressure/labour-resilience data but
+        no digital_employer_share (e.g. not surveyed that year) must report
+        transition_readiness as unavailable, not silently score using the
+        other three inputs alone. Extends the _build_modeled_semantic_metrics
+        coverage issue #86 already exercises."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            db_path = self._copy_analytics_db(temp_dir)
+            with duckdb.connect(str(db_path)) as connection:
+                connection.execute("drop table if exists mart_semantic_metrics")
+                connection.execute(
+                    """
+                    create table mart_semantic_metrics as
+                    select
+                        'DE::ALL::transition_readiness' as semantic_metric_id,
+                        'DE' as geo_id,
+                        'ALL' as sector_id,
+                        'transition_readiness' as metric_id,
+                        cast(null as double) as metric_value,
+                        'eurostat_isoc' as primary_source_id,
+                        'unavailable' as implementation_status,
+                        '0.3' as formula_version,
+                        'Digital-employer share, green-employment share, hiring pressure, or labour resilience unavailable; transition readiness not scored.' as evidence_summary
+                    """
+                )
+            repo = AnalyticsRepository(ROOT_DIR, analytics_db_path=db_path)
+            filters, _ = repo.resolve_filters("DE", "DE", "ALL", "latest")
+            metrics = repo._build_modeled_semantic_metrics(filters)
+            tr = next((m for m in (metrics or []) if m["id"] == "transition_readiness"), None)
+            self.assertIsNotNone(tr)
+            self.assertIsNone(tr["value"])
+            self.assertEqual(tr["implementation_status"], "unavailable")
+
 
 class EgaproPeerBenchmarkTests(unittest.TestCase):
     """Tests for _build_egapro_peer_benchmark."""

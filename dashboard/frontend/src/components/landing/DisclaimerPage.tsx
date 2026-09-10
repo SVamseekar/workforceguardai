@@ -30,9 +30,9 @@ function DisclaimerContent() {
         <a href={RESEARCH_PAPER_URL} target="_blank" rel="noopener noreferrer">
           {RESEARCH_PAPER_LABEL}
         </a>
-        . Composite indices (Hiring Pressure, Labour Resilience, Equity Risk, Transition Readiness)
-        summarise statistical relationships; they are not predictions of enforcement outcomes or
-        litigation risk for your organisation.
+        . Composite indices (Hiring Pressure, Labour Resilience, Equity Risk, and Transition Readiness
+        as an in-development proxy) summarise statistical relationships; they are not predictions of
+        enforcement outcomes or litigation risk for your organisation.
       </p>
       <h2>Payroll and company-specific analysis</h2>
       <p>

@@ -270,6 +270,9 @@ export function PayAnalysisSection() {
                     </ToneChip>
                   </div>
                 )}
+                {Boolean(metric.implementation_status) && metric.implementation_status !== 'live' && (
+                  <ToneChip tone="watch">Proxy / in development</ToneChip>
+                )}
               </article>
             ))}
           </div>

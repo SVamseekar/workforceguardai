@@ -123,4 +123,29 @@ describe('PayAnalysisSection', () => {
     renderInRouter(<PayAnalysisSection />)
     expect(await screen.findByText('Revoke trust — payroll')).toBeInTheDocument()
   })
+
+  it('shows a "Proxy / in development" badge for a non-live semantic metric', async () => {
+    server.use(
+      http.get('/api/overview', () =>
+        HttpResponse.json({
+          ...MOCK_OVERVIEW,
+          semantic_metrics: [
+            {
+              id: 'transition_readiness',
+              title: 'Transition Readiness',
+              value: 62,
+              unit: 'score',
+              definition: 'Composite readiness score.',
+              implementation_status: 'proxy_live',
+              evidence_summary: ['Selected geography: Germany', 'Sector scope: All sectors', 'Digital-employer share 18.2%, green-employment share 4.1%'],
+            },
+          ],
+        }),
+      ),
+    )
+
+    renderInRouter(<PayAnalysisSection />)
+    await waitFor(() => expect(screen.getByText('Transition Readiness')).toBeInTheDocument())
+    expect(screen.getByText('Proxy / in development')).toBeInTheDocument()
+  })
 })

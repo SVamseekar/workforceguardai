@@ -69,6 +69,45 @@ pay_gap as (
     where unit_code = 'PC'
 ),
 
+digital_demand as (
+    select
+        region_code,
+        null as sector_code,
+        period_code,
+        period_type,
+        'digital_employer_share' as signal_name,
+        metric_value as signal_value
+    from {{ ref('stg_eurostat__ict_specialist_employers') }}
+    where size_class_code = 'GE10'
+      and unit_code = 'PC_ENT'
+),
+
+green_demand_fte as (
+    select
+        region_code,
+        null as sector_code,
+        period_code,
+        period_type,
+        'green_sector_fte' as signal_name,
+        metric_value as signal_value
+    from {{ ref('stg_eurostat__green_sector_employment') }}
+),
+
+employed_persons as (
+    select
+        region_code,
+        null as sector_code,
+        period_code,
+        period_type,
+        'employed_persons_total' as signal_name,
+        metric_value as signal_value
+    from {{ ref('stg_eurostat__employed_persons_total') }}
+    where indicator_code = 'EMP_LFS'
+      and sex_code = 'T'
+      and age_code = 'Y20-64'
+      and unit_code = 'THS_PER'
+),
+
 flows_to_employment_ranked as (
     select
         region_code,
@@ -186,6 +225,12 @@ unioned as (
     select * from employment_continuity
     union all
     select * from labour_slack_rate
+    union all
+    select * from digital_demand
+    union all
+    select * from green_demand_fte
+    union all
+    select * from employed_persons
 )
 
 select
