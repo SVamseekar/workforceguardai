@@ -3,6 +3,7 @@ import { useOverviewData } from '../../hooks/useOverviewData'
 import { useAuth } from '../../hooks/useAuth'
 import { MetricCard } from '../primitives/MetricCard'
 import { FreshnessPill } from '../primitives/FreshnessPill'
+import { ToneChip } from '../primitives/ToneChip'
 import { DataState } from '../shared/DataState'
 import { FilterBar } from '../shared/FilterBar'
 import {
@@ -182,6 +183,9 @@ export function HomeSection() {
                       )}
                     </span>
                   </div>
+                  {Boolean(sm.implementation_status) && sm.implementation_status !== 'live' && (
+                    <ToneChip tone="watch">Proxy / in development</ToneChip>
+                  )}
                   <div className="score-pulse__track">
                     <div className="score-pulse__fill" style={{ width: `${pct}%`, background: barColor, opacity: isUnavailable ? 0.25 : 1 }} />
                   </div>
