@@ -119,8 +119,8 @@ describe('useOverviewData', () => {
   it('exportEvidencePack triggers download link and does not set error', async () => {
     const createObjectURL = vi.fn(() => 'blob:fake')
     const revokeObjectURL = vi.fn()
-    global.URL.createObjectURL = createObjectURL
-    global.URL.revokeObjectURL = revokeObjectURL
+    globalThis.URL.createObjectURL = createObjectURL
+    globalThis.URL.revokeObjectURL = revokeObjectURL
 
     const clickSpy = vi.fn()
     const originalCreateElement = document.createElement.bind(document)
