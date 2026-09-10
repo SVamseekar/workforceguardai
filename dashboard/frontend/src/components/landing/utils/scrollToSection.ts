@@ -1,13 +1,19 @@
 export const LANDING_NAV_OFFSET = 72
 
+function isDomAvailable() {
+  return typeof document !== 'undefined'
+}
+
 /** Hash jumps skip scroll-reveal intersection; show all sections so the page is not blank. */
 export function revealAllLandingSections() {
+  if (!isDomAvailable()) return
   document.querySelectorAll('.landing-reveal:not(.is-visible)').forEach((el) => {
     el.classList.add('is-visible')
   })
 }
 
 export function scrollToSection(hash: string, behavior: ScrollBehavior = 'smooth') {
+  if (!isDomAvailable()) return false
   const id = hash.replace(/^#/, '')
   const el = document.getElementById(id)
   if (!el) return false
@@ -23,6 +29,7 @@ export function scrollToSectionWhenReady(
 ) {
   const id = hash.replace(/^#/, '')
   const tryScroll = (remaining: number) => {
+    if (!isDomAvailable()) return
     if (scrollToSection(hash, behavior)) {
       revealAllLandingSections()
       if (id === 'contact') focusContactForm()
@@ -37,6 +44,7 @@ export function scrollToSectionWhenReady(
 
 export function focusContactForm() {
   window.setTimeout(() => {
+    if (!isDomAvailable()) return
     document.querySelector<HTMLInputElement>('.demo-form input[autocomplete="given-name"]')?.focus()
   }, 450)
 }

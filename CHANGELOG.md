@@ -11,6 +11,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the release process.
 
 ### Changed
 
+- Dependency floors: pandas 3.0.5, dbt-core 1.12.3, dbt-duckdb 1.11.0,
+  frontend minor/patch group, plus jest-dom 7 and jsdom 30.
 - Pre-commit hooks match GitHub practice: local file hygiene plus the same
   checks in CI, Conventional Commit messages, and PR-title validation for
   squash-merge.
