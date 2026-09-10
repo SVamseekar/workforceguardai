@@ -14,6 +14,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the release process.
 - Pre-commit hooks match GitHub practice: local file hygiene plus the same
   checks in CI, Conventional Commit messages, and PR-title validation for
   squash-merge.
+- Commits and PRs reject `Co-authored-by` / `Co-committed-by` and known
+  agent emails. Authorship is the maintainer only.
 
 ## [0.1.0] - 2026-09-10
 
