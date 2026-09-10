@@ -4052,7 +4052,7 @@ class AnalyticsRepository:
             output = self.build_overview(**filters)["brief"]
             output_type = "brief"
         elif schedule["output"] == "compliance_evidence_pack":
-            output = self.build_evidence_pack(**filters)
+            output = self.build_evidence_pack(**filters, actor="automation_runner")
             output_type = "evidence_pack"
         else:
             raise ValueError(f"Unsupported scheduled output: {schedule['output']}")
