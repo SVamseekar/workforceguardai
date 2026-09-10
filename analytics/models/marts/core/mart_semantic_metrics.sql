@@ -1,9 +1,21 @@
 with latest_signal_periods as (
+    -- Per (signal_name, geo_id), not just per signal_name: Eurostat reporting
+    -- is staggered across countries (e.g. green_sector_fte -- most countries
+    -- reported 2022, a handful reported 2023), so a single global max period
+    -- per signal would silently drop every country that hasn't yet reported
+    -- the very latest period, even though their prior-year value is real,
+    -- current data. Keeping the grain at (signal_name, geo_id) rather than
+    -- also including sector_id is intentional: sector-grain signals
+    -- (job_vacancy_rate, gender_pay_gap) are already fully synced across
+    -- sectors/countries at their global max period, so expanding the grain
+    -- further isn't needed and would require touching the sector_pairs /
+    -- default_sector_signals / geo_sector_letter_signals fallback CTEs.
     select
         signal_name,
+        geo_id,
         max(period_code) as period_code
     from {{ ref('fct_labour_market_region_sector') }}
-    group by 1
+    group by 1, 2
 ),
 
 latest_signals as (
@@ -16,6 +28,7 @@ latest_signals as (
     from {{ ref('fct_labour_market_region_sector') }} f
     inner join latest_signal_periods p
         on f.signal_name = p.signal_name
+       and f.geo_id = p.geo_id
        and f.period_code = p.period_code
 ),
 
@@ -268,7 +281,17 @@ final_scores as (
                         labour_resilience * 0.4500
                         + greatest(0, 100 - hiring_pressure_index) * 0.2500
                         + least(100, digital_employer_share * 3) * 0.1500
-                        + least(100, green_demand_share * 3) * 0.1500
+                        -- digital_employer_share runs 12.4%-34.1% across the
+                        -- 27-country panel, so * 3 (37.2-100+) already lands
+                        -- in a comparable 0-100 band. green_demand_share is a
+                        -- much narrower slice of the workforce (0.8%-2.6%
+                        -- across the same panel) -- a * 3 scale would leave
+                        -- it at 2.4-7.8, negligible at this weight. * 38
+                        -- brings the same real range to ~30-99, a comparable
+                        -- band to digital's scaled range, without ever
+                        -- exceeding the least(100, ...) clamp for realistic
+                        -- values.
+                        + least(100, green_demand_share * 38) * 0.1500
                     )
                 )
             )
