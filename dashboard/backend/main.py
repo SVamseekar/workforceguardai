@@ -127,6 +127,7 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(title="WorkforceGuard Analytics API", lifespan=lifespan)
 
 app.add_middleware(SessionMiddleware, secret_key=os.environ["SESSION_SECRET"])
+evidence_signing.load_signing_key()  # fail fast at boot if misconfigured, matching SESSION_SECRET above
 
 _KNOWN_PRODUCTION_ORIGINS = {
     "https://workforceguard-ai.vercel.app",
@@ -388,15 +389,20 @@ def get_evidence_pack(
 
 
 @app.get("/api/evidence-pack/public-key")
-def get_evidence_pack_public_key(
-    ctx: AuthContext = Depends(require_session),
-):
-    signing_key = evidence_signing.load_signing_key()
-    return {
-        "public_key_pem": evidence_signing.public_key_pem(signing_key),
-        "signing_key_id": evidence_signing.key_id(signing_key),
-        "signature_algorithm": "ed25519",
-    }
+def get_evidence_pack_public_key():
+    # Deliberately unauthenticated: the whole point of this endpoint is that
+    # an external recipient (auditor, works council member, regulator) who
+    # has no WorkforceGuard account needs to fetch the public key to verify
+    # a pack they were handed. The key is, by definition, meant to be public.
+    def _load_public_key_info():
+        signing_key = evidence_signing.load_signing_key()
+        return {
+            "public_key_pem": evidence_signing.public_key_pem(signing_key),
+            "signing_key_id": evidence_signing.key_id(signing_key),
+            "signature_algorithm": "ed25519",
+        }
+
+    return guarded(_load_public_key_info)
 
 
 @app.get("/api/evidence-pack/pdf")

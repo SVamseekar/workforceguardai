@@ -395,6 +395,19 @@ class EvidencePackRouteTests(unittest.TestCase):
         self.assertEqual(body["signature_algorithm"], "ed25519")
         self.assertEqual(len(body["signing_key_id"]), 8)
 
+    def test_evidence_pack_public_key_does_not_require_session(self):
+        # Deliberately unauthenticated: an external recipient (auditor,
+        # works council member, regulator) with no WorkforceGuard account
+        # must be able to fetch the public key to verify a pack they were
+        # handed. The key is, by definition, meant to be public.
+        from fastapi.testclient import TestClient
+
+        unauthenticated_client = TestClient(app_module.app)
+        response = unauthenticated_client.get("/api/evidence-pack/public-key")
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertIn("-----BEGIN PUBLIC KEY-----", body["public_key_pem"])
+
     def test_evidence_pack_pdf_returns_pdf_bytes(self):
         response = _client.get("/api/evidence-pack/pdf")
         self.assertEqual(response.status_code, 200)
