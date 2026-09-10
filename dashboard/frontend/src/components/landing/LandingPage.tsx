@@ -177,7 +177,8 @@ function LandingHomeContent() {
               <a href={RESEARCH_PAPER_URL} target="_blank" rel="noopener noreferrer">
                 {RESEARCH_PAPER_LABEL}
               </a>
-              {' '}preprint — Hiring Pressure, Labour Resilience, Equity Risk, and Transition Readiness.
+              {' '}preprint — Hiring Pressure, Labour Resilience, Equity Risk, and Transition Readiness
+              {' '}(in-development proxy, see <Link to="/disclaimer">disclaimer</Link>).
             </p>
           </div>
           <div className="landing-research__panel">
