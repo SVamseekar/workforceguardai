@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+      - "v*.*.*-*"
+
+permissions:
+  contents: write
+
+jobs:
+  github-release:
+    name: GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Validate tag and versions
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Tag must be vMAJOR.MINOR.PATCH (optional prerelease suffix)."
+            exit 1
+          fi
+          VERSION="${TAG#v}"
+          FILE_VERSION="$(tr -d '[:space:]' < VERSION)"
+          PKG_VERSION="$(python3 -c 'import json; print(json.load(open("dashboard/frontend/package.json"))["version"])')"
+          if [ "$FILE_VERSION" != "$VERSION" ]; then
+            echo "VERSION ($FILE_VERSION) does not match tag ($VERSION)."
+            exit 1
+          fi
+          if [ "$PKG_VERSION" != "$VERSION" ]; then
+            echo "dashboard/frontend/package.json version ($PKG_VERSION) does not match tag ($VERSION)."
+            exit 1
+          fi
+
+      - name: Extract changelog notes
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          python3 -c '
+          import os, re
+          from pathlib import Path
+          tag = os.environ["TAG"]
+          version = tag[1:] if tag.startswith("v") else tag
+          text = Path("CHANGELOG.md").read_text(encoding="utf-8")
+          match = re.search(rf"^## \[v?{re.escape(version)}\].*$", text, re.M)
+          notes_path = Path("release-notes.md")
+          if not match:
+              notes_path.write_text(f"Release {tag}.\n", encoding="utf-8")
+              raise SystemExit(0)
+          start = match.end()
+          nxt = re.search(r"^## ", text[start:], re.M)
+          stop = start + nxt.start() if nxt else None
+          body = text[start:stop].strip()
+          notes_path.write_text((body or f"Release {tag}") + "\n", encoding="utf-8")
+          '
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          extra=()
+          if [[ "$TAG" == *-* ]]; then
+            extra+=(--prerelease)
+          fi
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes-file release-notes.md \
+            --target "${{ github.sha }}" \
+            "${extra[@]}"

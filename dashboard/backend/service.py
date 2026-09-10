@@ -4731,7 +4731,7 @@ class AnalyticsRepository:
             "provenance": {
                 "warehouse": str(self.analytics_db_path),
                 "formula_registry": "analytics/seeds/reference/ref_metric_registry.csv",
-                "paper_exports": "data/paper_exports/",
+                "paper_exports": "unpublished local replication exports (not in git)",
             },
         }
 

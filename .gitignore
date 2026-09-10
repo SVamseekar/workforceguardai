@@ -1,15 +1,17 @@
+# OS
 .DS_Store
 Thumbs.db
+*~
+*.swp
+*.swo
 
-# Local secrets and machine-specific config
+# Secrets and machine-local env
 .env
 .env.*
 !.env.example
 !.env.docker.example
 !deploy/.env.production.example
-analytics/.user.yml
-**/*.duckdb
-projects/
+deploy/.env.production
 *.pem
 *.key
 *.p12
@@ -17,6 +19,7 @@ projects/
 id_rsa*
 credentials.json
 service-account*.json
+analytics/.user.yml
 
 # Python
 __pycache__/
@@ -27,27 +30,39 @@ __pycache__/
 .coverage
 htmlcov/
 *.egg-info/
-dist/
-build/
-
-# Local virtual environments
 .venv/
 .venv-data/
 dashboard/backend/.venv/
 
-# Analytics build outputs
-analytics/logs/
-analytics/target/
-
-# Frontend build outputs
-dashboard/frontend/node_modules/
+# Node
+node_modules/
 dashboard/frontend/dist/
 
-# Local internal/company data
-data/governance_events.json
-data/governance_events.sqlite
-data/governance_events.sqlite-*
-data/automation_schedules.json
+# Build and tooling caches
+dist/
+build/
+analytics/logs/
+analytics/target/
+.vercel/
+.playwright-mcp/
+
+# Editors
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.claude/
+.cursor/
+.grok/
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+
+# Unpublished working notes (everything under docs/)
+docs/
+
+# Local data — not source
+**/*.duckdb
 data/tenants/*
 !data/tenants/.gitkeep
 data/internal/*
@@ -56,48 +71,23 @@ data/internal_meta/*
 !data/internal_meta/.gitkeep
 data/internal_raw/*
 !data/internal_raw/.gitkeep
+!data/internal_raw/job_architecture.csv
+!data/internal_raw/payroll_snapshot.csv
 data/demo_raw/*
 !data/demo_raw/.gitkeep
-deploy/.env.production
-
-# IDE and editor
-.idea/
-.claude/
-.cursor/
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-# Internal drafts and tooling scratch
-docs/superpowers/
-docs/social_media_campaign/
-record_demo.mjs
-node_modules/
-*.swp
-*.swo
-*~
-
-# Tooling / local automation
-.playwright-mcp/
-screenshot-*.png
-.vercel
-.env*.local
-
-# Large generated or scratch assets (keep committed demo GIFs in docs/demos/)
-docs/demos/video_recording/
-*.webm
-/image.png
-/*.pdf
-
-# Research paper workspace (local drafts — keep untracked)
-docs/paper.tex
-docs/paper-refs.bib
-docs/paper-*.md
-docs/paper-*.html
-docs/paper-style.css
-docs/figures/
-docs/paper-output.pdf
-docs/paper-output.html
-docs/SECURITY_AUDIT.md
-paper/
+data/governance_events.json
+data/governance_events.sqlite
+data/governance_events.sqlite-*
+data/automation_schedules.json
 data/eu_meta/
 data/eu_raw/
+
+# Local research / portfolio trees
+paper/
+projects/
+
+# Scratch
+screenshot-*.png
+/image.png
+/*.pdf
+record_demo.mjs

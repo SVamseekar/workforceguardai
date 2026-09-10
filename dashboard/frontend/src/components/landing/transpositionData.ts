@@ -1,4 +1,4 @@
-/** Static seed from docs/paper-insights.md §10 (May 2026 desk research). */
+/** Static seed from projects/gender-pay-gap-paper/drafts/paper-insights.md §10 (May 2026 desk research). */
 export const TRANSPOSITION_DEADLINE = '7 June 2026'
 export const TRANSPOSITION_AS_OF = 'May 2026'
 

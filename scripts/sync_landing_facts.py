@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate landingFacts countrySamples and research constants from paper_exports."""
+"""Regenerate landingFacts countrySamples and research constants from paper data-exports."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pathlib import Path
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPORTS = ROOT / "data" / "paper_exports"
+EXPORTS = ROOT / "projects" / "gender-pay-gap-paper" / "data-exports"
 LANDING_FACTS = ROOT / "dashboard" / "frontend" / "src" / "components" / "landing" / "landingFacts.ts"
 
 FIN_SECTOR = "Financial and insurance activities"
@@ -133,9 +133,9 @@ def update_landing_facts() -> None:
     )
 
     text = re.sub(
-        r"  // Synced from data/paper_exports/.*?\n  countrySamples: \[[^\]]+\] as const,",
+        r"  // Synced from .*? via scripts/sync_landing_facts.py\n  countrySamples: \[[^\]]+\] as const,",
         (
-            "  // Synced from data/paper_exports/ via scripts/sync_landing_facts.py\n"
+            "  // Synced from projects/gender-pay-gap-paper/data-exports/ via scripts/sync_landing_facts.py\n"
             f"  countrySamples: [\n{_format_country_samples(samples)}\n  ] as const,"
         ),
         text,
@@ -155,10 +155,10 @@ def check_landing_facts() -> int:
     updated = LANDING_FACTS.read_text()
     LANDING_FACTS.write_text(original)
     if original == updated:
-        print("landingFacts.ts is in sync with data/paper_exports/")
+        print("landingFacts.ts is in sync with paper data-exports")
         return 0
     print(
-        "landingFacts.ts is out of sync with data/paper_exports/.\n"
+        "landingFacts.ts is out of sync with paper data-exports.\n"
         "Run: python scripts/sync_landing_facts.py"
     )
     return 1

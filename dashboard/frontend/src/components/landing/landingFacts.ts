@@ -24,7 +24,7 @@ export const LANDING_FACTS = {
     jointAssessmentThresholdPct: 5,
     unresolvedReviewThresholdPct: 10,
   },
-  // Synced from data/paper_exports/ via scripts/sync_landing_facts.py
+  // Synced from projects/gender-pay-gap-paper/data-exports/ via scripts/sync_landing_facts.py
   countrySamples: [
     { code: 'CZ', name: 'Czechia', employmentRatePct: 82.9, financeGpgPct: 35.6, hpi: 93, ers: 99, period: '2024' },
     { code: 'HU', name: 'Hungary', employmentRatePct: 81.1, financeGpgPct: 40.3, hpi: 88, ers: 90, period: '2024' },

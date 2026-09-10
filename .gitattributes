@@ -19,15 +19,9 @@
 *.csv     text eol=lf diff
 *.txt     text eol=lf
 
-# Binary / large data — Git LFS (see existing tracked patterns below)
-*.webm    filter=lfs diff=lfs merge=lfs -text
-
-data/**/*.xlsx                 filter=lfs diff=lfs merge=lfs -text
-projects/**/*.docx             filter=lfs diff=lfs merge=lfs -text
-projects/**/*.xlsx             filter=lfs diff=lfs merge=lfs -text
-projects/**/data/**/*.csv      filter=lfs diff=lfs merge=lfs -text
-
-# Linguist overrides
-analytics/target/**            linguist-generated=true
-dashboard/frontend/dist/**     linguist-generated=true
-dashboard/frontend/node_modules/** linguist-vendored=true
+# Binary / large data — Git LFS
+# xlsx was already in LFS before this branch. Do not LFS parquet/gif/mp4:
+# CI skips LFS smudge (quota), so those must stay regular blobs.
+*.xlsx     filter=lfs diff=lfs merge=lfs -text
+*.pdf      filter=lfs diff=lfs merge=lfs -text
+*.webm     filter=lfs diff=lfs merge=lfs -text
