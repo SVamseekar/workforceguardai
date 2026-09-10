@@ -102,7 +102,7 @@ Eurostat API  ──►  Python ingestion  ──►  DuckDB  ──►  dbt mod
 
 **Prerequisites:** Python 3.11+, Node 20+, dbt-duckdb.
 CI uses **Python 3.12** and **Node 22**. Env templates: [`.env.example`](.env.example).
-Versioning: SemVer — [CONTRIBUTING.md](CONTRIBUTING.md) (no production tags yet).
+Versioning: SemVer — [CONTRIBUTING.md](CONTRIBUTING.md). Current: `v0.1.0`.
 
 ```bash
 # Clone

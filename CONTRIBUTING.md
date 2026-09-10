@@ -38,8 +38,7 @@ Semantic Versioning: `vMAJOR.MINOR.PATCH`. Tags match
 - **MINOR** — backward-compatible feature
 - **MAJOR** — breaking change
 
-No production tags exist yet. First tag should be `v0.1.0` unless you
-declare a v1.0.0 milestone. Do not invent historical versions.
+The first production tag is `v0.1.0`. Do not invent earlier versions.
 
 Flow: feature/fix branch → PR → `main` → annotated tag.
 
