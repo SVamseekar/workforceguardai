@@ -1112,6 +1112,59 @@ class AnalyticsRepository:
             "manifest_path": str(self._internal_manifest_path()),
         }
 
+    def promote_internal_asset_trust(self, asset_type: str, actor: Optional[str] = None) -> Dict[str, Any]:
+        """Explicitly grants trust for one uploaded internal data asset.
+        Separate from upload itself (issue #82 / ADR-5): a human with an
+        admin session must take this action, and it always writes a
+        governance event, so trust can never be flipped by upload alone."""
+        return self._set_internal_asset_trust(asset_type, trusted=True, actor=actor, reason=None)
+
+    def revoke_internal_asset_trust(
+        self, asset_type: str, actor: Optional[str] = None, reason: str = ""
+    ) -> Dict[str, Any]:
+        """Explicitly revokes trust for one previously-promoted internal
+        data asset. Requires a reason (enforced by record_governance_event
+        via the trust_revoked action's requires_reason=true seed row)."""
+        return self._set_internal_asset_trust(asset_type, trusted=False, actor=actor, reason=reason)
+
+    def _set_internal_asset_trust(
+        self, asset_type: str, trusted: bool, actor: Optional[str], reason: Optional[str]
+    ) -> Dict[str, Any]:
+        valid_asset_types = {"internal_payroll_snapshot", "internal_job_architecture"}
+        if asset_type not in valid_asset_types:
+            raise ValueError(
+                f"Unknown internal data asset_type: {asset_type!r}. "
+                f"Valid types: {', '.join(sorted(valid_asset_types))}."
+            )
+
+        assets = self._internal_manifest_assets()
+        if asset_type not in assets:
+            raise ValueError(
+                f"No uploaded data found for {asset_type}; upload it before changing its trust status."
+            )
+
+        manifest_path = self._internal_manifest_path()
+        with manifest_path.open("r", encoding="utf-8") as handle:
+            manifest = json.load(handle)
+        for asset in manifest.get("assets", []):
+            if asset.get("asset_type") == asset_type:
+                asset["trusted_for_company_claims"] = trusted
+
+        with manifest_path.open("w", encoding="utf-8") as handle:
+            json.dump(manifest, handle, indent=2)
+
+        self.record_governance_event(
+            {
+                "action_code": "trust_promoted" if trusted else "trust_revoked",
+                "target_type": "internal_data_asset",
+                "target_id": asset_type,
+                "actor": actor or "system",
+                "reason": reason,
+            }
+        )
+
+        return self._internal_claim_trust_status()
+
     def _build_internal_data_status(self) -> Dict[str, Any]:
         if not self._modeled_database_ready():
             return {
@@ -4182,7 +4235,12 @@ class AnalyticsRepository:
                     "version": "uploaded-v1",
                     "record_count": len(df),
                     "output": str(out_path),
-                    "trusted_for_company_claims": True,
+                    # Upload alone must never grant trust -- ADR-5 gates
+                    # company claims on this flag, and flipping it requires
+                    # a separate, governance-logged admin action (issue
+                    # #82). A re-upload resets trust, requiring re-promotion
+                    # of the new data.
+                    "trusted_for_company_claims": False,
                 },
             ],
         }
@@ -4287,7 +4345,9 @@ class AnalyticsRepository:
                     "version": "uploaded-v1",
                     "record_count": len(df),
                     "output": str(out_path),
-                    "trusted_for_company_claims": True,
+                    # See the matching comment in ingest_uploaded_payroll:
+                    # upload alone must never grant trust (issue #82).
+                    "trusted_for_company_claims": False,
                 },
             ],
         }

@@ -1220,7 +1220,10 @@ class IngestUploadedPayrollTests(unittest.TestCase):
             self.assertEqual(len(df), 10)
             self.assertIn("base_pay_amount", df.columns)
 
-    def test_manifest_updated_with_trusted_flag(self):
+    def test_manifest_updated_as_untrusted_until_promoted(self):
+        """Upload alone must never flip trust -- ADR-5 gates company claims
+        on trusted_for_company_claims, and promotion is a separate,
+        governance-logged admin action (issue #82)."""
         with tempfile.TemporaryDirectory() as temp_dir:
             internal_dir = Path(temp_dir) / "internal"
             internal_dir.mkdir(parents=True)
@@ -1234,7 +1237,7 @@ class IngestUploadedPayrollTests(unittest.TestCase):
             payroll_asset = next(
                 a for a in manifest["assets"] if a["asset_type"] == "internal_payroll_snapshot"
             )
-            self.assertTrue(payroll_asset["trusted_for_company_claims"])
+            self.assertFalse(payroll_asset["trusted_for_company_claims"])
             self.assertEqual(payroll_asset["record_count"], 10)
 
     def test_rejects_upload_with_fewer_than_10_rows(self):
@@ -1406,7 +1409,10 @@ class IngestUploadedJobArchitectureTests(unittest.TestCase):
             self.assertEqual(len(df), 2)
             self.assertEqual(df["nace_code"].tolist(), ["K64", "K64"])
 
-    def test_manifest_updated_with_trusted_flag(self):
+    def test_manifest_updated_as_untrusted_until_promoted(self):
+        """Upload alone must never flip trust -- ADR-5 gates company claims
+        on trusted_for_company_claims, and promotion is a separate,
+        governance-logged admin action (issue #82)."""
         with tempfile.TemporaryDirectory() as temp_dir:
             internal_dir = Path(temp_dir) / "internal"
             internal_dir.mkdir(parents=True)
@@ -1420,7 +1426,7 @@ class IngestUploadedJobArchitectureTests(unittest.TestCase):
             job_arch_asset = next(
                 a for a in manifest["assets"] if a["asset_type"] == "internal_job_architecture"
             )
-            self.assertTrue(job_arch_asset["trusted_for_company_claims"])
+            self.assertFalse(job_arch_asset["trusted_for_company_claims"])
             self.assertEqual(job_arch_asset["record_count"], 2)
 
     def test_rejects_duplicate_job_codes(self):
@@ -1463,6 +1469,141 @@ class IngestUploadedJobArchitectureTests(unittest.TestCase):
             self.assertEqual(result["status"], "accepted")
             self.assertTrue(len(result["validation"]["warnings"]) > 0)
             self.assertIn("payroll job_codes", result["validation"]["warnings"][0])
+
+
+class InternalAssetTrustPromotionTests(unittest.TestCase):
+    """Tests for promote_internal_asset_trust / revoke_internal_asset_trust
+    (issue #82): upload alone must never flip trust, promotion/revocation
+    must each write a governance event, and claims stay unavailable until
+    both required assets are promoted."""
+
+    def _make_csv(self, rows: list[dict]) -> bytes:
+        return pd.DataFrame(rows).to_csv(index=False).encode("utf-8")
+
+    def _valid_payroll_rows(self, n: int = 10) -> list[dict]:
+        return [
+            {
+                "employee_id": f"emp-{i:03d}",
+                "job_code": "SE-1",
+                "country_code": "FR",
+                "worker_category_id": "eng_ic",
+                "gender": "female" if i % 2 == 0 else "male",
+                "base_salary": 60000 + i * 100,
+                "currency": "EUR",
+                "snapshot_date": "2026-03-31",
+            }
+            for i in range(n)
+        ]
+
+    def _valid_job_architecture_rows(self, n: int = 2) -> list[dict]:
+        return [
+            {
+                "job_code": f"SE-{i}",
+                "job_family": "Engineering",
+                "job_level": "IC2",
+                "worker_category_id": "eng_ic",
+                "worker_category_label": "Engineering Individual Contributor",
+                "esco_uri": "urn:esco:occupation:2512",
+                "nace_code": "J62",
+            }
+            for i in range(n)
+        ]
+
+    def test_promote_flips_trust_and_writes_governance_event(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            events_path = Path(temp_dir) / "governance_events.sqlite"
+            repo = AnalyticsRepository(
+                ROOT_DIR, internal_data_dir=internal_dir, governance_events_path=events_path
+            )
+            repo.ingest_uploaded_payroll(self._make_csv(self._valid_payroll_rows()))
+
+            before = repo._internal_claim_trust_status()
+            self.assertIn("internal_payroll_snapshot", before["untrusted_assets"])
+
+            status = repo.promote_internal_asset_trust("internal_payroll_snapshot", actor="admin_user")
+
+            self.assertIn("internal_payroll_snapshot", status["trusted_assets"])
+            manifest = json.loads(repo._internal_manifest_path().read_text())
+            asset = next(a for a in manifest["assets"] if a["asset_type"] == "internal_payroll_snapshot")
+            self.assertTrue(asset["trusted_for_company_claims"])
+
+            events = repo.build_governance_payload()["events"]
+            promotion_events = [e for e in events if e["action_code"] == "trust_promoted"]
+            self.assertEqual(len(promotion_events), 1)
+            self.assertEqual(promotion_events[0]["target_type"], "internal_data_asset")
+            self.assertEqual(promotion_events[0]["target_id"], "internal_payroll_snapshot")
+            self.assertEqual(promotion_events[0]["actor"], "admin_user")
+
+    def test_revoke_requires_reason_and_flips_trust_back(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            events_path = Path(temp_dir) / "governance_events.sqlite"
+            repo = AnalyticsRepository(
+                ROOT_DIR, internal_data_dir=internal_dir, governance_events_path=events_path
+            )
+            repo.ingest_uploaded_payroll(self._make_csv(self._valid_payroll_rows()))
+            repo.promote_internal_asset_trust("internal_payroll_snapshot", actor="admin_user")
+
+            with self.assertRaises(ValueError):
+                repo.revoke_internal_asset_trust("internal_payroll_snapshot", actor="admin_user", reason="")
+
+            status = repo.revoke_internal_asset_trust(
+                "internal_payroll_snapshot", actor="admin_user", reason="Vendor flagged a data quality issue."
+            )
+
+            self.assertIn("internal_payroll_snapshot", status["untrusted_assets"])
+            manifest = json.loads(repo._internal_manifest_path().read_text())
+            asset = next(a for a in manifest["assets"] if a["asset_type"] == "internal_payroll_snapshot")
+            self.assertFalse(asset["trusted_for_company_claims"])
+
+            events = repo.build_governance_payload()["events"]
+            revoke_events = [e for e in events if e["action_code"] == "trust_revoked"]
+            self.assertEqual(len(revoke_events), 1)
+            self.assertEqual(revoke_events[0]["reason"], "Vendor flagged a data quality issue.")
+
+    def test_promote_rejects_unknown_asset_type(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+
+            with self.assertRaises(ValueError):
+                repo.promote_internal_asset_trust("internal_hris_workforce_snapshot", actor="admin_user")
+
+    def test_promote_rejects_asset_never_uploaded(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+
+            with self.assertRaises(ValueError):
+                repo.promote_internal_asset_trust("internal_payroll_snapshot", actor="admin_user")
+
+    def test_company_claims_stay_unavailable_until_both_assets_promoted(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = Path(temp_dir) / "internal"
+            internal_dir.mkdir(parents=True)
+            events_path = Path(temp_dir) / "governance_events.sqlite"
+            repo = AnalyticsRepository(
+                ROOT_DIR, internal_data_dir=internal_dir, governance_events_path=events_path
+            )
+            repo.ingest_uploaded_payroll(self._make_csv(self._valid_payroll_rows()))
+            repo.ingest_uploaded_job_architecture(self._make_csv(self._valid_job_architecture_rows()))
+
+            status = repo._internal_claim_trust_status()
+            self.assertFalse(status["trusted"])
+
+            repo.promote_internal_asset_trust("internal_payroll_snapshot", actor="admin_user")
+            still_partial = repo._internal_claim_trust_status()
+            self.assertFalse(still_partial["trusted"])
+            self.assertIn("internal_job_architecture", still_partial["untrusted_assets"])
+
+            repo.promote_internal_asset_trust("internal_job_architecture", actor="admin_user")
+            fully_trusted = repo._internal_claim_trust_status()
+            self.assertTrue(fully_trusted["trusted"])
 
 
 @unittest.skipIf(main is None, f"FastAPI app unavailable in test env: {MAIN_IMPORT_ERROR}")
