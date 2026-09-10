@@ -22,6 +22,9 @@ if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
 from service import AnalyticsRepository, OBSERVED_METRIC_IDS  # noqa: E402
+import evidence_signing  # noqa: E402
+
+os.environ.setdefault(evidence_signing.SIGNING_KEY_ENV_VAR, evidence_signing.generate_signing_key_b64())
 
 try:  # noqa: E402
     import main
@@ -381,6 +384,53 @@ class AnalyticsRepositoryTests(unittest.TestCase):
         self.assertIn("copilot", evidence_pack)
         self.assertIn("brief", evidence_pack)
         self.assertIn("automation", evidence_pack)
+
+    def test_evidence_pack_is_signed_and_verifiable(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.environ[evidence_signing.SIGNING_KEY_ENV_VAR] = evidence_signing.generate_signing_key_b64()
+            events_path = Path(temp_dir) / "governance_events.json"
+            repo = AnalyticsRepository(ROOT_DIR, governance_events_path=events_path)
+
+            pack = repo.build_evidence_pack(actor="test-actor")
+
+            self.assertIn("chain_tip_hash", pack)
+            self.assertIn("integrity", pack)
+            self.assertEqual(pack["integrity"]["signature_algorithm"], "ed25519")
+            signing_key = evidence_signing.load_signing_key()
+            self.assertTrue(
+                evidence_signing.verify_pack(pack, evidence_signing.public_key_pem(signing_key))
+            )
+
+    def test_evidence_pack_export_writes_governance_event(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.environ[evidence_signing.SIGNING_KEY_ENV_VAR] = evidence_signing.generate_signing_key_b64()
+            events_path = Path(temp_dir) / "governance_events.json"
+            repo = AnalyticsRepository(ROOT_DIR, governance_events_path=events_path)
+
+            self.assertEqual(len(repo.governance_events), 0)
+            repo.build_evidence_pack(actor="test-actor")
+
+            self.assertEqual(len(repo.governance_events), 1)
+            event = repo.governance_events[0]
+            self.assertEqual(event["action_code"], "exported")
+            self.assertEqual(event["target_type"], "evidence_pack")
+            self.assertEqual(event["actor"], "test-actor")
+
+    def test_evidence_pack_verification_fails_if_tampered_after_export(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.environ[evidence_signing.SIGNING_KEY_ENV_VAR] = evidence_signing.generate_signing_key_b64()
+            events_path = Path(temp_dir) / "governance_events.json"
+            repo = AnalyticsRepository(ROOT_DIR, governance_events_path=events_path)
+
+            pack = repo.build_evidence_pack(actor="test-actor")
+            signing_key = evidence_signing.load_signing_key()
+            public_pem = evidence_signing.public_key_pem(signing_key)
+
+            tampered = dict(pack)
+            tampered["summary"] = {**pack["summary"], "headline": "Everything is fine, trust us."}
+
+            self.assertTrue(evidence_signing.verify_pack(pack, public_pem))
+            self.assertFalse(evidence_signing.verify_pack(tampered, public_pem))
 
     def test_phase5_copilot_briefs_and_workflows_are_governed(self):
         overview = self.repo.build_overview(geography="DE")
@@ -929,7 +979,7 @@ class AnalyticsRepositoryTests(unittest.TestCase):
         evidence_pack = self.repo.build_evidence_pack()
 
         self.assertEqual(evidence_pack["pack_type"], "workforceguard_compliance_evidence_pack")
-        self.assertEqual(evidence_pack["pack_version"], "phase-4-v1")
+        self.assertEqual(evidence_pack["pack_version"], "phase-4-v2")
         self.assertIn("compliance_review", evidence_pack)
         self.assertIn("export_contract", evidence_pack["compliance_review"])
         self.assertFalse(evidence_pack["compliance_review"]["export_contract"]["contains_person_level_data"])
