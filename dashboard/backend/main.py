@@ -12,7 +12,7 @@ from typing import Any, Dict, Optional
 
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -28,6 +28,8 @@ from auth.oauth import (
 from auth.redirects import frontend_login_redirect
 from auth.repository import AuthRepository
 from service import AnalyticsRepository, RepositoryRegistry
+import evidence_signing
+from evidence_pack_pdf import render_evidence_pack_pdf
 
 logger = logging.getLogger("workforceguard.api")
 
@@ -125,6 +127,7 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(title="WorkforceGuard Analytics API", lifespan=lifespan)
 
 app.add_middleware(SessionMiddleware, secret_key=os.environ["SESSION_SECRET"])
+evidence_signing.load_signing_key()  # fail fast at boot if misconfigured, matching SESSION_SECRET above
 
 _KNOWN_PRODUCTION_ORIGINS = {
     "https://workforceguard-ai.vercel.app",
@@ -371,6 +374,7 @@ def get_evidence_pack(
     benchmark_geography: Optional[str] = None,
     benchmark_sector: Optional[str] = None,
     repo: AnalyticsRepository = Depends(get_repository),
+    ctx: AuthContext = Depends(require_session),
 ):
     return guarded(
         repo.build_evidence_pack,
@@ -380,6 +384,54 @@ def get_evidence_pack(
         period=period,
         benchmark_geography=benchmark_geography,
         benchmark_sector=benchmark_sector,
+        actor=ctx.user_id,
+    )
+
+
+@app.get("/api/evidence-pack/public-key")
+def get_evidence_pack_public_key():
+    # Deliberately unauthenticated: the whole point of this endpoint is that
+    # an external recipient (auditor, works council member, regulator) who
+    # has no WorkforceGuard account needs to fetch the public key to verify
+    # a pack they were handed. The key is, by definition, meant to be public.
+    def _load_public_key_info():
+        signing_key = evidence_signing.load_signing_key()
+        return {
+            "public_key_pem": evidence_signing.public_key_pem(signing_key),
+            "signing_key_id": evidence_signing.key_id(signing_key),
+            "signature_algorithm": "ed25519",
+        }
+
+    return guarded(_load_public_key_info)
+
+
+@app.get("/api/evidence-pack/pdf")
+def get_evidence_pack_pdf(
+    country: str = "ALL",
+    geography: str = "EU27_AVG",
+    sector: str = "ALL",
+    period: str = "latest",
+    benchmark_geography: Optional[str] = None,
+    benchmark_sector: Optional[str] = None,
+    repo: AnalyticsRepository = Depends(get_repository),
+    ctx: AuthContext = Depends(require_session),
+):
+    pack = guarded(
+        repo.build_evidence_pack,
+        country=country,
+        geography=geography,
+        sector=sector,
+        period=period,
+        benchmark_geography=benchmark_geography,
+        benchmark_sector=benchmark_sector,
+        actor=ctx.user_id,
+    )
+    pdf_bytes = guarded(render_evidence_pack_pdf, pack)
+    filename = f"workforceguard-evidence-{country}-{period}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 

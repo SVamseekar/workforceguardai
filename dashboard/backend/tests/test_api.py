@@ -37,6 +37,8 @@ try:
         raise RuntimeError("DATABASE_URL not set; required for authenticated test client")
 
     os.environ.setdefault("SESSION_SECRET", "test-secret-not-for-production-use-only")
+    import evidence_signing
+    os.environ.setdefault(evidence_signing.SIGNING_KEY_ENV_VAR, evidence_signing.generate_signing_key_b64())
     _client = authed_client(app_module.app)
     _SKIP = False
     _SKIP_REASON = ""
@@ -368,6 +370,49 @@ class OverviewEgaproBenchmarkIntegrationTests(unittest.TestCase):
         self.assertLessEqual(eb["p50_score"], 100)
         self.assertLessEqual(eb["p25_score"], eb["p50_score"])
         self.assertLessEqual(eb["p50_score"], eb["p75_score"])
+
+
+@unittest.skipIf(_SKIP, f"FastAPI app or httpx unavailable: {_SKIP_REASON}")
+class EvidencePackRouteTests(unittest.TestCase):
+    """GET /api/evidence-pack, /api/evidence-pack/pdf, /api/evidence-pack/public-key"""
+
+    def test_evidence_pack_requires_session(self):
+        from fastapi.testclient import TestClient
+
+        unauthenticated_client = TestClient(app_module.app)
+        response = unauthenticated_client.get("/api/evidence-pack")
+        self.assertEqual(response.status_code, 401)
+
+    def test_evidence_pack_returns_200_when_authenticated(self):
+        response = _client.get("/api/evidence-pack")
+        self.assertEqual(response.status_code, 200)
+
+    def test_evidence_pack_public_key_returns_pem(self):
+        response = _client.get("/api/evidence-pack/public-key")
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertIn("-----BEGIN PUBLIC KEY-----", body["public_key_pem"])
+        self.assertEqual(body["signature_algorithm"], "ed25519")
+        self.assertEqual(len(body["signing_key_id"]), 8)
+
+    def test_evidence_pack_public_key_does_not_require_session(self):
+        # Deliberately unauthenticated: an external recipient (auditor,
+        # works council member, regulator) with no WorkforceGuard account
+        # must be able to fetch the public key to verify a pack they were
+        # handed. The key is, by definition, meant to be public.
+        from fastapi.testclient import TestClient
+
+        unauthenticated_client = TestClient(app_module.app)
+        response = unauthenticated_client.get("/api/evidence-pack/public-key")
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertIn("-----BEGIN PUBLIC KEY-----", body["public_key_pem"])
+
+    def test_evidence_pack_pdf_returns_pdf_bytes(self):
+        response = _client.get("/api/evidence-pack/pdf")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["content-type"], "application/pdf")
+        self.assertTrue(response.content.startswith(b"%PDF-"))
 
 
 if __name__ == "__main__":

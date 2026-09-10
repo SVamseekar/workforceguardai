@@ -14,6 +14,8 @@ from typing import Any, Dict, Iterable, List, Optional
 
 import duckdb
 
+import evidence_signing
+
 
 AGGREGATE_SECTORS = {
     "A-S",
@@ -4050,7 +4052,7 @@ class AnalyticsRepository:
             output = self.build_overview(**filters)["brief"]
             output_type = "brief"
         elif schedule["output"] == "compliance_evidence_pack":
-            output = self.build_evidence_pack(**filters)
+            output = self.build_evidence_pack(**filters, actor="automation_runner")
             output_type = "evidence_pack"
         else:
             raise ValueError(f"Unsupported scheduled output: {schedule['output']}")
@@ -5991,6 +5993,7 @@ class AnalyticsRepository:
         period: str = "latest",
         benchmark_geography: Optional[str] = None,
         benchmark_sector: Optional[str] = None,
+        actor: Optional[str] = None,
     ) -> Dict[str, Any]:
         overview = self.build_overview(
             country,
@@ -6000,10 +6003,17 @@ class AnalyticsRepository:
             benchmark_geography=benchmark_geography,
             benchmark_sector=benchmark_sector,
         )
-        return {
+        # Captured before recording the export event below, so the signed
+        # chain_tip_hash reflects the governance state this pack was
+        # actually built from — not the export event about to be appended
+        # for it (avoids a self-referential hash).
+        chain_tip_hash = self._latest_governance_hash()
+
+        pack: Dict[str, Any] = {
             "generated_at": overview["generated_at"],
             "pack_type": "workforceguard_compliance_evidence_pack",
-            "pack_version": "phase-4-v1",
+            "pack_version": "phase-4-v2",
+            "chain_tip_hash": chain_tip_hash,
             "filters": overview["filters"]["applied"],
             "summary": {
                 "headline": overview["intelligence"]["headline"],
@@ -6035,6 +6045,25 @@ class AnalyticsRepository:
             "recommendations": overview["intelligence"]["recommendations"],
             "governance": overview["governance"],
         }
+
+        signing_key = evidence_signing.load_signing_key()
+        pack["integrity"] = evidence_signing.sign_pack(pack, signing_key)
+
+        target_id = "::".join([country, geography, sector, period])
+        self.record_governance_event(
+            {
+                "action_code": "exported",
+                "target_type": "evidence_pack",
+                "target_id": target_id,
+                "actor": actor or "system",
+                "context": {
+                    "pack_hash": pack["integrity"]["pack_hash"],
+                    "signing_key_id": pack["integrity"]["signing_key_id"],
+                },
+            }
+        )
+
+        return pack
 
 
 class RepositoryRegistry:
