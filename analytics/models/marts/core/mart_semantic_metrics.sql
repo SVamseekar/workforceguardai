@@ -78,6 +78,22 @@ default_sector_signals as (
     group by 1
 ),
 
+geo_sector_letter_signals as (
+    -- Some countries (e.g. Denmark) report vacancy/pay-gap data only at the
+    -- single-letter NACE section level, with no 'ALL', 'A-S' or 'B-S'
+    -- rollup at all. Average across that country's own reported sections
+    -- (single uppercase letters only, so combined rollups like 'B-E' or
+    -- 'G-N' don't double-count) as a last real-data fallback before we
+    -- admit the metric is unavailable. See issue #31 / #79.
+    select
+        geo_id,
+        avg(case when signal_name = 'job_vacancy_rate' then signal_value end) as avg_vacancy_rate,
+        avg(case when signal_name = 'gender_pay_gap' then signal_value end) as avg_gender_pay_gap
+    from latest_signals
+    where regexp_matches(sector_id, '^[A-Z]$')
+    group by 1
+),
+
 skill_flags as (
     select
         r.occupation_uri,
@@ -131,16 +147,23 @@ scored_context as (
     select
         p.geo_id,
         p.sector_id,
-        coalesce(s.vacancy_rate, d.default_vacancy_rate, 0) as vacancy_rate,
-        coalesce(c.unemployment_rate, 0) as unemployment_rate,
-        coalesce(c.employment_rate, 0) as employment_rate,
-        greatest(coalesce(d.default_gender_pay_gap, s.gender_pay_gap, 0), 0) as pay_gap,
+        -- Three-tier fallback, never a fabricated zero: this country/sector's
+        -- own signal -> known alternate country rollup -> average of this
+        -- country's reported NACE sections -> NULL (metric reported as
+        -- unavailable downstream, not silently scored as "no risk").
+        coalesce(s.vacancy_rate, d.default_vacancy_rate, g.avg_vacancy_rate) as vacancy_rate,
+        c.unemployment_rate,
+        c.employment_rate,
+        case
+            when coalesce(d.default_gender_pay_gap, s.gender_pay_gap, g.avg_gender_pay_gap) is null then null
+            else greatest(coalesce(d.default_gender_pay_gap, s.gender_pay_gap, g.avg_gender_pay_gap), 0)
+        end as pay_gap,
         c.labour_slack_rate,
         c.flow_to_employment,
         c.flow_to_inactivity,
         c.employment_continuity,
-        coalesce(k.digital_skill_coverage, o.digital_skill_coverage, 0) as digital_skill_coverage,
-        coalesce(k.green_skill_coverage, o.green_skill_coverage, 0) as green_skill_coverage
+        coalesce(k.digital_skill_coverage, o.digital_skill_coverage) as digital_skill_coverage,
+        coalesce(k.green_skill_coverage, o.green_skill_coverage) as green_skill_coverage
     from sector_pairs p
     left join country_signals c
         on p.geo_id = c.geo_id
@@ -149,6 +172,8 @@ scored_context as (
        and p.sector_id = s.sector_id
     left join default_sector_signals d
         on p.geo_id = d.geo_id
+    left join geo_sector_letter_signals g
+        on p.geo_id = g.geo_id
     left join sector_skill_context k
         on p.sector_id = k.sector_id
     cross join overall_skill_context o
@@ -183,9 +208,16 @@ raw_scores as (
 clamped_scores as (
     select
         *,
-        least(100, greatest(0, round(hiring_pressure_raw))) as hiring_pressure_index,
-        least(100, greatest(0, round(labour_resilience_raw))) as labour_resilience,
-        least(100, greatest(0, round(equity_risk_raw))) as equity_risk_score
+        -- DuckDB's greatest()/least() ignore NULL arguments (greatest(0, NULL) = 0),
+        -- so clamping a NULL raw score would silently reintroduce the fabricated-zero
+        -- bug this model just removed upstream. Guard explicitly: no raw score, no
+        -- clamped score.
+        case when hiring_pressure_raw is null then null
+             else least(100, greatest(0, round(hiring_pressure_raw))) end as hiring_pressure_index,
+        case when labour_resilience_raw is null then null
+             else least(100, greatest(0, round(labour_resilience_raw))) end as labour_resilience,
+        case when equity_risk_raw is null then null
+             else least(100, greatest(0, round(equity_risk_raw))) end as equity_risk_score
     from raw_scores
 ),
 
@@ -206,17 +238,20 @@ final_scores as (
         hiring_pressure_index,
         labour_resilience,
         equity_risk_score,
-        least(
-            100,
-            greatest(
-                0,
-                round(
-                    labour_resilience * 0.45
-                    + greatest(0, 100 - hiring_pressure_index) * 0.25
-                    + least(100, (digital_skill_coverage + green_skill_coverage) * 4) * 0.30
+        case
+            when labour_resilience is null or hiring_pressure_index is null then null
+            else least(
+                100,
+                greatest(
+                    0,
+                    round(
+                        labour_resilience * 0.45
+                        + greatest(0, 100 - hiring_pressure_index) * 0.25
+                        + least(100, (digital_skill_coverage + green_skill_coverage) * 4) * 0.30
+                    )
                 )
             )
-        ) as transition_readiness
+        end as transition_readiness
     from clamped_scores
 ),
 
@@ -227,12 +262,16 @@ unioned as (
         'hiring_pressure_index' as metric_id,
         hiring_pressure_index as metric_value,
         'eurostat_jvs' as primary_source_id,
-        'proxy_live' as implementation_status,
-        concat(
-            'Vacancy ', round(vacancy_rate, 1),
-            '%, unemployment ', round(unemployment_rate, 1),
-            coalesce(concat('%, slack ', round(labour_slack_rate, 1)), '%')
-        ) as evidence_summary
+        case when hiring_pressure_index is null then 'unavailable' else 'proxy_live' end as implementation_status,
+        case
+            when vacancy_rate is null then 'Vacancy data unavailable for this geography/sector; hiring pressure not scored.'
+            else concat(
+                'Vacancy ', round(vacancy_rate, 1),
+                '%, unemployment ',
+                case when unemployment_rate is null then 'unavailable' else concat(round(unemployment_rate, 1), '%') end,
+                case when labour_slack_rate is null then '' else concat(', slack ', round(labour_slack_rate, 1)) end
+            )
+        end as evidence_summary
     from final_scores
 
     union all
@@ -243,8 +282,11 @@ unioned as (
         'labour_resilience' as metric_id,
         labour_resilience as metric_value,
         'eurostat_lfs' as primary_source_id,
-        'live' as implementation_status,
-        concat('Employment ', round(employment_rate, 1), '%, unemployment ', round(unemployment_rate, 1), '%') as evidence_summary
+        case when labour_resilience is null then 'unavailable' else 'live' end as implementation_status,
+        case
+            when labour_resilience is null then 'Employment/unemployment data unavailable for this geography/sector.'
+            else concat('Employment ', round(employment_rate, 1), '%, unemployment ', round(unemployment_rate, 1), '%')
+        end as evidence_summary
     from final_scores
 
     union all
@@ -255,8 +297,11 @@ unioned as (
         'equity_risk_score' as metric_id,
         equity_risk_score as metric_value,
         'eurostat_lfs' as primary_source_id,
-        'proxy_live' as implementation_status,
-        concat('Market pay-gap input ', round(pay_gap, 1), '%') as evidence_summary
+        case when equity_risk_score is null then 'unavailable' else 'proxy_live' end as implementation_status,
+        case
+            when pay_gap is null then 'Pay-gap data unavailable for this geography/sector.'
+            else concat('Market pay-gap input ', round(pay_gap, 1), '%')
+        end as evidence_summary
     from final_scores
 
     union all
@@ -267,14 +312,17 @@ unioned as (
         'transition_readiness' as metric_id,
         transition_readiness as metric_value,
         'esco_taxonomy' as primary_source_id,
-        'proxy_live' as implementation_status,
-        concat(
-            'ESCO skill coverage proxy: digital ',
-            round(digital_skill_coverage, 1),
-            '%, green ',
-            round(green_skill_coverage, 1),
-            '%'
-        ) as evidence_summary
+        case when transition_readiness is null then 'unavailable' else 'proxy_live' end as implementation_status,
+        case
+            when transition_readiness is null then 'Underlying hiring pressure or labour resilience unavailable; transition readiness not scored.'
+            else concat(
+                'ESCO skill coverage proxy: digital ',
+                round(digital_skill_coverage, 1),
+                '%, green ',
+                round(green_skill_coverage, 1),
+                '%'
+            )
+        end as evidence_summary
     from final_scores
 )
 

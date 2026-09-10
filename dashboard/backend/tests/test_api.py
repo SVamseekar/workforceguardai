@@ -37,6 +37,8 @@ try:
         raise RuntimeError("DATABASE_URL not set; required for authenticated test client")
 
     os.environ.setdefault("SESSION_SECRET", "test-secret-not-for-production-use-only")
+    import evidence_signing
+    os.environ.setdefault(evidence_signing.SIGNING_KEY_ENV_VAR, evidence_signing.generate_signing_key_b64())
     _client = authed_client(app_module.app)
     _SKIP = False
     _SKIP_REASON = ""
@@ -368,6 +370,106 @@ class OverviewEgaproBenchmarkIntegrationTests(unittest.TestCase):
         self.assertLessEqual(eb["p50_score"], 100)
         self.assertLessEqual(eb["p25_score"], eb["p50_score"])
         self.assertLessEqual(eb["p50_score"], eb["p75_score"])
+
+
+@unittest.skipIf(_SKIP, f"FastAPI app or httpx unavailable: {_SKIP_REASON}")
+class EvidencePackRouteTests(unittest.TestCase):
+    """GET /api/evidence-pack, /api/evidence-pack/pdf, /api/evidence-pack/public-key"""
+
+    def test_evidence_pack_requires_session(self):
+        from fastapi.testclient import TestClient
+
+        unauthenticated_client = TestClient(app_module.app)
+        response = unauthenticated_client.get("/api/evidence-pack")
+        self.assertEqual(response.status_code, 401)
+
+    def test_evidence_pack_returns_200_when_authenticated(self):
+        response = _client.get("/api/evidence-pack")
+        self.assertEqual(response.status_code, 200)
+
+    def test_evidence_pack_public_key_returns_pem(self):
+        response = _client.get("/api/evidence-pack/public-key")
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertIn("-----BEGIN PUBLIC KEY-----", body["public_key_pem"])
+        self.assertEqual(body["signature_algorithm"], "ed25519")
+        self.assertEqual(len(body["signing_key_id"]), 8)
+
+    def test_evidence_pack_public_key_does_not_require_session(self):
+        # Deliberately unauthenticated: an external recipient (auditor,
+        # works council member, regulator) with no WorkforceGuard account
+        # must be able to fetch the public key to verify a pack they were
+        # handed. The key is, by definition, meant to be public.
+        from fastapi.testclient import TestClient
+
+        unauthenticated_client = TestClient(app_module.app)
+        response = unauthenticated_client.get("/api/evidence-pack/public-key")
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertIn("-----BEGIN PUBLIC KEY-----", body["public_key_pem"])
+
+    def test_evidence_pack_pdf_returns_pdf_bytes(self):
+        response = _client.get("/api/evidence-pack/pdf")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["content-type"], "application/pdf")
+        self.assertTrue(response.content.startswith(b"%PDF-"))
+
+
+@unittest.skipIf(_SKIP, f"FastAPI app or httpx unavailable: {_SKIP_REASON}")
+class InternalAssetTrustRouteTests(unittest.TestCase):
+    """POST /api/internal-data/{asset_type}/promote,
+    POST /api/internal-data/{asset_type}/revoke (issue #82)."""
+
+    def test_promote_requires_admin_role(self):
+        from auth_test_helpers import authed_client
+
+        member_client = authed_client(app_module.app, role="member")
+        response = member_client.post(
+            "/api/internal-data/internal_payroll_snapshot/promote", json={}
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_promote_requires_session(self):
+        from fastapi.testclient import TestClient
+
+        unauthenticated_client = TestClient(app_module.app)
+        response = unauthenticated_client.post(
+            "/api/internal-data/internal_payroll_snapshot/promote", json={}
+        )
+        self.assertEqual(response.status_code, 401)
+
+    def test_promote_rejects_asset_never_uploaded(self):
+        # Fresh tenant in this test run, so nothing has been uploaded yet.
+        response = _client.post(
+            "/api/internal-data/internal_payroll_snapshot/promote", json={}
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_promote_then_revoke_round_trip(self):
+        csv_bytes = _make_payroll_csv(15)
+        upload_resp = _client.post(
+            "/api/upload/payroll",
+            files={"file": ("payroll.csv", csv_bytes, "text/csv")},
+        )
+        self.assertEqual(upload_resp.status_code, 200)
+
+        promote_resp = _client.post(
+            "/api/internal-data/internal_payroll_snapshot/promote", json={}
+        )
+        self.assertEqual(promote_resp.status_code, 200)
+        self.assertIn("internal_payroll_snapshot", promote_resp.json()["trusted_assets"])
+
+        revoke_missing_reason_resp = _client.post(
+            "/api/internal-data/internal_payroll_snapshot/revoke", json={}
+        )
+        self.assertEqual(revoke_missing_reason_resp.status_code, 400)
+
+        revoke_resp = _client.post(
+            "/api/internal-data/internal_payroll_snapshot/revoke",
+            json={"reason": "Vendor flagged a data quality issue."},
+        )
+        self.assertEqual(revoke_resp.status_code, 200)
+        self.assertIn("internal_payroll_snapshot", revoke_resp.json()["untrusted_assets"])
 
 
 if __name__ == "__main__":

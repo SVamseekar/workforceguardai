@@ -16,6 +16,10 @@ os.environ.setdefault("SESSION_SECRET", "test-secret-not-for-production-use-only
 os.environ.setdefault("DATABASE_URL", "postgresql://localhost/workforceguard_test")
 os.environ["WORKFORCEGUARD_SKIP_MIGRATION_CHECK"] = "1"
 
+import evidence_signing
+
+os.environ.setdefault(evidence_signing.SIGNING_KEY_ENV_VAR, evidence_signing.generate_signing_key_b64())
+
 from fastapi.testclient import TestClient
 
 import main as app_module

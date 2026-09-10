@@ -21,8 +21,12 @@ except Exception as exc:  # pragma: no cover
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS_DIR = ROOT / "scripts"
+BACKEND_DIR = ROOT / "dashboard" / "backend"
 DEFAULT_TENANT_ID = "a0000000-0000-4000-8000-000000000001"
 MERIDIAN_UPLOAD_SAMPLE = ROOT / "data" / "demo_samples" / "meridian_payroll_upload.csv"
+
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
 
 SCENARIO_GENERATORS = {
     "aerotech-fr": {
@@ -85,6 +89,34 @@ def run_prepare_internal(raw_dir: Path, internal_dir: Path, manifest_path: Path)
     return json.loads(manifest_path.read_text(encoding="utf-8"))
 
 
+def record_demo_trust_governance_events(
+    tenant_dir: Path, internal_dir: Path, manifest: dict[str, Any], tenant_id: str
+) -> None:
+    """prepare_internal_company_data.py --trust-company-data writes the
+    manifest's trusted_for_company_claims flags directly (it's a batch/CLI
+    tool, not the live upload+promote web flow from issue #82) -- so a
+    freshly seeded demo tenant has trusted data but zero governance
+    events, leaving the Govern screen looking empty even though Pay
+    Analysis is fully populated. Route each already-trusted asset through
+    the real promote_internal_asset_trust() so the demo tenant gets the
+    same governance trail a production tenant would have after an admin
+    promoted its data -- same tenant-scoped storage paths RepositoryRegistry
+    uses, so this repo instance and the one the running API serves see the
+    same governance store."""
+    from service import AnalyticsRepository
+
+    repo = AnalyticsRepository(
+        ROOT,
+        governance_events_path=tenant_dir / "governance_events.sqlite",
+        automation_schedules_path=tenant_dir / "automation_schedules.json",
+        internal_data_dir=internal_dir,
+        tenant_id=tenant_id,
+    )
+    for asset in manifest.get("assets", []):
+        if asset.get("trusted_for_company_claims"):
+            repo.promote_internal_asset_trust(asset["asset_type"], actor="demo_seed_script")
+
+
 def run_dbt_internal(internal_dir: Path, tenant_id: str) -> None:
     analytics_dir = ROOT / "analytics"
     if not analytics_dir.exists():
@@ -120,10 +152,13 @@ def parquet_row_count(path: Path) -> int:
 def print_health_summary(
     scenario: str,
     tenant_id: str,
+    tenant_dir: Path,
     internal_dir: Path,
     manifest_path: Path,
     manifest: dict[str, Any],
 ) -> None:
+    from service import AnalyticsRepository
+
     payroll_path = internal_dir / "payroll_snapshot.parquet"
     job_arch_path = internal_dir / "job_architecture.parquet"
 
@@ -153,6 +188,23 @@ def print_health_summary(
         for missing in missing_inputs:
             print(f"  - {missing}")
 
+    repo = AnalyticsRepository(
+        ROOT,
+        governance_events_path=tenant_dir / "governance_events.sqlite",
+        automation_schedules_path=tenant_dir / "automation_schedules.json",
+        internal_data_dir=internal_dir,
+        tenant_id=tenant_id,
+    )
+    internal_status = repo._build_internal_data_status()
+    governance_payload = repo.build_governance_payload()
+    print(f"Company-aware benchmarking available: {internal_status['available']}")
+    print(f"Governance events recorded: {governance_payload['integrity']['event_count']}")
+    if not internal_status["available"]:
+        print(f"  -> {internal_status.get('note', 'unavailable, see AnalyticsRepository._build_internal_data_status')}")
+        print("  This means Pay Analysis will show an empty state for this tenant -- "
+              "if dbt models were just rebuilt, this is expected until the next request "
+              "reconnects; otherwise investigate before using this tenant for a demo.")
+
 
 def seed_demo_tenant(scenario: str, tenant_id: str, *, skip_dbt: bool = False) -> dict[str, Any]:
     if scenario not in SCENARIO_GENERATORS:
@@ -167,10 +219,12 @@ def seed_demo_tenant(scenario: str, tenant_id: str, *, skip_dbt: bool = False) -
         run_generator(scenario, raw_dir)
         manifest = run_prepare_internal(raw_dir, internal_dir, manifest_path)
 
+    record_demo_trust_governance_events(tenant_dir, internal_dir, manifest, tenant_id)
+
     if not skip_dbt:
         run_dbt_internal(internal_dir, tenant_id)
 
-    print_health_summary(scenario, tenant_id, internal_dir, manifest_path, manifest)
+    print_health_summary(scenario, tenant_id, tenant_dir, internal_dir, manifest_path, manifest)
     return manifest
 
 

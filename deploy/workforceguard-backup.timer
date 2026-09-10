@@ -1,0 +1,12 @@
+[Unit]
+Description=Daily WorkforceGuard database backup
+
+[Timer]
+# 03:00 UTC daily, off peak. Persistent=true catches up a missed run if the
+# VM was stopped at the scheduled time (see deploy/gcp-service.sh stop).
+OnCalendar=*-*-* 03:00:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target
