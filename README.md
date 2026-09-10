@@ -70,7 +70,7 @@ Eurostat API  ──►  Python ingestion  ──►  DuckDB  ──►  dbt mod
 
 **Frontend:** React 18 + TypeScript + Vite, TanStack Query for data fetching, Recharts for time-series visualisation, Tailwind CSS. Deployed on Vercel.
 
-**CI/CD:** GitHub Actions — PRs and pushes to `main` run CI (tests, lint, frontend production build, secret scan). Deploy to GCP and Vercel runs only after CI passes on `main`. Releases are SemVer Git tags (`vX.Y.Z`) with GitHub Releases. Git and release process: [CONTRIBUTING.md](CONTRIBUTING.md).
+**CI/CD:** GitHub Actions — PRs and pushes to `main` run CI (pre-commit hooks, tests, lint, frontend production build, secret scan). Deploy to GCP and Vercel runs only after CI passes on `main`. Releases are SemVer Git tags (`vX.Y.Z`) with GitHub Releases. Git and release process: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 

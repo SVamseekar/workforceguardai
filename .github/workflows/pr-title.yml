@@ -1,0 +1,45 @@
+# Squash-merge uses the PR title as the commit subject. Validate it here
+# (including on title edits) so Conventional Commits land on main.
+name: PR title
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+    branches: [main]
+
+concurrency:
+  group: pr-title-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  conventional:
+    name: Conventional title
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validate PR title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          import sys
+
+          title = os.environ["TITLE"].strip()
+          # Conventional Commits 1.0.0. Types match CONTRIBUTING.md plus revert.
+          pattern = (
+              r"^(feat|fix|refactor|perf|test|docs|build|ci|chore|revert)"
+              r"(\([a-zA-Z0-9._/#-]+\))?(!)?: [^\s].+"
+          )
+          if not re.match(pattern, title):
+              print("PR title must be a Conventional Commit.")
+              print(f"  got: {title}")
+              print("  example: ci: run pre-commit hooks in GitHub Actions")
+              sys.exit(1)
+          print(f"OK: {title}")
+          PY

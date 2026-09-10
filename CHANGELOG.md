@@ -9,6 +9,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the release process.
 
 ## [Unreleased]
 
+### Changed
+
+- Pre-commit hooks match GitHub practice: local file hygiene plus the same
+  checks in CI, Conventional Commit messages, and PR-title validation for
+  squash-merge.
+
 ## [0.1.0] - 2026-09-10
 
 First tagged product release.

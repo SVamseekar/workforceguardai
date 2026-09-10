@@ -1,31 +1,72 @@
 # Install: pip install pre-commit && pre-commit install
 # Run all hooks: pre-commit run --all-files
+#
+# Local hooks are fast feedback. CI re-runs the same checks on the PR
+# diff so `git commit --no-verify` cannot land on main.
 default_language_version:
   python: python3
 
+default_install_hook_types:
+  - pre-commit
+  - commit-msg
+
+# If pre-commit.ci is enabled later, skip hooks that only make sense locally.
+ci:
+  skip: [no-commit-to-branch]
+  autofix_prs: false
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
+        exclude: \.csv$
       - id: end-of-file-fixer
+        exclude: \.csv$
       - id: check-yaml
         args: [--allow-multiple-documents]
       - id: check-json
+        exclude: (^dashboard/frontend/tsconfig\.json$)
       - id: check-toml
       - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-symlinks
+      - id: check-illegal-windows-names
+      - id: check-ast
+      - id: debug-statements
+      - id: check-executables-have-shebangs
+      - id: destroyed-symlinks
+      - id: fix-byte-order-marker
+      - id: detect-private-key
       - id: check-added-large-files
         args: [--maxkb=5120]
-      - id: detect-private-key
       - id: no-commit-to-branch
         args: [--branch, main]
       - id: mixed-line-ending
         args: [--fix=lf]
+        exclude: \.csv$
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.22.1
     hooks:
       - id: gitleaks
+
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.4.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args:
+          - feat
+          - fix
+          - refactor
+          - perf
+          - test
+          - docs
+          - build
+          - ci
+          - chore
+          - revert
 
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v4.0.0-alpha.8
