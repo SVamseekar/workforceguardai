@@ -1,0 +1,89 @@
+{
+  "code": "isoc_ske_itspe",
+  "label": "Enterprises that employ ICT specialists by size class of enterprise",
+  "updated": "2026-06-15T11:00:00+0200",
+  "dimensions": [
+    "freq",
+    "size_emp",
+    "nace_r2",
+    "indic_is",
+    "unit",
+    "geo",
+    "time"
+  ],
+  "categories": {
+    "freq": [
+      "A"
+    ],
+    "size_emp": [
+      "0_1",
+      "0-9",
+      "1-4",
+      "1-9",
+      "2-9",
+      "5-9",
+      "10-49",
+      "10-249",
+      "GE10",
+      "50-249",
+      "GE250"
+    ],
+    "nace_r2": [
+      "C10-S951_X_K"
+    ],
+    "indic_is": [
+      "E_ITSP2"
+    ],
+    "unit": [
+      "PC_ENT",
+      "PC_ENT_CUSE"
+    ],
+    "geo": [
+      "EU27_2020",
+      "EU28",
+      "EU27_2007",
+      "EU15",
+      "EA",
+      "BE",
+      "BG",
+      "CZ",
+      "DK",
+      "DE",
+      "EE",
+      "IE",
+      "EL",
+      "ES",
+      "FR",
+      "HR",
+      "IT",
+      "CY",
+      "LV",
+      "LT",
+      "LU",
+      "HU",
+      "MT",
+      "NL",
+      "AT",
+      "PL",
+      "PT",
+      "RO",
+      "SI",
+      "SK",
+      "FI",
+      "SE",
+      "IS",
+      "NO",
+      "UK",
+      "BA",
+      "ME",
+      "MK",
+      "AL",
+      "RS",
+      "TR"
+    ],
+    "time": [
+      "2024"
+    ]
+  },
+  "pulled_at": "2026-09-10T19:56:06.799602+00:00"
+}
