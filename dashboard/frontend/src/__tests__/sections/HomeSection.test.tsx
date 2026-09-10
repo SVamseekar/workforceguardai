@@ -1,7 +1,7 @@
 import { screen, waitFor } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import { http, HttpResponse } from 'msw'
-import { server } from '../handlers.js'
+import { server, MOCK_OVERVIEW } from '../handlers.js'
 import { HomeSection } from '../../components/sections/HomeSection.jsx'
 import { renderInRouter } from '../test-utils'
 
@@ -49,5 +49,39 @@ describe('HomeSection', () => {
     await waitFor(() =>
       expect(screen.getByText('Could not load data')).toBeInTheDocument(),
     )
+  })
+
+  it('shows "Unavailable" for a null semantic metric, never a fabricated 0/100', async () => {
+    server.use(
+      http.get('/api/overview', () => {
+        return HttpResponse.json({
+          ...MOCK_OVERVIEW,
+          semantic_metrics: [
+            {
+              id: 'transition_readiness',
+              title: 'Transition Readiness',
+              value: null,
+              unit: 'status',
+              definition: 'Composite readiness score.',
+              implementation_status: 'unavailable',
+              evidence_summary: [
+                'Selected geography: Germany',
+                'Sector scope: All sectors',
+                'Underlying hiring pressure or labour resilience unavailable; transition readiness not scored.',
+              ],
+            },
+          ],
+        })
+      }),
+    )
+
+    renderInRouter(<HomeSection />)
+    await waitFor(() => expect(screen.getByText('Transition Readiness')).toBeInTheDocument())
+
+    expect(screen.getByText('Unavailable')).toBeInTheDocument()
+    expect(screen.queryByText('0/100')).not.toBeInTheDocument()
+    expect(
+      screen.getByText('Underlying hiring pressure or labour resilience unavailable; transition readiness not scored.'),
+    ).toBeInTheDocument()
   })
 })
