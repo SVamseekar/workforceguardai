@@ -60,3 +60,33 @@ models:
       - name: slack_status_code
         tests:
           - not_null
+
+  - name: stg_eurostat__ict_specialist_employers
+    description: ICT-specialist-employer share observations standardized from the current Eurostat Parquet extract.
+    columns:
+      - name: region_code
+        tests:
+          - not_null
+      - name: period_code
+        tests:
+          - not_null
+
+  - name: stg_eurostat__green_sector_employment
+    description: Environmental goods and services sector employment observations standardized from the current Eurostat Parquet extract.
+    columns:
+      - name: region_code
+        tests:
+          - not_null
+      - name: period_code
+        tests:
+          - not_null
+
+  - name: stg_eurostat__employed_persons_total
+    description: Total employed-persons headcount observations (denominator for the green-employment-share signal) standardized from the current Eurostat Parquet extract.
+    columns:
+      - name: region_code
+        tests:
+          - not_null
+      - name: period_code
+        tests:
+          - not_null
