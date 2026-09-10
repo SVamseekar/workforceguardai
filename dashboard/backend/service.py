@@ -7,12 +7,15 @@ import math
 import re
 import sqlite3
 import time
+import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
 import duckdb
+
+import evidence_signing
 
 
 AGGREGATE_SECTORS = {
@@ -510,7 +513,7 @@ class AnalyticsRepository:
                 # just modeled into main to every tenant via this fallback.
                 self._assert_main_has_no_internal_tables(connection)
                 if self._tenant_schema_exists(connection):
-                    connection.execute(f"set search_path = '{self.tenant_schema},main'")
+                    self._set_tenant_search_path(connection)
             return connection
 
         connection = duckdb.connect(database=":memory:")
@@ -560,6 +563,19 @@ class AnalyticsRepository:
         ).fetchone()
         return row is not None
 
+    def _set_tenant_search_path(self, connection: duckdb.DuckDBPyConnection) -> None:
+        """`set search_path` doesn't support bind parameters for identifiers,
+        so this interpolates self.tenant_schema into SQL text. tenant_schema
+        is always produced by tenant_schema_name(), which sanitizes to
+        [a-z0-9_] only -- but re-assert that shape here immediately before
+        use rather than trust a property elsewhere never to regress, since
+        an f-string into SQL is exactly the pattern that becomes a real
+        injection risk the moment that invariant quietly breaks."""
+        assert self.tenant_schema is not None
+        if not re.fullmatch(r"[a-z0-9_]+", self.tenant_schema):
+            raise ValueError(f"Refusing to use non-normalized tenant schema name: {self.tenant_schema!r}")
+        connection.execute(f"set search_path = '{self.tenant_schema},main'")
+
     def _modeled_database_ready(self) -> bool:
         required_tables = {
             "dim_geography",
@@ -571,11 +587,19 @@ class AnalyticsRepository:
         return required_tables.issubset(available)
 
     def _available_tables(self) -> set[str]:
+        """Cannot call self._connect() here -- _connect() calls
+        self._modeled_database_ready(), which calls this method, which
+        would recurse forever. Connect directly, then replicate just the
+        tenant-schema search_path piece of _connect() so a tenant-scoped
+        repo sees its own internal-tagged tables (which live only in
+        tenant_<id>, never in 'main') instead of only ever seeing 'main'."""
         if not self.analytics_db_path.exists():
             return set()
 
         try:
             with self._connect_with_lock_retry() as connection:
+                if self.tenant_schema is not None and self._tenant_schema_exists(connection):
+                    self._set_tenant_search_path(connection)
                 rows = connection.execute("show tables").fetchall()
         except duckdb.Error:
             return set()
@@ -1108,6 +1132,59 @@ class AnalyticsRepository:
             "untrusted_assets": untrusted_assets,
             "manifest_path": str(self._internal_manifest_path()),
         }
+
+    def promote_internal_asset_trust(self, asset_type: str, actor: Optional[str] = None) -> Dict[str, Any]:
+        """Explicitly grants trust for one uploaded internal data asset.
+        Separate from upload itself (issue #82 / ADR-5): a human with an
+        admin session must take this action, and it always writes a
+        governance event, so trust can never be flipped by upload alone."""
+        return self._set_internal_asset_trust(asset_type, trusted=True, actor=actor, reason=None)
+
+    def revoke_internal_asset_trust(
+        self, asset_type: str, actor: Optional[str] = None, reason: str = ""
+    ) -> Dict[str, Any]:
+        """Explicitly revokes trust for one previously-promoted internal
+        data asset. Requires a reason (enforced by record_governance_event
+        via the trust_revoked action's requires_reason=true seed row)."""
+        return self._set_internal_asset_trust(asset_type, trusted=False, actor=actor, reason=reason)
+
+    def _set_internal_asset_trust(
+        self, asset_type: str, trusted: bool, actor: Optional[str], reason: Optional[str]
+    ) -> Dict[str, Any]:
+        valid_asset_types = {"internal_payroll_snapshot", "internal_job_architecture"}
+        if asset_type not in valid_asset_types:
+            raise ValueError(
+                f"Unknown internal data asset_type: {asset_type!r}. "
+                f"Valid types: {', '.join(sorted(valid_asset_types))}."
+            )
+
+        assets = self._internal_manifest_assets()
+        if asset_type not in assets:
+            raise ValueError(
+                f"No uploaded data found for {asset_type}; upload it before changing its trust status."
+            )
+
+        manifest_path = self._internal_manifest_path()
+        with manifest_path.open("r", encoding="utf-8") as handle:
+            manifest = json.load(handle)
+        for asset in manifest.get("assets", []):
+            if asset.get("asset_type") == asset_type:
+                asset["trusted_for_company_claims"] = trusted
+
+        with manifest_path.open("w", encoding="utf-8") as handle:
+            json.dump(manifest, handle, indent=2)
+
+        self.record_governance_event(
+            {
+                "action_code": "trust_promoted" if trusted else "trust_revoked",
+                "target_type": "internal_data_asset",
+                "target_id": asset_type,
+                "actor": actor or "system",
+                "reason": reason,
+            }
+        )
+
+        return self._internal_claim_trust_status()
 
     def _build_internal_data_status(self) -> Dict[str, Any]:
         if not self._modeled_database_ready():
@@ -2953,9 +3030,19 @@ class AnalyticsRepository:
         def format_percentage(value: Optional[float]) -> str:
             return f"{value:.1f}%" if value is not None else "Unavailable"
 
-        hiring_pressure = int((semantic_metrics.get("hiring_pressure_index") or {}).get("value") or 0)
-        labour_resilience = int((semantic_metrics.get("labour_resilience") or {}).get("value") or 0)
-        equity_risk = int((semantic_metrics.get("equity_risk_score") or {}).get("value") or 0)
+        def score_or_none(metric_id: str) -> Optional[int]:
+            value = (semantic_metrics.get(metric_id) or {}).get("value")
+            return int(value) if value is not None else None
+
+        def format_score(value: Optional[int]) -> str:
+            return f"{value}/100" if value is not None else "Unavailable"
+
+        # None means the underlying data is missing (see mart_semantic_metrics,
+        # issue #79) and must be treated as "unavailable", not coerced to a
+        # fabricated 0 that would read as a false "no risk" signal below.
+        hiring_pressure = score_or_none("hiring_pressure_index")
+        labour_resilience = score_or_none("labour_resilience")
+        equity_risk = score_or_none("equity_risk_score")
 
         vacancy_rate = metric_value("vacancy_rate")
         employment_rate = metric_value("employment_rate")
@@ -2998,11 +3085,13 @@ class AnalyticsRepository:
                 "lead_metric": active_benchmark_lead,
             }
 
-        if hiring_pressure >= 70 and labour_resilience >= 65:
+        if hiring_pressure is None and labour_resilience is None and equity_risk is None:
+            headline = "Not enough external market data is available to summarize conditions for this filter."
+        elif hiring_pressure is not None and labour_resilience is not None and hiring_pressure >= 70 and labour_resilience >= 65:
             headline = "The market looks resilient, but hiring pressure is intensifying."
-        elif equity_risk >= 70:
+        elif equity_risk is not None and equity_risk >= 70:
             headline = "The clearest external risk signal is pay-equity pressure."
-        elif labour_resilience < 55:
+        elif labour_resilience is not None and labour_resilience < 55:
             headline = "Labour resilience is softening and needs closer review."
         else:
             headline = "Conditions are stable overall, with a few hotspots worth acting on first."
@@ -3040,7 +3129,11 @@ class AnalyticsRepository:
             {
                 "id": "signal_hiring_pressure",
                 "title": "Hiring pressure",
-                "tone": "watch" if hiring_pressure >= 70 else "neutral" if hiring_pressure >= 45 else "good",
+                "tone": (
+                    "watch" if hiring_pressure is not None and hiring_pressure >= 70
+                    else "good" if hiring_pressure is not None and hiring_pressure < 45
+                    else "neutral"
+                ),
                 "detail": (
                     f"Vacancy intensity is {format_percentage(vacancy_rate)} and the tightest sector is {top_vacancy['sector_label']}."
                     if top_vacancy
@@ -3054,7 +3147,7 @@ class AnalyticsRepository:
                     "Hiring pressure",
                     "Grounded summary of the current labour-demand environment.",
                     [
-                        {"label": "Hiring pressure index", "value": f"{hiring_pressure}/100"},
+                        {"label": "Hiring pressure index", "value": format_score(hiring_pressure)},
                         {"label": "Observed vacancy rate", "value": format_percentage(vacancy_rate)},
                         {"label": "Leading vacancy hotspot", "value": top_vacancy["sector_label"] if top_vacancy else "Unavailable"},
                     ],
@@ -3068,13 +3161,17 @@ class AnalyticsRepository:
             {
                 "id": "signal_labour_resilience",
                 "title": "Labour resilience",
-                "tone": "good" if labour_resilience >= 70 else "neutral" if labour_resilience >= 45 else "watch",
+                "tone": (
+                    "good" if labour_resilience is not None and labour_resilience >= 70
+                    else "watch" if labour_resilience is not None and labour_resilience < 45
+                    else "neutral"
+                ),
                 "detail": f"Employment is {format_percentage(employment_rate)} and unemployment is {format_percentage(unemployment_rate)}.",
                 "evidence_bundle": bundle(
                     "Labour resilience",
                     "Combined labour-market strength for the selected geography.",
                     [
-                        {"label": "Labour resilience", "value": f"{labour_resilience}/100"},
+                        {"label": "Labour resilience", "value": format_score(labour_resilience)},
                         {"label": "Employment", "value": format_percentage(employment_rate)},
                         {"label": "Unemployment", "value": format_percentage(unemployment_rate)},
                     ],
@@ -3089,7 +3186,11 @@ class AnalyticsRepository:
             {
                 "id": "signal_equity_risk",
                 "title": "Pay equity pressure",
-                "tone": "watch" if equity_risk >= 70 else "neutral" if equity_risk >= 45 else "good",
+                "tone": (
+                    "watch" if equity_risk is not None and equity_risk >= 70
+                    else "good" if equity_risk is not None and equity_risk < 45
+                    else "neutral"
+                ),
                 "detail": (
                     f"Market pay gap is {pay_gap:.1f}% and the widest hotspot is {top_gap['sector_label']}."
                     if top_gap
@@ -3103,7 +3204,7 @@ class AnalyticsRepository:
                     "Pay equity pressure",
                     "Market-level pay-gap pressure for the selected geography and sector scope.",
                     [
-                        {"label": "Equity risk score", "value": f"{equity_risk}/100"},
+                        {"label": "Equity risk score", "value": format_score(equity_risk)},
                         {"label": "Observed pay gap", "value": format_percentage(pay_gap)},
                         {"label": "Leading pay-gap hotspot", "value": top_gap["sector_label"] if top_gap else "Unavailable"},
                     ],
@@ -3188,7 +3289,7 @@ class AnalyticsRepository:
                 {
                     "id": "recommendation_hiring_focus",
                     "title": f"Focus hiring analysis on {top_vacancy['sector_label']}",
-                    "priority": "high" if hiring_pressure >= 70 else "medium",
+                    "priority": "high" if hiring_pressure is not None and hiring_pressure >= 70 else "medium",
                     "detail": (
                         f"{top_vacancy['sector_label']} has the strongest vacancy signal at {top_vacancy['value']:.1f}%. "
                         "Investigate talent supply, compensation competitiveness, and channel mix there first."
@@ -3198,7 +3299,7 @@ class AnalyticsRepository:
                         f"Focus hiring analysis on {top_vacancy['sector_label']}",
                         "This recommendation is grounded in current vacancy pressure.",
                         [
-                            {"label": "Hiring pressure index", "value": f"{hiring_pressure}/100"},
+                            {"label": "Hiring pressure index", "value": format_score(hiring_pressure)},
                             {"label": "Top vacancy sector", "value": f"{top_vacancy['sector_label']} ({top_vacancy['value']:.1f}%)"},
                             {"label": "Selected geography", "value": filters.geography_label},
                         ],
@@ -3242,7 +3343,7 @@ class AnalyticsRepository:
                 {
                     "id": "recommendation_equity_review",
                     "title": f"Review pay-equity risk in {top_gap['sector_label']}",
-                    "priority": "high" if equity_risk >= 70 else "medium",
+                    "priority": "high" if equity_risk is not None and equity_risk >= 70 else "medium",
                     "detail": (
                         f"{top_gap['sector_label']} shows the widest market pay gap at {top_gap['value']:.1f}%. "
                         "Use this as a benchmark for internal pay-review readiness."
@@ -3252,7 +3353,7 @@ class AnalyticsRepository:
                         f"Review pay-equity risk in {top_gap['sector_label']}",
                         "Grounded in observed market pay-gap signals.",
                         [
-                            {"label": "Equity risk score", "value": f"{equity_risk}/100"},
+                            {"label": "Equity risk score", "value": format_score(equity_risk)},
                             {"label": "Top pay-gap sector", "value": f"{top_gap['sector_label']} ({top_gap['value']:.1f}%)"},
                             {"label": "Selected geography", "value": filters.geography_label},
                         ],
@@ -3287,7 +3388,7 @@ class AnalyticsRepository:
             {
                 "id": "watch_equity_hotspot",
                 "label": "Largest pay-gap hotspot",
-                "tone": "watch" if equity_risk >= 70 else "neutral",
+                "tone": "watch" if equity_risk is not None and equity_risk >= 70 else "neutral",
                 "value": top_gap["sector_label"] if top_gap else "Unavailable",
                 "detail": f"{top_gap['value']:.1f}% gap in the latest annual release." if top_gap else "No pay-gap hotspot available.",
                 "evidence_bundle": bundle(
@@ -4026,7 +4127,7 @@ class AnalyticsRepository:
             output = self.build_overview(**filters)["brief"]
             output_type = "brief"
         elif schedule["output"] == "compliance_evidence_pack":
-            output = self.build_evidence_pack(**filters)
+            output = self.build_evidence_pack(**filters, actor="automation_runner")
             output_type = "evidence_pack"
         else:
             raise ValueError(f"Unsupported scheduled output: {schedule['output']}")
@@ -4155,7 +4256,12 @@ class AnalyticsRepository:
                     "version": "uploaded-v1",
                     "record_count": len(df),
                     "output": str(out_path),
-                    "trusted_for_company_claims": True,
+                    # Upload alone must never grant trust -- ADR-5 gates
+                    # company claims on this flag, and flipping it requires
+                    # a separate, governance-logged admin action (issue
+                    # #82). A re-upload resets trust, requiring re-promotion
+                    # of the new data.
+                    "trusted_for_company_claims": False,
                 },
             ],
         }
@@ -4260,7 +4366,9 @@ class AnalyticsRepository:
                     "version": "uploaded-v1",
                     "record_count": len(df),
                     "output": str(out_path),
-                    "trusted_for_company_claims": True,
+                    # See the matching comment in ingest_uploaded_payroll:
+                    # upload alone must never grant trust (issue #82).
+                    "trusted_for_company_claims": False,
                 },
             ],
         }
@@ -5941,7 +6049,13 @@ class AnalyticsRepository:
 
         sequence = self._next_governance_sequence()
         event = {
-            "event_id": f"evt_{sequence:04d}",
+            # UUIDs, not evt_{sequence} -- a sequence-derived ID is not
+            # globally unique across process restarts (in-memory list
+            # length resets to 0 each boot), which is a real liability for
+            # audit-grade evidence packs. event_sequence still orders the
+            # hash chain; event_id is a reference, not integrity material,
+            # so this needs no migration of previously written event_ids.
+            "event_id": str(uuid.uuid4()),
             "event_sequence": sequence,
             "action_code": action_code,
             "action_name": action["action_name"],
@@ -5967,6 +6081,7 @@ class AnalyticsRepository:
         period: str = "latest",
         benchmark_geography: Optional[str] = None,
         benchmark_sector: Optional[str] = None,
+        actor: Optional[str] = None,
     ) -> Dict[str, Any]:
         overview = self.build_overview(
             country,
@@ -5976,10 +6091,17 @@ class AnalyticsRepository:
             benchmark_geography=benchmark_geography,
             benchmark_sector=benchmark_sector,
         )
-        return {
+        # Captured before recording the export event below, so the signed
+        # chain_tip_hash reflects the governance state this pack was
+        # actually built from — not the export event about to be appended
+        # for it (avoids a self-referential hash).
+        chain_tip_hash = self._latest_governance_hash()
+
+        pack: Dict[str, Any] = {
             "generated_at": overview["generated_at"],
             "pack_type": "workforceguard_compliance_evidence_pack",
-            "pack_version": "phase-4-v1",
+            "pack_version": "phase-4-v2",
+            "chain_tip_hash": chain_tip_hash,
             "filters": overview["filters"]["applied"],
             "summary": {
                 "headline": overview["intelligence"]["headline"],
@@ -6011,6 +6133,25 @@ class AnalyticsRepository:
             "recommendations": overview["intelligence"]["recommendations"],
             "governance": overview["governance"],
         }
+
+        signing_key = evidence_signing.load_signing_key()
+        pack["integrity"] = evidence_signing.sign_pack(pack, signing_key)
+
+        target_id = "::".join([country, geography, sector, period])
+        self.record_governance_event(
+            {
+                "action_code": "exported",
+                "target_type": "evidence_pack",
+                "target_id": target_id,
+                "actor": actor or "system",
+                "context": {
+                    "pack_hash": pack["integrity"]["pack_hash"],
+                    "signing_key_id": pack["integrity"]["signing_key_id"],
+                },
+            }
+        )
+
+        return pack
 
 
 class RepositoryRegistry:

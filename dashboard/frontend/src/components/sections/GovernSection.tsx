@@ -31,7 +31,7 @@ function formatDate(val: unknown): string {
 }
 
 export function GovernSection() {
-  const { overview, loading, error, exporting, scheduleLoading, exportEvidencePack, scheduleBrief } = useOverviewData()
+  const { overview, loading, error, exporting, exportingPdf, scheduleLoading, exportEvidencePack, exportEvidencePackPdf, scheduleBrief } = useOverviewData()
   const { isAdmin } = useAuth()
 
   const ov = (overview ?? {}) as AnyObj
@@ -163,6 +163,15 @@ export function GovernSection() {
             >
               <Download size={16} />
               {exporting ? 'Preparing download…' : 'Download Evidence Pack'}
+            </button>
+            <button
+              className="filter-bar__button"
+              onClick={exportEvidencePackPdf}
+              disabled={exportingPdf}
+              style={{ display: 'inline-flex', gap: 8, alignItems: 'center', marginLeft: 10 }}
+            >
+              <Download size={16} />
+              {exportingPdf ? 'Preparing PDF…' : 'Download PDF'}
             </button>
           </div>
         </section>

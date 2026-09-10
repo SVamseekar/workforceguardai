@@ -10,3 +10,5 @@ asyncpg
 itsdangerous
 authlib
 httpx
+reportlab
+pypdf

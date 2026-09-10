@@ -160,20 +160,32 @@ export function HomeSection() {
         {metrics.length > 0 && (
           <section className="score-pulse" style={{ marginBottom: 20 }}>
             {((ov.semantic_metrics as AnyObj[]) ?? []).map((sm) => {
-              const val = sm.value as number
-              const pct = Math.min(100, Math.max(0, val))
-              const tone = val >= 70 ? 'good' : val >= 45 ? 'neutral' : 'watch'
+              const val = sm.value as number | null
+              const isUnavailable = val == null
+              // A null value means the metric is genuinely unavailable for
+              // this geography/sector (no fabricated zero, per #79) -- it
+              // must render as "Unavailable", never as a 0/100 score.
+              const pct = isUnavailable ? 0 : Math.min(100, Math.max(0, val))
+              const tone = isUnavailable ? 'neutral' : val >= 70 ? 'good' : val >= 45 ? 'neutral' : 'watch'
               const barColor = tone === 'good' ? 'var(--tone-good)' : tone === 'watch' ? 'var(--tone-watch)' : 'var(--text-muted)'
+              const evidenceSummary = Array.isArray(sm.evidence_summary) ? (sm.evidence_summary as string[]) : []
+              const unavailableReason = evidenceSummary[evidenceSummary.length - 1]
               return (
                 <div key={sm.id as string} className="score-pulse__item">
                   <div className="score-pulse__header">
                     <span className="score-pulse__label">{sm.title as string}</span>
-                    <span className="score-pulse__value" style={{ color: barColor }}>{Math.round(val)}<span style={{ fontSize: '0.65em', color: 'var(--text-muted)', fontWeight: 500 }}>/100</span></span>
+                    <span className="score-pulse__value" style={{ color: barColor }}>
+                      {isUnavailable ? (
+                        'Unavailable'
+                      ) : (
+                        <>{Math.round(val)}<span style={{ fontSize: '0.65em', color: 'var(--text-muted)', fontWeight: 500 }}>/100</span></>
+                      )}
+                    </span>
                   </div>
                   <div className="score-pulse__track">
-                    <div className="score-pulse__fill" style={{ width: `${pct}%`, background: barColor }} />
+                    <div className="score-pulse__fill" style={{ width: `${pct}%`, background: barColor, opacity: isUnavailable ? 0.25 : 1 }} />
                   </div>
-                  <p className="score-pulse__def">{sm.definition as string}</p>
+                  <p className="score-pulse__def">{isUnavailable && unavailableReason ? unavailableReason : sm.definition as string}</p>
                 </div>
               )
             })}

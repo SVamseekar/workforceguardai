@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import { api } from '../lib/api'
 import { normalizeOverview } from '../lib/normalizeOverview'
-import { useAuth } from './useAuth'
 
 export interface Filters {
   country: string
@@ -39,7 +38,6 @@ async function fetchOverview(filters: Filters): Promise<unknown> {
 export function useOverviewData() {
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { isAdmin } = useAuth()
 
   const [filters, setFilters] = useState<Filters>({
     country: searchParams.get('country') ?? 'ALL',
@@ -128,16 +126,28 @@ export function useOverviewData() {
       link.download = `workforceguard-evidence-${filters.country}-${filters.period}.json`
       link.click()
       URL.revokeObjectURL(url)
-      if (isAdmin) {
-        await api.post('/governance-events', {
-          action_code: 'exported',
-          target_type: 'evidence_pack',
-          target_id: `${filters.country}-${filters.period}`,
-          actor: 'dashboard-user',
-        })
-      }
+      // The backend now signs the pack and records the 'exported' governance
+      // event server-side (see evidence_signing.py / build_evidence_pack) —
+      // no follow-up POST needed here.
     },
     onError: () => setNotice({ type: 'error', message: 'Evidence pack export failed.' }),
+  })
+
+  const exportPdfMutation = useMutation({
+    mutationFn: async () => {
+      const response = await api.get('/evidence-pack/pdf', {
+        params: buildQueryParams(filters),
+        responseType: 'blob',
+      })
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `workforceguard-evidence-${filters.country}-${filters.period}.pdf`
+      link.click()
+      URL.revokeObjectURL(url)
+    },
+    onError: () => setNotice({ type: 'error', message: 'Evidence pack PDF export failed.' }),
   })
 
   const governanceMutation = useMutation({
@@ -211,6 +221,42 @@ export function useOverviewData() {
     },
   })
 
+  const promoteTrustMutation = useMutation({
+    mutationFn: async (assetType: string) => {
+      await api.post(`/internal-data/${assetType}/promote`, {})
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['overview'] })
+      setNotice({ type: 'success', message: 'Company data promoted to trusted.' })
+    },
+    onError: (err) => {
+      const forbidden = axios.isAxiosError(err) && err.response?.status === 403
+      const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined
+      setNotice({
+        type: 'error',
+        message: forbidden ? 'Only admins can promote company data to trusted.' : (detail ?? 'Failed to promote company data.'),
+      })
+    },
+  })
+
+  const revokeTrustMutation = useMutation({
+    mutationFn: async ({ assetType, reason }: { assetType: string; reason: string }) => {
+      await api.post(`/internal-data/${assetType}/revoke`, { reason })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['overview'] })
+      setNotice({ type: 'success', message: 'Company data trust revoked.' })
+    },
+    onError: (err) => {
+      const forbidden = axios.isAxiosError(err) && err.response?.status === 403
+      const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined
+      setNotice({
+        type: 'error',
+        message: forbidden ? 'Only admins can revoke company data trust.' : (detail ?? 'Failed to revoke company data trust.'),
+      })
+    },
+  })
+
   return {
     filters,
     setFilters,
@@ -218,14 +264,19 @@ export function useOverviewData() {
     loading,
     error,
     exporting: exportMutation.isPending,
+    exportingPdf: exportPdfMutation.isPending,
     actionLoading: governanceMutation.isPending,
     scheduleLoading: scheduleMutation.isPending,
+    trustActionLoading: promoteTrustMutation.isPending || revokeTrustMutation.isPending,
     notice,
     setNotice,
     exportEvidencePack: () => exportMutation.mutate(),
+    exportEvidencePackPdf: () => exportPdfMutation.mutate(),
     recordGovernanceAction: (actionCode: string, targetType: string, targetId: string, reason?: string) =>
       governanceMutation.mutate({ actionCode, targetType, targetId, reason }),
     scheduleBrief: (template: { id: string; label: string }) => scheduleMutation.mutateAsync(template),
     uploadPayroll: (file: File) => uploadMutation.mutateAsync(file),
+    promoteInternalAssetTrust: (assetType: string) => promoteTrustMutation.mutate(assetType),
+    revokeInternalAssetTrust: (assetType: string, reason: string) => revokeTrustMutation.mutate({ assetType, reason }),
   }
 }
