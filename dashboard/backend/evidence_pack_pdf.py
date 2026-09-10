@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import io
 from typing import Any, Dict, List
+from xml.sax.saxutils import escape
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -69,10 +70,10 @@ def render_evidence_pack_pdf(pack: Dict[str, Any]) -> bytes:
     filters = pack.get("filters") or {}
     story.append(
         Paragraph(
-            f"Generated {pack.get('generated_at', '')} &middot; "
-            f"Geography: {filters.get('geography', '')} &middot; "
-            f"Sector: {filters.get('sector', '')} &middot; "
-            f"Period: {filters.get('period', '')}",
+            f"Generated {escape(str(pack.get('generated_at', '')))} &middot; "
+            f"Geography: {escape(str(filters.get('geography', '')))} &middot; "
+            f"Sector: {escape(str(filters.get('sector', '')))} &middot; "
+            f"Period: {escape(str(filters.get('period', '')))}",
             _STYLES["Normal"],
         )
     )
@@ -80,8 +81,8 @@ def render_evidence_pack_pdf(pack: Dict[str, Any]) -> bytes:
 
     summary = pack.get("summary") or {}
     story.append(Paragraph("Summary", _STYLES["Heading2"]))
-    story.append(Paragraph(summary.get("headline", ""), _STYLES["Normal"]))
-    story.append(Paragraph(summary.get("summary", ""), _STYLES["Normal"]))
+    story.append(Paragraph(escape(str(summary.get("headline", ""))), _STYLES["Normal"]))
+    story.append(Paragraph(escape(str(summary.get("summary", ""))), _STYLES["Normal"]))
     story.append(Spacer(1, 6 * mm))
 
     story.append(Paragraph("Observed metrics", _STYLES["Heading2"]))
@@ -94,11 +95,20 @@ def render_evidence_pack_pdf(pack: Dict[str, Any]) -> bytes:
 
     compliance_review = pack.get("compliance_review") or {}
     story.append(Paragraph("Pay-transparency review", _STYLES["Heading2"]))
-    story.append(Paragraph(f"Status: {compliance_review.get('status', 'unavailable')}", _STYLES["Normal"]))
+    story.append(
+        Paragraph(f"Status: {escape(str(compliance_review.get('status', 'unavailable')))}", _STYLES["Normal"])
+    )
     review_items = compliance_review.get("review_items") or []
     if review_items:
         item_rows = [["Category", "Review state"]] + [
-            [str(item.get("category_label") or item.get("category_id") or ""), str(item.get("review_state") or "")]
+            [
+                str(
+                    (item.get("worker_category") or {}).get("label")
+                    or (item.get("worker_category") or {}).get("id")
+                    or ""
+                ),
+                str(item.get("review_label") or item.get("review_state") or ""),
+            ]
             for item in review_items
         ]
         item_table = Table(item_rows, colWidths=[100 * mm, 60 * mm])
@@ -121,9 +131,9 @@ def render_evidence_pack_pdf(pack: Dict[str, Any]) -> bytes:
     story.append(Paragraph("Governance decision log", _STYLES["Heading2"]))
     story.append(
         Paragraph(
-            f"Chain verified: {governance_integrity.get('verified')} &middot; "
-            f"Events: {governance_integrity.get('event_count')} &middot; "
-            f"Latest hash: {governance_integrity.get('latest_hash')}",
+            f"Chain verified: {escape(str(governance_integrity.get('verified')))} &middot; "
+            f"Events: {escape(str(governance_integrity.get('event_count')))} &middot; "
+            f"Latest hash: {escape(str(governance_integrity.get('latest_hash')))}",
             _STYLES["Normal"],
         )
     )
@@ -140,12 +150,14 @@ def render_evidence_pack_pdf(pack: Dict[str, Any]) -> bytes:
         )
     )
     story.append(Spacer(1, 3 * mm))
-    story.append(Paragraph(f"pack_hash: {integrity.get('pack_hash', '')}", _MONO))
-    story.append(Paragraph(f"chain_tip_hash: {pack.get('chain_tip_hash', '')}", _MONO))
-    story.append(Paragraph(f"signing_key_id: {integrity.get('signing_key_id', '')}", _MONO))
-    story.append(Paragraph(f"signature_algorithm: {integrity.get('signature_algorithm', '')}", _MONO))
-    story.append(Paragraph(f"signed_at: {integrity.get('signed_at', '')}", _MONO))
-    story.append(Paragraph(f"signature: {integrity.get('signature', '')}", _MONO))
+    story.append(Paragraph(f"pack_hash: {escape(str(integrity.get('pack_hash', '')))}", _MONO))
+    story.append(Paragraph(f"chain_tip_hash: {escape(str(pack.get('chain_tip_hash', '')))}", _MONO))
+    story.append(Paragraph(f"signing_key_id: {escape(str(integrity.get('signing_key_id', '')))}", _MONO))
+    story.append(
+        Paragraph(f"signature_algorithm: {escape(str(integrity.get('signature_algorithm', '')))}", _MONO)
+    )
+    story.append(Paragraph(f"signed_at: {escape(str(integrity.get('signed_at', '')))}", _MONO))
+    story.append(Paragraph(f"signature: {escape(str(integrity.get('signature', '')))}", _MONO))
 
     doc.build(story)
     return buffer.getvalue()
