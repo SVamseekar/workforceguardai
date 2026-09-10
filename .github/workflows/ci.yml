@@ -238,7 +238,7 @@ jobs:
         if: needs.changes.outputs.analytics == 'true'
         run: |
           python -m pip install --upgrade pip
-          pip install "dbt-core>=1.11.11,<2" "dbt-duckdb>=1.10.1,<2"
+          pip install "dbt-core>=1.12.3,<2" "dbt-duckdb>=1.11.0,<2"
 
       - name: Parse and compile dbt project
         if: needs.changes.outputs.analytics == 'true'
