@@ -395,6 +395,12 @@ class EvidencePackRouteTests(unittest.TestCase):
         self.assertEqual(body["signature_algorithm"], "ed25519")
         self.assertEqual(len(body["signing_key_id"]), 8)
 
+    def test_evidence_pack_pdf_returns_pdf_bytes(self):
+        response = _client.get("/api/evidence-pack/pdf")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["content-type"], "application/pdf")
+        self.assertTrue(response.content.startswith(b"%PDF-"))
+
 
 if __name__ == "__main__":
     unittest.main()
