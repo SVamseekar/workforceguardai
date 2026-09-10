@@ -28,7 +28,19 @@ function formatValue(value: unknown, unit = '%') {
 }
 
 export function PayAnalysisSection() {
-  const { overview, filters, setFilters, loading, error, recordGovernanceAction, actionLoading, uploadPayroll } = useOverviewData()
+  const {
+    overview,
+    filters,
+    setFilters,
+    loading,
+    error,
+    recordGovernanceAction,
+    actionLoading,
+    uploadPayroll,
+    trustActionLoading,
+    promoteInternalAssetTrust,
+    revokeInternalAssetTrust,
+  } = useOverviewData()
   const { isAdmin } = useAuth()
   const [selectedEvidence, setSelectedEvidence] = useState<unknown>(null)
 
@@ -375,6 +387,44 @@ export function PayAnalysisSection() {
           ) : (
             <span className="admin-only-hint">Payroll upload requires an admin account.</span>
           )}
+        </div>
+      )}
+
+      {isAdmin && Boolean(internalData.trust) && (
+        <div className="inline-notice inline-notice--neutral" style={{ marginTop: 12 }}>
+          <div>
+            <strong>Company data trust status</strong>
+            <p>
+              {(internalData.trust as AnyObj).trusted
+                ? 'Uploaded payroll and job architecture are both promoted to trusted — Pay Analysis reflects real company claims.'
+                : 'Uploaded company data stays untrusted until an admin explicitly promotes it. Company-specific claims stay disabled until every required asset is promoted.'}
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {((((internalData.trust as AnyObj).untrusted_assets as string[]) ?? [])).map((assetType) => (
+              <button
+                key={assetType}
+                className="governance-button"
+                disabled={trustActionLoading}
+                onClick={() => promoteInternalAssetTrust?.(assetType)}
+              >
+                Promote {assetType === 'internal_payroll_snapshot' ? 'payroll' : 'job architecture'} to trusted
+              </button>
+            ))}
+            {((((internalData.trust as AnyObj).trusted_assets as string[]) ?? [])).map((assetType) => (
+              <button
+                key={assetType}
+                className="governance-button governance-button--overridden"
+                disabled={trustActionLoading}
+                onClick={() => {
+                  const reason = window.prompt('Reason for revoking trust (required):')
+                  if (reason && reason.trim()) revokeInternalAssetTrust?.(assetType, reason.trim())
+                }}
+              >
+                Revoke trust — {assetType === 'internal_payroll_snapshot' ? 'payroll' : 'job architecture'}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 

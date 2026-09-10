@@ -207,17 +207,28 @@ function ComparePanel({
       </div>
       <DataState loading={isLoading} error={errorMsg} empty={!isLoading && !errorMsg && metrics.length === 0}>
         <div className="compare-metric-list">
-          {metrics.map((m) => (
-            <div key={m.id as string} className="compare-metric-item">
-              <p className="metric-card__eyebrow">{m.title as string}</p>
-              <p className="compare-metric-item__value">{formatValue(m.value, m.unit as string)}</p>
-              {Boolean(m.tone) && (
-                <ToneChip tone={m.tone as string}>
-                  {m.tone === 'good' ? 'Good' : m.tone === 'watch' ? 'Watch' : 'Neutral'}
-                </ToneChip>
-              )}
-            </div>
-          ))}
+          {metrics.map((m) => {
+            const coverage = (m.coverage as AnyObj) ?? {}
+            const coverageStatus = coverage.status as string | undefined
+            const isImputedOrMissing = coverageStatus === 'unavailable' || coverageStatus === 'partial'
+            return (
+              <div key={m.id as string} className="compare-metric-item">
+                <p className="metric-card__eyebrow">{m.title as string}</p>
+                <p className="compare-metric-item__value">{formatValue(m.value, m.unit as string)}</p>
+                {Boolean(m.tone) && (
+                  <ToneChip tone={m.tone as string}>
+                    {m.tone === 'good' ? 'Good' : m.tone === 'watch' ? 'Watch' : 'Neutral'}
+                  </ToneChip>
+                )}
+                {isImputedOrMissing && Boolean(coverage.note) && (
+                  <p className="compare-metric-item__coverage-note" style={{ margin: '6px 0 0', fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                    {coverageStatus === 'unavailable' ? 'Unavailable: ' : 'Partial coverage: '}
+                    {coverage.note as string}
+                  </p>
+                )}
+              </div>
+            )
+          })}
         </div>
       </DataState>
     </div>

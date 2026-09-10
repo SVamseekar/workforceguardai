@@ -53,6 +53,10 @@ class GovernanceEventRequest(BaseModel):
     context: Optional[Dict[str, Any]] = None
 
 
+class InternalAssetTrustRequest(BaseModel):
+    reason: Optional[str] = None
+
+
 class AutomationScheduleRequest(BaseModel):
     template_id: str
     country: str = "ALL"
@@ -646,6 +650,26 @@ async def upload_job_architecture(
     result = guarded(repo.ingest_uploaded_job_architecture, content)
     _trigger_tenant_internal_dbt(repo, result)
     return result
+
+
+@app.post("/api/internal-data/{asset_type}/promote")
+def promote_internal_asset_trust(
+    asset_type: str,
+    request: InternalAssetTrustRequest,
+    repo: AnalyticsRepository = Depends(get_repository),
+    ctx: AuthContext = Depends(require_role("admin")),
+):
+    return guarded(repo.promote_internal_asset_trust, asset_type, actor=ctx.user_id)
+
+
+@app.post("/api/internal-data/{asset_type}/revoke")
+def revoke_internal_asset_trust(
+    asset_type: str,
+    request: InternalAssetTrustRequest,
+    repo: AnalyticsRepository = Depends(get_repository),
+    ctx: AuthContext = Depends(require_role("admin")),
+):
+    return guarded(repo.revoke_internal_asset_trust, asset_type, actor=ctx.user_id, reason=request.reason or "")
 
 
 if __name__ == "__main__":

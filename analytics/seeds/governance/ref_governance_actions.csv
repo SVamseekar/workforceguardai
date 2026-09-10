@@ -4,4 +4,6 @@ approved,Approved,false
 overridden,Overridden,true
 reversed,Reversed,true
 exported,Evidence pack exported,false
+trust_promoted,Company data promoted to trusted,false
+trust_revoked,Company data trust revoked,true
 

@@ -1,0 +1,11 @@
+[Unit]
+Description=WorkforceGuard database backup to GCS
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=REPLACE_USER
+WorkingDirectory=/home/REPLACE_USER/WorkforceGuard-AI
+EnvironmentFile=/home/REPLACE_USER/WorkforceGuard-AI/deploy/.env.production
+ExecStart=/home/REPLACE_USER/WorkforceGuard-AI/deploy/backup-databases.sh

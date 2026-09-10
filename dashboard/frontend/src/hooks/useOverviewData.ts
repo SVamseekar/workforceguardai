@@ -221,6 +221,42 @@ export function useOverviewData() {
     },
   })
 
+  const promoteTrustMutation = useMutation({
+    mutationFn: async (assetType: string) => {
+      await api.post(`/internal-data/${assetType}/promote`, {})
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['overview'] })
+      setNotice({ type: 'success', message: 'Company data promoted to trusted.' })
+    },
+    onError: (err) => {
+      const forbidden = axios.isAxiosError(err) && err.response?.status === 403
+      const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined
+      setNotice({
+        type: 'error',
+        message: forbidden ? 'Only admins can promote company data to trusted.' : (detail ?? 'Failed to promote company data.'),
+      })
+    },
+  })
+
+  const revokeTrustMutation = useMutation({
+    mutationFn: async ({ assetType, reason }: { assetType: string; reason: string }) => {
+      await api.post(`/internal-data/${assetType}/revoke`, { reason })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['overview'] })
+      setNotice({ type: 'success', message: 'Company data trust revoked.' })
+    },
+    onError: (err) => {
+      const forbidden = axios.isAxiosError(err) && err.response?.status === 403
+      const detail = axios.isAxiosError(err) ? err.response?.data?.detail : undefined
+      setNotice({
+        type: 'error',
+        message: forbidden ? 'Only admins can revoke company data trust.' : (detail ?? 'Failed to revoke company data trust.'),
+      })
+    },
+  })
+
   return {
     filters,
     setFilters,
@@ -231,6 +267,7 @@ export function useOverviewData() {
     exportingPdf: exportPdfMutation.isPending,
     actionLoading: governanceMutation.isPending,
     scheduleLoading: scheduleMutation.isPending,
+    trustActionLoading: promoteTrustMutation.isPending || revokeTrustMutation.isPending,
     notice,
     setNotice,
     exportEvidencePack: () => exportMutation.mutate(),
@@ -239,5 +276,7 @@ export function useOverviewData() {
       governanceMutation.mutate({ actionCode, targetType, targetId, reason }),
     scheduleBrief: (template: { id: string; label: string }) => scheduleMutation.mutateAsync(template),
     uploadPayroll: (file: File) => uploadMutation.mutateAsync(file),
+    promoteInternalAssetTrust: (assetType: string) => promoteTrustMutation.mutate(assetType),
+    revokeInternalAssetTrust: (assetType: string, reason: string) => revokeTrustMutation.mutate({ assetType, reason }),
   }
 }

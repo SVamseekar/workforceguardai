@@ -135,6 +135,54 @@ CI compiles dbt on `analytics/**` changes. Run tests locally when you change mod
 cd analytics && dbt test
 ```
 
+## Demo tenants
+
+Two synthetic demo scenarios exist for local development, sales walkthroughs,
+and landing-page screenshot captures — both are fully synthetic, generated
+data, never real customer data (see the `.gitignore`d `data/tenants/` note
+below):
+
+- `aerotech-fr` — a French aerospace company (`scripts/generate_demo_company.py`)
+- `meridian-cz` — a Czech finance company (`scripts/generate_demo_company_cz.py`),
+  and the only scenario that also produces an upload-ready sample CSV at
+  `data/demo_samples/meridian_payroll_upload.csv` for exercising the
+  `POST /api/upload/payroll` flow by hand
+
+**Seed (or reset) a demo tenant:**
+
+```bash
+bash scripts/setup_demo_environment.sh <scenario> [tenant-id]
+# e.g.
+bash scripts/setup_demo_environment.sh aerotech-fr
+bash scripts/setup_demo_environment.sh meridian-cz a0000000-0000-4000-8000-000000000002
+```
+
+This is **idempotent** — re-running it for the same `tenant-id` regenerates
+the synthetic payroll/job-architecture data, overwrites the tenant's
+`internal/` parquet files and manifest from scratch (no duplication or
+accumulation across runs), rebuilds that tenant's `tenant_<id>` dbt schema,
+and records a fresh `trust_promoted` governance event for each trusted
+asset — so the Govern screen's event log grows with each reset the same
+way it would for a real admin action, while the underlying data stays
+consistent.
+
+`tenant-id` defaults to `a0000000-0000-4000-8000-000000000001` if omitted.
+There is no separate "reset" command — running the same seed command again
+*is* the reset. To remove a demo tenant entirely instead of resetting it,
+delete its directory: `rm -rf data/tenants/<tenant-id>`.
+
+The script prints a health summary after seeding, including whether
+company-aware benchmarking (Pay Analysis) is actually available for that
+tenant — if it prints `Company-aware benchmarking available: False`, Pay
+Analysis will show an empty state and something needs investigating before
+using that tenant for a demo (see `AnalyticsRepository._build_internal_data_status`
+for what it checks).
+
+**Never commit** anything under `data/internal/` or `data/tenants/` — both
+are `.gitignore`d specifically so real customer data can never land in this
+repo by accident, even from a demo-seeding session run against a locally
+migrated production-shaped dataset.
+
 ## Large files and Git LFS
 
 Binary assets (Parquet, XLSX, and similar) use **Git LFS**. If `git push`

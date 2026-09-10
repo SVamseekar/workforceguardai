@@ -7,6 +7,7 @@ import math
 import re
 import sqlite3
 import time
+import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -512,7 +513,7 @@ class AnalyticsRepository:
                 # just modeled into main to every tenant via this fallback.
                 self._assert_main_has_no_internal_tables(connection)
                 if self._tenant_schema_exists(connection):
-                    connection.execute(f"set search_path = '{self.tenant_schema},main'")
+                    self._set_tenant_search_path(connection)
             return connection
 
         connection = duckdb.connect(database=":memory:")
@@ -562,6 +563,19 @@ class AnalyticsRepository:
         ).fetchone()
         return row is not None
 
+    def _set_tenant_search_path(self, connection: duckdb.DuckDBPyConnection) -> None:
+        """`set search_path` doesn't support bind parameters for identifiers,
+        so this interpolates self.tenant_schema into SQL text. tenant_schema
+        is always produced by tenant_schema_name(), which sanitizes to
+        [a-z0-9_] only -- but re-assert that shape here immediately before
+        use rather than trust a property elsewhere never to regress, since
+        an f-string into SQL is exactly the pattern that becomes a real
+        injection risk the moment that invariant quietly breaks."""
+        assert self.tenant_schema is not None
+        if not re.fullmatch(r"[a-z0-9_]+", self.tenant_schema):
+            raise ValueError(f"Refusing to use non-normalized tenant schema name: {self.tenant_schema!r}")
+        connection.execute(f"set search_path = '{self.tenant_schema},main'")
+
     def _modeled_database_ready(self) -> bool:
         required_tables = {
             "dim_geography",
@@ -573,11 +587,19 @@ class AnalyticsRepository:
         return required_tables.issubset(available)
 
     def _available_tables(self) -> set[str]:
+        """Cannot call self._connect() here -- _connect() calls
+        self._modeled_database_ready(), which calls this method, which
+        would recurse forever. Connect directly, then replicate just the
+        tenant-schema search_path piece of _connect() so a tenant-scoped
+        repo sees its own internal-tagged tables (which live only in
+        tenant_<id>, never in 'main') instead of only ever seeing 'main'."""
         if not self.analytics_db_path.exists():
             return set()
 
         try:
             with self._connect_with_lock_retry() as connection:
+                if self.tenant_schema is not None and self._tenant_schema_exists(connection):
+                    self._set_tenant_search_path(connection)
                 rows = connection.execute("show tables").fetchall()
         except duckdb.Error:
             return set()
@@ -1110,6 +1132,59 @@ class AnalyticsRepository:
             "untrusted_assets": untrusted_assets,
             "manifest_path": str(self._internal_manifest_path()),
         }
+
+    def promote_internal_asset_trust(self, asset_type: str, actor: Optional[str] = None) -> Dict[str, Any]:
+        """Explicitly grants trust for one uploaded internal data asset.
+        Separate from upload itself (issue #82 / ADR-5): a human with an
+        admin session must take this action, and it always writes a
+        governance event, so trust can never be flipped by upload alone."""
+        return self._set_internal_asset_trust(asset_type, trusted=True, actor=actor, reason=None)
+
+    def revoke_internal_asset_trust(
+        self, asset_type: str, actor: Optional[str] = None, reason: str = ""
+    ) -> Dict[str, Any]:
+        """Explicitly revokes trust for one previously-promoted internal
+        data asset. Requires a reason (enforced by record_governance_event
+        via the trust_revoked action's requires_reason=true seed row)."""
+        return self._set_internal_asset_trust(asset_type, trusted=False, actor=actor, reason=reason)
+
+    def _set_internal_asset_trust(
+        self, asset_type: str, trusted: bool, actor: Optional[str], reason: Optional[str]
+    ) -> Dict[str, Any]:
+        valid_asset_types = {"internal_payroll_snapshot", "internal_job_architecture"}
+        if asset_type not in valid_asset_types:
+            raise ValueError(
+                f"Unknown internal data asset_type: {asset_type!r}. "
+                f"Valid types: {', '.join(sorted(valid_asset_types))}."
+            )
+
+        assets = self._internal_manifest_assets()
+        if asset_type not in assets:
+            raise ValueError(
+                f"No uploaded data found for {asset_type}; upload it before changing its trust status."
+            )
+
+        manifest_path = self._internal_manifest_path()
+        with manifest_path.open("r", encoding="utf-8") as handle:
+            manifest = json.load(handle)
+        for asset in manifest.get("assets", []):
+            if asset.get("asset_type") == asset_type:
+                asset["trusted_for_company_claims"] = trusted
+
+        with manifest_path.open("w", encoding="utf-8") as handle:
+            json.dump(manifest, handle, indent=2)
+
+        self.record_governance_event(
+            {
+                "action_code": "trust_promoted" if trusted else "trust_revoked",
+                "target_type": "internal_data_asset",
+                "target_id": asset_type,
+                "actor": actor or "system",
+                "reason": reason,
+            }
+        )
+
+        return self._internal_claim_trust_status()
 
     def _build_internal_data_status(self) -> Dict[str, Any]:
         if not self._modeled_database_ready():
@@ -4181,7 +4256,12 @@ class AnalyticsRepository:
                     "version": "uploaded-v1",
                     "record_count": len(df),
                     "output": str(out_path),
-                    "trusted_for_company_claims": True,
+                    # Upload alone must never grant trust -- ADR-5 gates
+                    # company claims on this flag, and flipping it requires
+                    # a separate, governance-logged admin action (issue
+                    # #82). A re-upload resets trust, requiring re-promotion
+                    # of the new data.
+                    "trusted_for_company_claims": False,
                 },
             ],
         }
@@ -4286,7 +4366,9 @@ class AnalyticsRepository:
                     "version": "uploaded-v1",
                     "record_count": len(df),
                     "output": str(out_path),
-                    "trusted_for_company_claims": True,
+                    # See the matching comment in ingest_uploaded_payroll:
+                    # upload alone must never grant trust (issue #82).
+                    "trusted_for_company_claims": False,
                 },
             ],
         }
@@ -5967,7 +6049,13 @@ class AnalyticsRepository:
 
         sequence = self._next_governance_sequence()
         event = {
-            "event_id": f"evt_{sequence:04d}",
+            # UUIDs, not evt_{sequence} -- a sequence-derived ID is not
+            # globally unique across process restarts (in-memory list
+            # length resets to 0 each boot), which is a real liability for
+            # audit-grade evidence packs. event_sequence still orders the
+            # hash chain; event_id is a reference, not integrity material,
+            # so this needs no migration of previously written event_ids.
+            "event_id": str(uuid.uuid4()),
             "event_sequence": sequence,
             "action_code": action_code,
             "action_name": action["action_name"],
