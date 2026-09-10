@@ -128,16 +128,28 @@ export function useOverviewData() {
       link.download = `workforceguard-evidence-${filters.country}-${filters.period}.json`
       link.click()
       URL.revokeObjectURL(url)
-      if (isAdmin) {
-        await api.post('/governance-events', {
-          action_code: 'exported',
-          target_type: 'evidence_pack',
-          target_id: `${filters.country}-${filters.period}`,
-          actor: 'dashboard-user',
-        })
-      }
+      // The backend now signs the pack and records the 'exported' governance
+      // event server-side (see evidence_signing.py / build_evidence_pack) —
+      // no follow-up POST needed here.
     },
     onError: () => setNotice({ type: 'error', message: 'Evidence pack export failed.' }),
+  })
+
+  const exportPdfMutation = useMutation({
+    mutationFn: async () => {
+      const response = await api.get('/evidence-pack/pdf', {
+        params: buildQueryParams(filters),
+        responseType: 'blob',
+      })
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `workforceguard-evidence-${filters.country}-${filters.period}.pdf`
+      link.click()
+      URL.revokeObjectURL(url)
+    },
+    onError: () => setNotice({ type: 'error', message: 'Evidence pack PDF export failed.' }),
   })
 
   const governanceMutation = useMutation({
@@ -218,11 +230,13 @@ export function useOverviewData() {
     loading,
     error,
     exporting: exportMutation.isPending,
+    exportingPdf: exportPdfMutation.isPending,
     actionLoading: governanceMutation.isPending,
     scheduleLoading: scheduleMutation.isPending,
     notice,
     setNotice,
     exportEvidencePack: () => exportMutation.mutate(),
+    exportEvidencePackPdf: () => exportPdfMutation.mutate(),
     recordGovernanceAction: (actionCode: string, targetType: string, targetId: string, reason?: string) =>
       governanceMutation.mutate({ actionCode, targetType, targetId, reason }),
     scheduleBrief: (template: { id: string; label: string }) => scheduleMutation.mutateAsync(template),
