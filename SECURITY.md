@@ -34,15 +34,49 @@ cd dashboard/backend && .venv/bin/python -c "import evidence_signing; print(evid
 **Rotation:**
 1. Generate a new key with the command above.
 2. Deploy it as the new `WORKFORCEGUARD_EVIDENCE_SIGNING_KEY`.
-3. Packs signed under the old key remain independently verifiable forever
-   (each pack embeds its `signing_key_id`) — you do not need to keep the
-   old private key after rotation, only be able to say which key id was
-   retired and when.
+3. `GET /api/evidence-pack/public-key` only ever serves the *current* key,
+   so nothing in this system publishes a retired public key on its own.
+   Packs signed under the old key remain independently verifiable only if
+   you separately retain and publish its *public* key (never the private
+   key — that should be discarded/rotated out) alongside the `signing_key_id`
+   it corresponds to: keep a dated record of retired public keys, e.g.
+   appended to this section, so packs signed before a rotation remain
+   verifiable.
 4. Record the rotation as a governance event (`POST /api/governance-events`
    with `action_code=overridden`, `target_type=evidence_pack_signing_key`,
-   a `reason`, so the governance log itself shows when keys changed.
+   a `reason`), so the governance log itself shows when keys changed.
 5. If the old key may have leaked, treat every pack it ever signed as
    compromised, per the "if a secret is committed, rotate it" rule above.
+
+### Verifying an evidence pack
+
+A recipient (auditor, works council member, regulator) with no
+WorkforceGuard account can verify a pack's signature independently:
+
+1. Fetch the current signing public key: `GET /api/evidence-pack/public-key`
+   (unauthenticated — this endpoint is intentionally public).
+2. Take the pack JSON and remove its top-level `integrity` field.
+3. Canonicalize the remaining JSON exactly as WorkforceGuard does when
+   signing — **this is Python's `json.dumps` canonical form, not the
+   RFC 8785 (JSON Canonicalization Scheme) standard**, so a non-Python
+   verifier must replicate this exact serialization rather than assume
+   JCS compatibility:
+   ```python
+   import json
+   canonical_bytes = json.dumps(
+       pack_without_integrity, sort_keys=True, separators=(",", ":"), allow_nan=False
+   ).encode("utf-8")
+   ```
+4. Base64-decode `integrity.signature` and verify it against
+   `canonical_bytes` using the fetched public key (Ed25519), e.g.:
+   ```python
+   import base64
+   from cryptography.hazmat.primitives.serialization import load_pem_public_key
+
+   public_key = load_pem_public_key(public_key_pem.encode("ascii"))
+   public_key.verify(base64.b64decode(integrity["signature"]), canonical_bytes)
+   # Raises InvalidSignature if the pack was altered or signed by another key.
+   ```
 
 ## Tenant and payroll data
 

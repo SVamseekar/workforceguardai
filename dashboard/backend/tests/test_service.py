@@ -401,6 +401,36 @@ class AnalyticsRepositoryTests(unittest.TestCase):
                 evidence_signing.verify_pack(pack, evidence_signing.public_key_pem(signing_key))
             )
 
+    def test_evidence_pack_chain_tip_hash_excludes_its_own_export_event(self):
+        """build_evidence_pack captures chain_tip_hash BEFORE recording its
+        own 'exported' governance event, so the signed chain_tip_hash never
+        references the export event it is itself about to create (avoiding
+        a self-referential hash). Guards against a future refactor silently
+        reordering the hash-capture and the record_governance_event call."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.environ[evidence_signing.SIGNING_KEY_ENV_VAR] = evidence_signing.generate_signing_key_b64()
+            events_path = Path(temp_dir) / "governance_events.json"
+            repo = AnalyticsRepository(ROOT_DIR, governance_events_path=events_path)
+
+            repo.record_governance_event(
+                {
+                    "action_code": "approved",
+                    "target_type": "evidence_pack",
+                    "target_id": "pre-export-event",
+                    "actor": "test-actor",
+                }
+            )
+            hash_before_export = repo._latest_governance_hash()
+            self.assertNotEqual(hash_before_export, "GENESIS")
+
+            pack = repo.build_evidence_pack(actor="test-actor")
+
+            self.assertEqual(pack["chain_tip_hash"], hash_before_export)
+            # Sanity check: the export call did append its own event, and
+            # the chain tip has moved on beyond what was signed into the pack.
+            self.assertEqual(len(repo.governance_events), 2)
+            self.assertNotEqual(repo._latest_governance_hash(), hash_before_export)
+
     def test_evidence_pack_export_writes_governance_event(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             os.environ[evidence_signing.SIGNING_KEY_ENV_VAR] = evidence_signing.generate_signing_key_b64()
