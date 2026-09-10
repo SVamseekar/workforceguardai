@@ -7,6 +7,7 @@ import math
 import re
 import sqlite3
 import time
+import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -5967,7 +5968,13 @@ class AnalyticsRepository:
 
         sequence = self._next_governance_sequence()
         event = {
-            "event_id": f"evt_{sequence:04d}",
+            # UUIDs, not evt_{sequence} -- a sequence-derived ID is not
+            # globally unique across process restarts (in-memory list
+            # length resets to 0 each boot), which is a real liability for
+            # audit-grade evidence packs. event_sequence still orders the
+            # hash chain; event_id is a reference, not integrity material,
+            # so this needs no migration of previously written event_ids.
+            "event_id": str(uuid.uuid4()),
             "event_sequence": sequence,
             "action_code": action_code,
             "action_name": action["action_name"],

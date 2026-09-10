@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 import json
+import uuid
 from pathlib import Path
 
 os.environ.setdefault("SESSION_SECRET", "test-secret-not-for-production-use-only")
@@ -594,6 +595,60 @@ class AnalyticsRepositoryTests(unittest.TestCase):
             self.assertTrue(payload["export"]["includes_hash_chain"])
             self.assertEqual(payload["events"][0]["target_id"], "phase4_pack")
             self.assertEqual(payload["events"][0]["actor"], "compliance_lead")
+
+    def test_governance_event_id_is_a_uuid(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            events_path = Path(temp_dir) / "governance_events.sqlite"
+            repo = AnalyticsRepository(ROOT_DIR, governance_events_path=events_path)
+
+            created = repo.record_governance_event(
+                {
+                    "action_code": "overridden",
+                    "target_type": "recommendation",
+                    "target_id": "recommendation_benchmark",
+                    "reason": "Manual override for a UUID event_id test.",
+                }
+            )
+
+            self.assertNotRegex(created["event_id"], r"^evt_\d+$")
+            # Raises ValueError if not a valid UUID string.
+            parsed = uuid.UUID(created["event_id"])
+            self.assertEqual(str(parsed), created["event_id"])
+
+    def test_governance_event_ids_stay_unique_across_simulated_restarts(self):
+        """event_id must not collide after the process restarts (a fresh
+        AnalyticsRepository instance against the same store), since the old
+        evt_{sequence} scheme derived IDs from in-memory list length, which
+        resets to 0 on every restart -- colliding with IDs already written
+        by a prior process."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            events_path = Path(temp_dir) / "governance_events.sqlite"
+
+            first_process = AnalyticsRepository(ROOT_DIR, governance_events_path=events_path)
+            first_event = first_process.record_governance_event(
+                {
+                    "action_code": "overridden",
+                    "target_type": "recommendation",
+                    "target_id": "before-restart",
+                    "reason": "Event recorded before the simulated restart.",
+                }
+            )
+
+            second_process = AnalyticsRepository(ROOT_DIR, governance_events_path=events_path)
+            second_event = second_process.record_governance_event(
+                {
+                    "action_code": "overridden",
+                    "target_type": "recommendation",
+                    "target_id": "after-restart",
+                    "reason": "Event recorded after the simulated restart.",
+                }
+            )
+
+            self.assertNotEqual(first_event["event_id"], second_event["event_id"])
+            # Chain integrity (hash-based) is unaffected by IDs being
+            # references rather than integrity material.
+            payload = second_process.build_governance_payload()
+            self.assertTrue(payload["integrity"]["verified"])
 
     def test_build_overview_supports_company_benchmark_when_internal_benchmark_mart_has_rows(self):
         with tempfile.TemporaryDirectory() as temp_dir:
