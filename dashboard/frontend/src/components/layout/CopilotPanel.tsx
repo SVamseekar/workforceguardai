@@ -64,6 +64,10 @@ export function CopilotPanel({ onClose }: { onClose: () => void }) {
           <div>
             <p className="panel__eyebrow">AI Analyst</p>
             <h2>Ask about this view</h2>
+            <p className="copilot-panel__disclosure">
+              Answers are composed from this view&apos;s computed metrics — not generated
+              freely. If the data doesn&apos;t cover a question, the Analyst will say so.
+            </p>
           </div>
           <button className="evidence-drawer__close" onClick={onClose} aria-label="Close">
             <X size={16} />
