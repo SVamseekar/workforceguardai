@@ -3,6 +3,9 @@ export const SUPPORT_EMAIL = 'workforceguardai@souravamseekar.com'
 export const RESEARCH_PAPER_URL = 'https://mpra.ub.uni-muenchen.de/129330/'
 export const RESEARCH_PAPER_LABEL = 'MPRA Paper No. 129330'
 
+/** Public "Try the demo" CTA. Default off until magic-link email is a real mailer. */
+export const SANDBOX_CTA_ENABLED = import.meta.env.VITE_ENABLE_SANDBOX_CTA === 'true'
+
 export const SITE_TAGLINE =
   'The compliance intelligence platform for EU employers. Built by analysts. Trusted by HR and compliance leaders.'
 
@@ -28,7 +31,9 @@ export const FOOTER_SECTIONS: FooterSection[] = [
       { kind: 'hash', hash: '#transposition', label: 'Transposition tracker' },
       { kind: 'hash', hash: '#security', label: 'Security' },
       { kind: 'hash', hash: '#demo', label: 'See it live' },
-      { kind: 'route', to: '/sandbox', label: 'Try the demo' },
+      ...(SANDBOX_CTA_ENABLED
+        ? [{ kind: 'route' as const, to: '/sandbox', label: 'Try the demo' }]
+        : []),
       { kind: 'external', href: RESEARCH_PAPER_URL, label: 'Methodology' },
       { kind: 'hash', hash: '#onboarding', label: 'API & tenant provisioning' },
     ],

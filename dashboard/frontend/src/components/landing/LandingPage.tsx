@@ -19,7 +19,7 @@ import { SecurityTrustSection } from './components/SecurityTrustSection'
 import { TranspositionStatusSection } from './components/TranspositionStatusSection'
 import { LandingShell, useLandingDemo } from './LandingShell'
 import { countrySample, LANDING_FACTS } from './landingFacts'
-import { RESEARCH_PAPER_LABEL, RESEARCH_PAPER_URL } from './site'
+import { RESEARCH_PAPER_LABEL, RESEARCH_PAPER_URL, SANDBOX_CTA_ENABLED } from './site'
 
 import { useScrollReveal } from './useScrollReveal'
 import './landing.css'
@@ -128,12 +128,14 @@ function LandingHomeContent() {
               >
                 Request a demo <ArrowRight size={18} className="landing-cta__arrow" />
               </button>
-              <Link
-                to="/sandbox"
-                className="landing-cta landing-cta--secondary landing-cta--large"
-              >
-                Try the demo
-              </Link>
+              {SANDBOX_CTA_ENABLED ? (
+                <Link
+                  to="/sandbox"
+                  className="landing-cta landing-cta--secondary landing-cta--large"
+                >
+                  Try the demo
+                </Link>
+              ) : null}
               <Link
                 to="/app"
                 className="landing-cta landing-cta--ghost landing-cta--large"

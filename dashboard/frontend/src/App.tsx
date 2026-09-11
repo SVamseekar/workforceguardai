@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Sidebar } from './components/layout/Sidebar'
@@ -12,6 +12,7 @@ import { GovernSection } from './components/sections/GovernSection'
 import { CompareSection } from './components/sections/CompareSection'
 import { ResearchSection } from './components/sections/ResearchSection'
 import { LandingPage } from './components/landing/LandingPage'
+import { SANDBOX_CTA_ENABLED } from './components/landing/site'
 import { MissionPage } from './components/landing/MissionPage'
 import { PrivacyPage } from './components/landing/PrivacyPage'
 import { TermsPage } from './components/landing/TermsPage'
@@ -126,11 +127,15 @@ export default function App() {
             <Route
               path="/sandbox"
               element={
-                <AuthProvider>
-                  <SandboxGate>
-                    <DashboardShell />
-                  </SandboxGate>
-                </AuthProvider>
+                SANDBOX_CTA_ENABLED ? (
+                  <AuthProvider>
+                    <SandboxGate>
+                      <DashboardShell />
+                    </SandboxGate>
+                  </AuthProvider>
+                ) : (
+                  <Navigate to="/" replace />
+                )
               }
             />
             <Route
