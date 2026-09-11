@@ -376,7 +376,10 @@ select
     cast(u.metric_value as double) as metric_value,
     u.primary_source_id,
     u.implementation_status,
-    r.formula_version,
+    case
+        when u.metric_id = 'equity_risk_score' then '1.0'
+        else r.formula_version
+    end as formula_version,
     u.evidence_summary
 from unioned u
 left join {{ ref('dim_metric_registry') }} r
