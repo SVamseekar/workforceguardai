@@ -43,5 +43,6 @@ describe('landing footer', () => {
     expect(screen.getByText(/All rights reserved/i)).toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: /^terms$/i }).length).toBeGreaterThan(0)
     expect(screen.getAllByRole('link', { name: /^disclaimer$/i }).length).toBeGreaterThan(0)
+    expect(screen.queryByRole('link', { name: /try the demo/i })).not.toBeInTheDocument()
   })
 })

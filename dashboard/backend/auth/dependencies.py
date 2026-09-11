@@ -5,7 +5,9 @@ from fastapi import Depends, HTTPException, Request
 from . import db, sessions
 from .repository import AuthRepository
 
-_ROLE_RANK = {"member": 0, "admin": 1}
+_ROLE_RANK = {"sandbox": -1, "member": 0, "admin": 1}
+
+SANDBOX_WRITE_DENIED = "This is a read-only sandbox. Writes are disabled."
 
 
 @dataclass(frozen=True)
@@ -56,8 +58,16 @@ async def require_session(request: Request) -> AuthContext:
 
 def require_role(min_role: str):
     async def dependency(ctx: AuthContext = Depends(require_session)) -> AuthContext:
+        if ctx.role == "sandbox" and min_role != "sandbox":
+            raise HTTPException(status_code=403, detail=SANDBOX_WRITE_DENIED)
         if _ROLE_RANK[ctx.role] < _ROLE_RANK[min_role]:
             raise HTTPException(status_code=403, detail=f"Requires {min_role} role")
         return ctx
 
     return dependency
+
+
+async def deny_if_sandbox(ctx: AuthContext = Depends(require_session)) -> AuthContext:
+    if ctx.role == "sandbox":
+        raise HTTPException(status_code=403, detail=SANDBOX_WRITE_DENIED)
+    return ctx
