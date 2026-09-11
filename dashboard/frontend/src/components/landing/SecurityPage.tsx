@@ -103,12 +103,14 @@ function SecurityContent() {
         <div className="landing-section__header">
           <h2>Data residency</h2>
           <p className="landing-section__lede">
-            [NEEDS MAINTAINER REVIEW] WorkforceGuard AI&apos;s infrastructure is hosted on Google
-            Cloud Platform, with the analytics warehouse and application services provisioned in
-            [region — confirm with maintainer before publishing]. Under EU GDPR Articles 44–49,
-            any transfer of personal data outside the EU/EEA must rely on an adequacy decision,
-            appropriate safeguards, or a specific derogation. Do not treat this paragraph as a
-            residency commitment until the hosting region is confirmed.
+            WorkforceGuard AI processes tenant application data on a Google Compute Engine
+            virtual machine in us-central1-f (Iowa, United States). The DuckDB analytics
+            warehouse is a file on that VM&apos;s disk; auth and session Postgres runs as a
+            Docker container on the same host, not Cloud SQL. The marketing frontend is served
+            by Vercel and cached at the edge globally; that does not change where warehouse or
+            session data is stored. Because that processing location is in the United States,
+            an EU-to-US transfer of personal data engages GDPR Chapter V international-transfer
+            rules and requires a valid transfer mechanism.
           </p>
         </div>
       </section>
