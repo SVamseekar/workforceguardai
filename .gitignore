@@ -20,6 +20,7 @@ id_rsa*
 credentials.json
 service-account*.json
 analytics/.user.yml
+analytics/profiles.yml
 
 # Python
 __pycache__/

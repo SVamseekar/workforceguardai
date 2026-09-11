@@ -151,6 +151,7 @@ jobs:
         if: needs.changes.outputs.python == 'true'
         working-directory: analytics
         run: |
+          cp profiles.yml.example profiles.yml
           dbt seed --profiles-dir .
           dbt run --profiles-dir . --exclude tag:internal
 
@@ -243,6 +244,7 @@ jobs:
       - name: Parse and compile dbt project
         if: needs.changes.outputs.analytics == 'true'
         run: |
+          cp profiles.yml.example profiles.yml
           dbt parse --profiles-dir .
           dbt compile --profiles-dir .
 
