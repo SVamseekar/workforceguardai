@@ -424,6 +424,43 @@ async def sandbox_consume_link(token: str):
     return response
 
 
+def _sanitize_health_error(exc: Exception) -> str:
+    text = str(exc)
+    text = re.sub(r"postgresql://[^\\s]+", "postgresql://***", text)
+    text = re.sub(r"/Users/[^\\s]+", "[path]", text)
+    return text[:200]
+
+
+@app.get("/health/detailed")
+@limiter.exempt
+async def health_check_detailed():
+    checks: Dict[str, str] = {}
+    try:
+        repository_registry.public_repository.resolve_filters()
+        checks["duckdb"] = "ok"
+    except Exception as exc:
+        checks["duckdb"] = f"error: {_sanitize_health_error(exc)}"
+    try:
+        if os.environ.get("DATABASE_URL"):
+            pool = await auth_db.get_pool()
+            async with pool.acquire() as conn:
+                await conn.fetchval("select 1")
+            checks["auth_db"] = "ok"
+        else:
+            checks["auth_db"] = "not configured"
+    except Exception as exc:
+        checks["auth_db"] = f"error: {_sanitize_health_error(exc)}"
+    healthy = all(value in {"ok", "not configured"} for value in checks.values())
+    return JSONResponse(
+        status_code=200 if healthy else 503,
+        content={
+            "status": "ok" if healthy else "degraded",
+            "checks": checks,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+        },
+    )
+
+
 @app.get("/api/research/panel")
 def get_research_panel(
     trajectory_group: str = "fast_recovery",

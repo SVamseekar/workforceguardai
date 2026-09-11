@@ -33,6 +33,18 @@ JOB_ARCH_FIELDNAMES = [
     "version",
 ]
 
+HRIS_FIELDNAMES = [
+    "employee_id",
+    "country_code",
+    "worker_category_id",
+    "gender",
+    "employment_type",
+    "hire_date",
+    "termination_date",
+    "snapshot_date",
+    "employment_status",
+]
+
 UPLOAD_PAYROLL_FIELDNAMES = [
     "employee_id",
     "job_code",
@@ -70,6 +82,37 @@ def write_csv(path: Path, fieldnames: Sequence[str], rows: Iterable[Mapping[str,
 def write_payroll(path: Path, rows: Iterable[Mapping[str, object]]) -> int:
     count = write_csv(path, PAYROLL_FIELDNAMES, rows)
     print(f"Written {count} rows to {path}")
+    return count
+
+
+def hris_rows_from_payroll(
+    payroll_rows: Iterable[Mapping[str, object]],
+    *,
+    hire_date: str = "2020-01-15",
+    employment_type: str = "full_time",
+) -> list[dict[str, object]]:
+    """Person-level HRIS rows aligned 1:1 with payroll so female_share is real."""
+    rows: list[dict[str, object]] = []
+    for payroll in payroll_rows:
+        rows.append(
+            {
+                "employee_id": payroll["employee_id"],
+                "country_code": payroll["country_code"],
+                "worker_category_id": payroll["worker_category_id"],
+                "gender": payroll["gender"],
+                "employment_type": employment_type,
+                "hire_date": hire_date,
+                "termination_date": "",
+                "snapshot_date": payroll["snapshot_date"],
+                "employment_status": payroll["employment_status"],
+            }
+        )
+    return rows
+
+
+def write_hris(path: Path, rows: Iterable[Mapping[str, object]]) -> int:
+    count = write_csv(path, HRIS_FIELDNAMES, rows)
+    print(f"Written {count} HRIS rows to {path}")
     return count
 
 
