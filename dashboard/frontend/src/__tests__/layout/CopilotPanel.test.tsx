@@ -16,6 +16,9 @@ describe('CopilotPanel', () => {
     renderPanel()
     expect(screen.getByText('AI Analyst')).toBeInTheDocument()
     expect(screen.getByText('Ask about this view')).toBeInTheDocument()
+    expect(
+      screen.getByText(/composed from this view's computed metrics/i),
+    ).toBeInTheDocument()
   })
 
   it('renders all 6 suggested questions', () => {
