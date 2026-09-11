@@ -28,6 +28,7 @@ export const FOOTER_SECTIONS: FooterSection[] = [
       { kind: 'hash', hash: '#transposition', label: 'Transposition tracker' },
       { kind: 'hash', hash: '#security', label: 'Security' },
       { kind: 'hash', hash: '#demo', label: 'See it live' },
+      { kind: 'route', to: '/sandbox', label: 'Try the demo' },
       { kind: 'external', href: RESEARCH_PAPER_URL, label: 'Methodology' },
       { kind: 'hash', hash: '#onboarding', label: 'API & tenant provisioning' },
     ],

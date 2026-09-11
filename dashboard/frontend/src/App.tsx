@@ -20,6 +20,8 @@ import { RefundsPage } from './components/landing/RefundsPage'
 import { AuthProvider } from './contexts/AuthContext'
 import { useAuth } from './hooks/useAuth'
 import { LoginScreen } from './components/auth/LoginScreen'
+import { SandboxBanner } from './components/sandbox/SandboxBanner'
+import { SandboxGate } from './components/sandbox/SandboxGate'
 import { NoticeBar } from './components/shared/NoticeBar'
 import { SidebarContext } from './components/layout/SidebarContext'
 import { useOverviewData } from './hooks/useOverviewData'
@@ -82,8 +84,11 @@ function DashboardShell() {
 
   const toggleTheme = () => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
 
+  const { user } = useAuth()
+
   return (
     <div className="app-shell">
+      {user?.role === 'sandbox' ? <SandboxBanner /> : null}
       <TopBar theme={theme} onToggleTheme={toggleTheme} />
       <div className="app-body">
         <SidebarProvider>
@@ -118,6 +123,16 @@ export default function App() {
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/disclaimer" element={<DisclaimerPage />} />
             <Route path="/refunds" element={<RefundsPage />} />
+            <Route
+              path="/sandbox"
+              element={
+                <AuthProvider>
+                  <SandboxGate>
+                    <DashboardShell />
+                  </SandboxGate>
+                </AuthProvider>
+              }
+            />
             <Route
               path="/app/*"
               element={

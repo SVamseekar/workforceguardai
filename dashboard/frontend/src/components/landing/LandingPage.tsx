@@ -129,8 +129,14 @@ function LandingHomeContent() {
                 Request a demo <ArrowRight size={18} className="landing-cta__arrow" />
               </button>
               <Link
-                to="/app"
+                to="/sandbox"
                 className="landing-cta landing-cta--secondary landing-cta--large"
+              >
+                Try the demo
+              </Link>
+              <Link
+                to="/app"
+                className="landing-cta landing-cta--ghost landing-cta--large"
                 title="Organisation sign-in via Google or Microsoft"
               >
                 Sign in to dashboard

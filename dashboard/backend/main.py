@@ -13,12 +13,17 @@ from typing import Any, Dict, Optional
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse, Response
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 
 from auth import db as auth_db
 from auth import sessions as auth_sessions
-from auth.dependencies import AuthContext, require_role, require_session
+from auth.dependencies import AuthContext, deny_if_sandbox, require_role, require_session
 from auth.oauth import (
     authorize_access_token_kwargs,
     get_oauth_client,
@@ -55,6 +60,10 @@ class GovernanceEventRequest(BaseModel):
 
 class InternalAssetTrustRequest(BaseModel):
     reason: Optional[str] = None
+
+
+class SandboxLinkRequest(BaseModel):
+    email: str
 
 
 class AutomationScheduleRequest(BaseModel):
@@ -129,6 +138,11 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="WorkforceGuard Analytics API", lifespan=lifespan)
+
+limiter = Limiter(key_func=get_remote_address, default_limits=["120/minute"])
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 app.add_middleware(SessionMiddleware, secret_key=os.environ["SESSION_SECRET"])
 evidence_signing.load_signing_key()  # fail fast at boot if misconfigured, matching SESSION_SECRET above
@@ -315,12 +329,99 @@ def read_root():
 
 
 @app.get("/health")
+@limiter.exempt
 def health_check():
     return {
         "status": "ok",
         "service": "WorkforceGuard Analytics API",
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
+
+
+def _sandbox_link_serializer() -> URLSafeTimedSerializer:
+    return URLSafeTimedSerializer(os.environ["SESSION_SECRET"], salt="wfg-sandbox-link")
+
+
+@app.post("/api/sandbox/request-link")
+@limiter.limit("5/hour")
+async def sandbox_request_link(payload: SandboxLinkRequest, request: Request):
+    email = payload.email.strip().lower()
+    if "@" not in email or "." not in email.split("@")[-1]:
+        raise HTTPException(status_code=400, detail="A valid email is required.")
+    token = _sandbox_link_serializer().dumps({"email": email})
+    consume_path = f"/api/sandbox/consume/{token}"
+    logger.info("Sandbox magic link issued for %s path=%s", email, consume_path)
+    return {
+        "status": "sent",
+        "message": "If this address is valid, a demo link has been issued. Check server logs in local development.",
+        "consume_path": consume_path if os.environ.get("SANDBOX_RETURN_LINK") == "1" else None,
+    }
+
+
+@app.get("/api/sandbox/consume/{token}")
+async def sandbox_consume_link(token: str):
+    try:
+        data = _sandbox_link_serializer().loads(token, max_age=15 * 60)
+    except (BadSignature, SignatureExpired, ValueError):
+        raise HTTPException(status_code=400, detail="This demo link is invalid or has expired.")
+    email = data.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="This demo link is invalid or has expired.")
+
+    pool = await auth_db.get_pool()
+    repo = AuthRepository(pool)
+    user = await repo.find_or_create_user(email, "Sandbox visitor")
+    slug = os.environ.get("SANDBOX_TENANT_SLUG", "sandbox")
+    tenant = await repo.get_tenant_by_slug(slug)
+    if tenant is None:
+        tenant = await repo.create_tenant_with_admin(
+            name="Public sandbox", slug=slug, user_id=user.id
+        )
+        async with pool.acquire() as conn:
+            await conn.execute(
+                "update memberships set role = 'sandbox' where user_id = $1 and tenant_id = $2",
+                user.id,
+                tenant.id,
+            )
+    else:
+        async with pool.acquire() as conn:
+            await conn.execute(
+                """
+                insert into memberships (user_id, tenant_id, role)
+                values ($1, $2, 'sandbox')
+                on conflict (user_id, tenant_id) do update set role = 'sandbox'
+                """,
+                user.id,
+                tenant.id,
+            )
+
+    session_id = str(uuid.uuid4())
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=4)
+    async with pool.acquire() as conn:
+        await conn.execute(
+            """
+            insert into sessions (id, user_id, tenant_id, expires_at, auth_provider)
+            values ($1, $2, $3, $4, $5)
+            """,
+            session_id,
+            user.id,
+            tenant.id,
+            expires_at,
+            None,
+        )
+
+    frontend_base = os.environ.get("OAUTH_REDIRECT_BASE_URL", "http://localhost:5173")
+    response = RedirectResponse(url=f"{frontend_base}/sandbox")
+    token_value = auth_sessions.create_session_token(session_id, expires_at)
+    response.set_cookie(
+        key=auth_sessions.SESSION_COOKIE_NAME,
+        value=token_value,
+        httponly=True,
+        secure=auth_sessions.session_cookie_secure(),
+        samesite="lax",
+        max_age=int((expires_at - datetime.now(timezone.utc)).total_seconds()),
+    )
+    return response
 
 
 @app.get("/api/research/panel")
@@ -378,7 +479,7 @@ def get_evidence_pack(
     benchmark_geography: Optional[str] = None,
     benchmark_sector: Optional[str] = None,
     repo: AnalyticsRepository = Depends(get_repository),
-    ctx: AuthContext = Depends(require_session),
+    ctx: AuthContext = Depends(deny_if_sandbox),
 ):
     return guarded(
         repo.build_evidence_pack,
@@ -418,7 +519,7 @@ def get_evidence_pack_pdf(
     benchmark_geography: Optional[str] = None,
     benchmark_sector: Optional[str] = None,
     repo: AnalyticsRepository = Depends(get_repository),
-    ctx: AuthContext = Depends(require_session),
+    ctx: AuthContext = Depends(deny_if_sandbox),
 ):
     pack = guarded(
         repo.build_evidence_pack,
