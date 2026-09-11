@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Sidebar } from './components/layout/Sidebar'
@@ -12,6 +12,7 @@ import { GovernSection } from './components/sections/GovernSection'
 import { CompareSection } from './components/sections/CompareSection'
 import { ResearchSection } from './components/sections/ResearchSection'
 import { LandingPage } from './components/landing/LandingPage'
+import { SANDBOX_CTA_ENABLED } from './components/landing/site'
 import { MissionPage } from './components/landing/MissionPage'
 import { SecurityPage } from './components/landing/SecurityPage'
 import { PrivacyPage } from './components/landing/PrivacyPage'
@@ -21,6 +22,8 @@ import { RefundsPage } from './components/landing/RefundsPage'
 import { AuthProvider } from './contexts/AuthContext'
 import { useAuth } from './hooks/useAuth'
 import { LoginScreen } from './components/auth/LoginScreen'
+import { SandboxBanner } from './components/sandbox/SandboxBanner'
+import { SandboxGate } from './components/sandbox/SandboxGate'
 import { NoticeBar } from './components/shared/NoticeBar'
 import { SidebarContext } from './components/layout/SidebarContext'
 import { useOverviewData } from './hooks/useOverviewData'
@@ -83,8 +86,11 @@ function DashboardShell() {
 
   const toggleTheme = () => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
 
+  const { user } = useAuth()
+
   return (
     <div className="app-shell">
+      {user?.role === 'sandbox' ? <SandboxBanner /> : null}
       <TopBar theme={theme} onToggleTheme={toggleTheme} />
       <div className="app-body">
         <SidebarProvider>
@@ -120,6 +126,20 @@ export default function App() {
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/disclaimer" element={<DisclaimerPage />} />
             <Route path="/refunds" element={<RefundsPage />} />
+            <Route
+              path="/sandbox"
+              element={
+                SANDBOX_CTA_ENABLED ? (
+                  <AuthProvider>
+                    <SandboxGate>
+                      <DashboardShell />
+                    </SandboxGate>
+                  </AuthProvider>
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
             <Route
               path="/app/*"
               element={
