@@ -1,0 +1,1839 @@
+% ============================================================
+%  Does Labour Market Tightness Close the Gender Pay Gap?
+%  A Panel Test of a Contested Premise
+%  Author: Marti Soura Vamseekar
+%  Overleaf-ready single file — compile with pdflatex + bibtex
+%  Figures: pulled automatically from paper/exports/figures/ via
+%           \graphicspath below. On Overleaf, upload this whole
+%           paper/ folder (main.tex + exports/figures/) so the
+%           relative path resolves.
+% ============================================================
+
+\documentclass[12pt,a4paper]{article}
+
+% ---- Encoding & fonts ----------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+% ---- Page layout ---------------------------------------------
+\usepackage[a4paper,
+            top=2.5cm, bottom=2.5cm,
+            left=2.8cm, right=2.8cm]{geometry}
+
+% ---- Line spacing (double for review) -----------------------
+\usepackage{setspace}
+\doublespacing
+
+% ---- Math ----------------------------------------------------
+\usepackage{amsmath,amssymb}
+
+% ---- Tables --------------------------------------------------
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{threeparttable}   % table notes (Notes: ...)
+\usepackage{adjustbox}        % rescale wide tables
+
+% ---- Figures -------------------------------------------------
+\usepackage{graphicx}
+\graphicspath{{exports/figures/}{./}}
+\usepackage{float}
+\usepackage{caption}
+\captionsetup{font=small, labelfont=bf, skip=6pt}
+
+% ---- Typography ----------------------------------------------
+\usepackage{microtype}
+
+% ---- Hyperlinks ----------------------------------------------
+\usepackage[colorlinks=true,
+            linkcolor=blue!55!black,
+            citecolor=blue!55!black,
+            urlcolor=blue!55!black,
+            pdftitle={Does Labour Market Tightness Close the Gender Pay Gap?},
+            pdfauthor={Marti Soura Vamseekar}]{hyperref}
+
+% ---- Bibliography --------------------------------------------
+\usepackage[round,authoryear,sort]{natbib}
+
+% ---- Misc ----------------------------------------------------
+\usepackage{xcolor}
+\usepackage{parskip}          % paragraph spacing instead of indent
+
+% ---- Custom commands -----------------------------------------
+\newcommand{\note}[1]{\par\smallskip\footnotesize\textit{Note:} #1}
+\newcommand{\sym}[1]{\ensuremath{^{#1}}}   % significance stars inline
+
+% ============================================================
+%  TITLE & AUTHOR
+% ============================================================
+\title{\Large\textbf{Does Labour Market Tightness Close the Gender Pay Gap?\\[4pt]
+       A Panel Test of a Contested Premise}}
+
+\author{Marti Soura Vamseekar\\[6pt]
+        \small Independent Researcher\\
+        \small M.Sc.\ Data Science, University of Greenwich, London, UK\\[4pt]
+        \small ORCID:\;\href{https://orcid.org/0009-0005-4884-1292}{0009-0005-4884-1292}\\
+        \small Correspondence:\;\href{mailto:martisoura@gmail.com}{martisoura@gmail.com}}
+
+\date{July 2026}
+
+% ============================================================
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+% ---- JEL + Keywords ------------------------------------------
+\vspace{1em}
+\noindent\textbf{JEL Codes:} J31, J71, J16, J21, C33, C55, K31
+
+\smallskip
+\noindent\textbf{Keywords:} Gender Pay Gap; Pay Transparency Directive; Labour
+Market Tightness; Panel Fixed Effects; Sector Heterogeneity; Compliance
+Exposure; Eurostat
+
+\newpage
+\setcounter{page}{1}
+
+% ============================================================
+%  ABSTRACT
+% ============================================================
+\begin{abstract}
+\noindent
+The EU Pay Transparency Directive (2023/970/EU), transposed into national law by
+June 2026, is implicitly premised on competitive equalisation theory: tight
+labour markets, by raising the cost of discrimination, should narrow gender pay
+gaps.  We test this premise using a panel of 27 EU member states and Eurostat
+labour-market data spanning 2019--2024.  A pooled cross-sectional specification
+with year fixed effects reproduces a strong positive association between
+employment rate and the gender pay gap ($\hat{\beta}=0.637$, SE\,=\,0.155,
+$p<0.001$, $N=159$) --- the opposite sign from what competitive equalisation
+predicts.  Once country fixed effects absorb time-invariant national
+confounders, the coefficient collapses to $\hat{\beta}=0.113$ (SE\,=\,0.269,
+$p=0.676$); a Hausman test confirms fixed effects as the preferred specification
+($\chi^{2}=27.99$, $p<0.001$).  This null result survives an extensive battery of
+checks: time-window splits, outlier exclusion, an alternative tightness proxy,
+controlling for the male--female employment participation gap, a formal test of
+whether the relationship is conditional on collective bargaining coverage, and an
+event-study cross-check using the differential severity of the 2020 COVID-19
+lockdown shock --- a source of variation with no evident channel back to national
+gender-discrimination institutions.  We conclude the pooled correlation reflects
+between-country heterogeneity, not a within-country causal channel, and that
+labour market tightness is not a reliable signal for anticipating Directive
+compliance risk.  Three findings remain robust and policy-relevant: gender pay
+gaps differ sharply and consistently by sector (ANOVA $F=105.78$, $p<0.001$;
+Finance 24.96\% mean gap versus Construction $-2.72$\%); Finance and Information
+\& Communication sectors show 100\% exposure to the Directive's 5\%
+joint-pay-assessment threshold across the sample period; and a classifier trained
+only on 2019--2022 data and tested on 2023--2024 confirms that sector membership
+substantially and significantly outperforms tightness as an out-of-sample
+predictor of compliance exposure (test AUC 0.805 vs.\ 0.560, $p<0.0001$).  We
+propose sector-based exposure mapping, now validated out of sample, as a more
+actionable compliance-triage tool than labour-market tightness.
+\end{abstract}
+
+\newpage
+
+% ============================================================
+%  1. INTRODUCTION
+% ============================================================
+\section{Introduction}
+\label{sec:intro}
+
+Directive (EU) 2023/970, transposed into national law by 7~June~2026, requires
+employers with 100 or more workers to report gender pay gaps by worker category
+and to justify, through a joint pay assessment, any unadjusted gap of 5\% or
+more.  Employer-level disclosures under the Directive begin in 2027 for the
+largest firms.  The Directive's design carries an implicit empirical premise:
+that labour markets left to their own competitive pressure are not closing gender
+pay gaps on their own, and that regulatory intervention is therefore necessary.
+This premise rests, in turn, on an older and contested claim in labour economics
+--- that tight labour markets, in which employers compete harder for scarce
+workers, should erode the scope for pay discrimination and narrow gaps, following
+the logic of competitive equalisation \citep{Becker1957}.  If that mechanism
+worked reliably, one observable implication would be a negative association
+between labour market tightness and the gender pay gap across countries and over
+time.  If it does not, tightness should show no reliable relationship with the
+gap, or an unstable one.
+
+This paper tests that observable implication directly, using a panel of 27 EU
+member states and annual and quarterly Eurostat labour-market indicators covering
+2019--2024.  We deliberately structure the empirical section to show the
+argument unfold rather than presenting only a final specification.  A pooled,
+cross-sectional test --- the kind of evidence most readily available and most
+commonly cited in policy discussion --- shows a positive association between
+employment rate and the gender pay gap, the opposite of what competitive
+equalisation predicts.  We then show that this pooled association is a
+between-country pattern: it does not survive the introduction of country and year
+fixed effects, which absorb the influence of time-invariant national
+characteristics such as industrial structure, wage-setting institutions, and
+legal regimes.  The coefficient shrinks by roughly 82\% and loses all
+statistical significance.  We test whether this null result is fragile or robust
+across five independent challenges --- narrower time windows, the exclusion of
+outlier countries, an alternative measure of tightness, and control for a leading
+candidate selection mechanism (the male--female employment participation gap) ---
+and find the null holds in every case.
+
+This paper makes three contributions.  First, it provides the first
+panel-identified test we are aware of of the labour-market-tightness premise
+implicit in the Directive's regulatory rationale, showing that a widely citable
+cross-sectional correlation does not survive the identification strategy
+required to support a causal or even a reliable predictive claim; this null
+proves robust not only to the checks in Section~\ref{subsec:robustness} but also
+to a cross-check using a source of variation with no evident channel back to
+national gender-discrimination institutions (the differential severity of the
+2020 COVID-19 lockdown shock, Section~\ref{subsec:covid_event}) and to a formal
+test of whether the relationship is conditional on collective bargaining
+coverage (Section~\ref{subsec:bargaining}).  Second, it introduces a sector-based
+compliance-exposure map against the Directive's own 5\% joint-pay-assessment
+threshold, showing that exposure is concentrated by sector (Finance and
+Information \& Communication at 100\% exposure across the sample) rather than by
+labour-market tightness, and validates this mapping out of sample: a classifier
+trained only on 2019--2022 data substantially and significantly outperforms a
+tightness-based classifier when tested on 2023--2024 data it never saw during
+fitting, turning a descriptive pattern into a demonstrated predictive one
+(Section~\ref{subsec:oos_validation}).  Third, it confirms that sector-level
+heterogeneity in gender pay gaps --- unlike the tightness relationship --- is
+large, statistically robust, and stable across every specification tested,
+offering a concrete empirical anchor for compliance prioritisation independent
+of the tightness question.
+
+The remainder of the paper proceeds as follows.  Section~\ref{sec:data}
+describes the data and empirical strategy.  Section~\ref{sec:results} presents
+results in the order the argument requires: descriptive statistics, the
+pooled-to-fixed-effects contrast, robustness checks, an exogenous cross-check
+using COVID-19 lockdown stringency, mechanism controls, a test for institutional
+moderation by collective bargaining coverage, sector heterogeneity, compliance
+exposure and its out-of-sample validation, and a descriptive risk-quadrant
+classification.  Section~\ref{sec:discussion} discusses mechanisms and policy
+implications.  Section~\ref{sec:conclusion} concludes.  Appendix~\ref{sec:appendix}
+reports a diagnostic validation of the Hiring Pressure Index, and
+Appendix~\ref{sec:appendixB} documents a pre-registered design for testing the
+Directive's staggered transposition timing once post-2024 outcome data becomes
+available.
+
+% ============================================================
+%  2. DATA AND METHODS
+% ============================================================
+\section{Data and Methods}
+\label{sec:data}
+
+\subsection{Data sources and panel construction}
+\label{subsec:data_sources}
+
+The primary dataset is a panel of 27 EU member states drawn from Eurostat's
+labour force survey and structure-of-earnings-survey products, accessed via the
+Eurostat JSON-stat API and processed through a versioned dbt pipeline
+(\texttt{analytics/} in the accompanying repository).  Six core series are used:
+employment rate (\texttt{lfsi\_emp\_a}), unemployment rate (\texttt{lfsi\_emp\_a}),
+job vacancy rate (\texttt{jvs\_q\_nace2}), gender pay gap by NACE sector
+(\texttt{earn\_gr\_gpgr2}), labour market flows (\texttt{lfsi\_long\_q}), and
+labour market slack (\texttt{lfsi\_sla\_q}).  Employment rate, unemployment rate,
+and gender pay gap are annual series; job vacancy rate, labour market slack, and
+labour flow signals are quarterly and are averaged within each calendar year to
+align with the annual series.
+
+\medskip
+\noindent\textbf{Data ceiling.} Eurostat's gender pay gap series
+(\texttt{earn\_gr\_gpgr2}) was last updated 26~February~2026, and its most
+recent published reference year is 2024.  All specifications reported below are
+therefore restricted to 2019--2024; 2025 country-year rows are excluded rather
+than imputed, since the Directive-relevant outcome variable is not yet available
+for that year in the Eurostat source.  This is expected annual-series publication
+lag rather than a data-collection failure, and we do not attempt to fill it.
+
+\medskip
+\noindent\textbf{Coverage.} All 27 EU member states have valid, non-missing
+gender pay gap data from 2022 onward.  Greece's gender pay gap series begins in
+2022 in the Eurostat source; 2019--2021 therefore have 26 of 27 countries with
+valid data (Greece is the sole exclusion in those years).  The primary
+fixed-effects panel has 159 country-year observations across 27 countries, close
+to but short of a fully balanced $27 \times 6 = 162$ cell panel because of
+Greece's shorter series.
+
+\subsection{Composite indices}
+\label{subsec:composites}
+
+Two composite indices from the underlying WorkforceGuard AI analytics pipeline
+are used in the compliance-exposure and risk-quadrant analyses
+(Sections~\ref{subsec:exposure}--\ref{subsec:quadrant}): the Hiring Pressure Index
+(HPI) and the Equity Risk Score (ERS), both computed in
+\texttt{mart\_semantic\_metrics.sql} and reported per country as a
+latest-available-period snapshot (not a year-varying panel signal).  HPI is
+constructed from vacancy rate, unemployment rate, labour market slack, and labour
+flow signals, with no gender pay gap input:
+
+\begin{align*}
+\text{HPI}_\text{raw} &= \text{vacancy\_rate} \times 11
+  + \max(0,\;9 - \text{unemployment\_rate}) \times 4 \\
+  &\quad + \max(0,\;12 - \text{labour\_slack\_rate}) \times 2.8
+  + \text{flow\_to\_employment} \times 0.9
+  + \text{flow\_to\_inactivity} \times 0.6
+\end{align*}
+
+ERS is a direct, near-linear transform of the gender pay gap itself:
+$\text{ERS}_\text{raw} = \text{pay\_gap} \times 5.5$, both clamped to
+$[0, 100]$.  Because ERS is mechanically derived from the same variable used to
+define Directive-threshold exposure, any ERS--exposure relationship in
+Section~\ref{subsec:exposure} is expected by construction and is reported only as
+a consistency check, not as a substantive finding; HPI, which shares no input
+with the gender pay gap, is the informative comparison.
+
+We separately validate HPI's weighting scheme against a principal components
+analysis of its six underlying input signals (Appendix~\ref{sec:appendix}).
+This validation is weaker than initially hypothesised (Spearman
+$\rho = 0.657$, $p = 0.156$, not significant at conventional thresholds on the
+full 27-country panel) and is not claimed as a validated methodological
+contribution in this paper; it is reported transparently in the appendix as a
+diagnostic, not a result the main contributions depend on.
+
+\subsection{Empirical strategy}
+\label{subsec:strategy}
+
+We estimate five specifications of the relationship between labour market
+tightness (proxied primarily by employment rate) and the gender pay gap:
+
+\begin{enumerate}
+  \item Pooled OLS with year fixed effects, standard errors clustered by country.
+  \item Two-way (country and year) fixed effects panel regression, standard
+        errors clustered by country.  This is the paper's main specification.
+  \item Two-way fixed effects with additional controls (unemployment rate, job
+        vacancy rate).
+  \item First-difference estimation, an alternative estimator robust to certain
+        forms of unit-root behaviour.
+  \item Two-way fixed effects using employment rate lagged one year, to address
+        the possibility that a persistent pay gap reduces female labour force
+        participation and mechanically depresses the employment rate (reverse
+        causality).
+\end{enumerate}
+
+We test the appropriateness of fixed effects against random effects using a
+Hausman test, and test the joint significance of the country fixed effects
+against a pooled null using an F-test.  We then subject the main fixed-effects
+specification to four independent robustness checks: splitting the sample into
+2019--2022 and 2021--2024 sub-windows; excluding Italy and Spain as potential
+outliers; substituting job vacancy rate for employment rate as the tightness
+proxy; and, in a dedicated mechanism-controls analysis, adding the male--female
+employment participation gap (a standard proxy for the
+\citealt{OlivettiPetrongolo2008} selection channel) as a covariate in both the
+pooled and fixed-effects specifications.
+
+\subsection{Related literature}
+\label{subsec:lit}
+
+This paper sits at the intersection of four literatures: the measurement of
+labour market tightness, the cross-country gender pay gap literature and its
+selection problem, the empirical evaluation of pay transparency legislation, and
+the methodology of composite indicator construction.
+
+\medskip
+\noindent\textbf{Labour market tightness.}  Tightness is formally defined in
+search-and-matching theory as the vacancy-to-unemployment ratio
+\citep{MortensenPissarides1994}, with the standard prediction that a high ratio
+strengthens worker bargaining power and should erode the scope for wage
+discrimination as employers compete for scarce labour.  This prediction has
+motivated a substantial central-bank and policy literature on composite tightness
+measurement, including the Federal Reserve Bank of New York's Hiring Pressure and
+Wage (HPW) Tightness Index \citep{HeisePearceWeber2024}, the Federal Reserve
+Bank of Kansas City's Labour Market Conditions Indicator
+\citep{HakkioWillis2014}, and comparable composite indices from the Reserve Bank
+of Australia \citep{BakerBall2018} and the Reserve Bank of New Zealand
+\citep{ArmstrongKamberKaragedikli2016}.  At the EU level,
+\citet{KissEtAl2022} analyse simultaneous slack and tightness across EU27 member
+states post-COVID using vacancy rates, unemployment, and broader slack
+indicators, estimating Beveridge curves to detect shifts in the
+unemployment--vacancy relationship; their multi-signal approach directly motivates
+this paper's use of a multi-signal Hiring Pressure Index rather than a single
+tightness ratio.
+
+\medskip
+\noindent\textbf{The gender pay gap, selection, and sectoral variation.}  The
+central theoretical tension for cross-country gender pay gap analysis was
+formalised by \citet{OlivettiPetrongolo2008}, who show that gender wage gaps and
+employment gaps are negatively correlated across countries: countries with lower
+female employment rates exhibit smaller unadjusted pay gaps, because positive
+selection into employment among only the most attached and highest-skill women
+compresses the lower tail of the female wage distribution.
+\citet{BlauKahn2017} provide the standard survey-level treatment of the gender
+wage gap internationally.  \citet{ChristofidesPolycarpouVrachimis2013} extend
+the selection analysis across the full earnings distribution using EU-SILC data,
+documenting ``sticky floor'' and ``glass ceiling'' effects.
+\citet{Hedija2017} provides sector-specific gender pay gap estimates across EU
+member states using EU-SILC microdata, finding large cross-sector and
+cross-country heterogeneity with Finance and insurance recording particularly
+large residual gaps --- the closest precedent for this paper's sector
+heterogeneity result (Section~\ref{subsec:sector}).
+\citet{Bacovic2022} confirms persistent cross-country and sectoral heterogeneity
+at a more aggregated level.
+
+\medskip
+\noindent\textbf{Pay transparency legislation: effects and conditions.}  The
+empirical literature on pay transparency legislation has expanded substantially
+since 2018.  \citet{BennedsenEtAl2022} exploit Denmark's 35-employee reporting
+threshold using a difference-in-differences design and find treated firms reduced
+their gender pay gap by approximately 2 percentage points relative to the
+pre-legislation mean, driven primarily by slower male wage growth.
+\citet{BlundellEtAl2025} extend this to the UK's mandatory gender pay gap
+reporting regime, estimating a substantially larger effect.  A recurring finding
+is that transparency legislation is markedly more effective where worker
+representation structures exist to enforce it: \citet{VaccaroEtAl2024},
+evaluating Germany's 2017 \textit{Entgelttransparenzgesetz}, find it reduced the
+raw gender pay gap only in establishments with works councils and collective
+bargaining agreements, with unexplained gaps in establishments lacking these
+structures showing no improvement or even a slight increase.
+
+\medskip
+\noindent\textbf{Composite indicator methodology.}  The methodological basis for
+constructing composite labour-market and social indicators is well established.
+\citet{NardoEtAl2008} is the standard reference, identifying data-driven (PCA,
+regression), normative, and equal-weighting strategies as the three principal
+approaches, and noting that normative weights are often more defensible in
+policy-oriented indices.  \citet{DecancqLugo2013} provide the standard overview
+of weighting choices in multidimensional wellbeing indices, a framework directly
+applicable to this paper's HPI and ERS.  This paper's Appendix~\ref{sec:appendix}
+PCA validation of the HPI weighting scheme follows this literature's standard
+diagnostic approach; consistent with \citeauthor{NardoEtAl2008}'s caution that
+data-driven and normative weights need not agree, we find only a weak,
+non-significant correlation.
+
+\medskip
+\noindent\textbf{What this paper adds.}  No published paper we are aware of
+tests the labour-market-tightness premise implicit in the EU Pay Transparency
+Directive using panel identification methods capable of distinguishing a
+within-country relationship from a between-country correlation.
+\citet{KissEtAl2022} analyse EU tightness without examining gender pay outcomes;
+the gender pay gap literature \citep{OlivettiPetrongolo2008, Hedija2017,
+BlauKahn2017} analyses pay gaps across countries without constructing or testing
+against a composite tightness index.  This paper closes that specific gap, and
+--- unusually for this literature --- reports a null result on the paper's own
+central question after subjecting it to the full panel-identification and
+robustness toolkit.
+
+% ============================================================
+%  3. RESULTS
+% ============================================================
+\section{Results}
+\label{sec:results}
+
+\subsection{Descriptive statistics}
+\label{subsec:descriptive}
+
+Table~\ref{tab:descriptive}, Panel~A reports variable-level descriptive
+statistics across the 189 country-year cells in the full annual panel (27
+countries, 7~years including 2025 for non-gender-pay-gap series).  Employment
+rate averages 75.8\% (SD\,=\,5.1, range 58.3--83.6\%) with no missing
+observations.  Unemployment rate averages 6.2\% (SD\,=\,2.7) with no missing
+observations.  Gender pay gap, restricted to 2019--2024 as described in
+Section~\ref{subsec:data_sources}, has 159 valid observations (15.9\% missing
+across the full 189-cell frame, entirely attributable to the 2025 data ceiling
+and Greece's shorter series) and averages 10.9\% (SD\,=\,5.6, range $-1.5$\% to
+21.3\%).  Job vacancy rate has 3.7\% missing (182 of 189 cells) and averages
+2.1\% (SD\,=\,1.2).
+
+Table~\ref{tab:descriptive}, Panel~B reports country-level means sorted by mean
+Hiring Pressure Index.  The Netherlands (HPI\,=\,100), Slovenia (HPI\,=\,99),
+Germany (HPI\,=\,98), and Czechia (HPI\,=\,93) are the four tightest labour
+markets in the sample by this measure; Romania (HPI\,=\,42), Greece (HPI\,=\,42),
+and Finland (HPI\,=\,44) are among the loosest.
+
+% ------- TABLE 1 -----------------------------------------------
+\begin{table}[htbp]
+\caption{Descriptive Statistics}
+\label{tab:descriptive}
+\begin{threeparttable}
+\smallskip
+\textit{Panel A: Variable-level summary statistics (full panel, $N=189$ country-year cells)}
+\smallskip
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+Variable & $N$ & Mean & SD & Min & P25 & Median & P75 & Max & \% Missing \\
+\midrule
+Employment rate & 189 & 75.80 & 5.14 & 58.30 & 72.80 & 77.00 & 79.70 & 83.60 & 0.00 \\
+Unemployment rate & 189 & 6.15 & 2.68 & 2.00 & 4.40 & 5.80 & 7.10 & 17.90 & 0.00 \\
+Gender pay gap & 159 & 10.92 & 5.56 & $-$1.50 & 7.00 & 11.40 & 15.60 & 21.30 & 15.87 \\
+Job vacancy rate & 182 & 2.13 & 1.17 & 0.42 & 1.18 & 1.95 & 2.74 & 6.32 & 3.70 \\
+Labour slack rate & 189 & 11.67 & 4.76 & 3.12 & 7.90 & 11.12 & 14.43 & 25.75 & 0.00 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+
+\bigskip
+\textit{Panel B: Country-level means, sorted by Hiring Pressure Index (HPI)}
+\smallskip
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{llrrrr}
+\toprule
+Code & Country & Mean Emp.\ Rate & Mean GPG (\%) & HPI & ERS \\
+\midrule
+NL & Netherlands  & 82.4 & 12.8 & 100 & 56 \\
+SI & Slovenia     & 77.0 &  5.6 &  99 & 42 \\
+DE & Germany      & 80.2 & 16.8 &  98 & 81 \\
+CZ & Czechia      & 81.2 & 17.5 &  93 & 99 \\
+CY & Cyprus       & 78.2 & 11.6 &  90 & 68 \\
+AT & Austria      & 76.7 & 18.8 &  88 & 97 \\
+HU & Hungary      & 79.6 & 16.3 &  88 & 90 \\
+BE & Belgium      & 71.4 &  2.0 &  85 &  4 \\
+PL & Poland       & 76.1 &  6.0 &  82 & 23 \\
+BG & Bulgaria     & 75.2 & 12.3 &  81 & 63 \\
+MT & Malta        & 79.6 &  6.9 &  80 & 27 \\
+IE & Ireland      & 77.0 &  9.1 &  79 & 44 \\
+LT & Lithuania    & 78.4 & 10.7 &  78 & 52 \\
+LV & Latvia       & 77.1 & 16.9 &  76 & 71 \\
+IT & Italy        & 64.8 &  5.3 &  71 & 34 \\
+EE & Estonia      & 80.9 & 19.0 &  69 & 100\\
+PT & Portugal     & 76.9 &  7.8 &  69 & 39 \\
+HR & Croatia      & 70.1 &  7.9 &  68 & 32 \\
+FR & France       & 73.8 & 13.7 &  67 & 67 \\
+SE & Sweden       & 81.5 & 10.7 &  56 & 58 \\
+DK & Denmark      & 79.3 & 13.5 &  55 & 74 \\
+LU & Luxembourg   & 73.8 & $-$0.4 & 54 &  0 \\
+ES & Spain        & 69.3 &  8.2 &  48 & 39 \\
+SK & Slovakia     & 76.5 & 16.1 &  45 & 83 \\
+FI & Finland      & 76.9 & 16.2 &  44 & 87 \\
+EL & Greece       & 65.1 & 13.5 &  42 & 74 \\
+RO & Romania      & 67.6 &  1.5 &  42 & 18 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\begin{tablenotes}
+\footnotesize
+\item \textit{Notes:} Panel~A covers all 189 country-year cells (27~EU member
+  states, 2019--2025).  Gender pay gap is restricted to 159 valid observations
+  (2019--2024); missing cells reflect the 2025 Eurostat data ceiling and
+  Greece's shorter series (2022--2024 only).  GPG\,=\,gender pay gap
+  (percentage-point unadjusted gap, female earnings as \% below male).
+  Panel~B reports means over 2019--2024; HPI and ERS are time-invariant
+  latest-period scores (see Section~\ref{subsec:composites}).
+  HPI range: 0--100 (higher = tighter market);
+  ERS range: 0--100 (higher = larger pay gap).
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\subsection{Pooled replication and fixed-effects null}
+\label{subsec:pooled_fe}
+
+Table~\ref{tab:regressions} reports the paper's central empirical result.
+Model~1 (pooled OLS, year fixed effects) shows employment rate positively and
+significantly associated with the gender pay gap: $\hat{\beta}=0.637$
+(SE\,=\,0.155, $p<0.001$, $N=159$, $R^{2}=0.299$).  This replicates, on the
+corrected and expanded 27-country panel, the positive cross-sectional association
+widely noted in the policy literature.
+
+Model~2, the paper's main specification, adds country and year fixed effects.
+The coefficient falls to $\hat{\beta}=0.113$ (SE\,=\,0.269, $p=0.676$, $N=159$),
+an attenuation of approximately 82\% relative to the pooled estimate, and the
+association is not statistically distinguishable from zero at any conventional
+threshold.  Within-country $R^{2}$ is $-0.096$, consistent with employment rate
+explaining essentially none of the within-country variation in the gender pay gap
+once between-country heterogeneity is absorbed.  A Hausman test strongly favours
+fixed effects over random effects ($\chi^{2}=27.99$, $p<0.001$), and an F-test
+confirms the country fixed effects are jointly significant against a pooled null
+($F=83.80$, $p<0.001$) --- the attenuation in Model~2 is not an artefact of an
+inappropriate estimator choice.
+
+Model~3 (fixed effects with unemployment rate and job vacancy rate as additional
+controls) gives $\hat{\beta}=0.209$ (SE\,=\,0.343, $p>0.05$, $N=153$),
+consistent with Model~2.  Model~4 (first differences) gives
+$\hat{\beta}=0.152$ (SE\,=\,0.112, $N=132$), and Model~5 (fixed effects with
+employment rate lagged one year, addressing reverse causality) gives
+$\hat{\beta}=0.016$ (SE\,=\,0.213, $N=132$) --- both null.  Every
+fixed-effects-family specification in Table~\ref{tab:regressions} is
+statistically indistinguishable from zero; only the pooled, cross-sectional
+specification in Model~1 shows a significant association.
+
+The contrast between Models~1 and~2 is the paper's central finding: a
+relationship that appears strong and significant when identified only from
+cross-country variation disappears entirely once within-country variation is
+isolated.  This pattern is the signature of a confounded, between-country
+association rather than a causal or even a reliably predictive within-country
+relationship.  Figure~\ref{fig:scatter} illustrates the pooled cross-country
+association.
+
+% ------- TABLE 2 -----------------------------------------------
+\begin{table}[htbp]
+\caption{Labour Market Tightness and the Gender Pay Gap:\\
+         Pooled OLS and Panel Fixed-Effects Estimates}
+\label{tab:regressions}
+\begin{threeparttable}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lcccccc}
+\toprule
+ & \multicolumn{5}{c}{\textit{Dependent variable: Gender pay gap (pp)}} \\
+\cmidrule(l){2-6}
+ & Model 1 & Model 2 & Model 3 & Model 4 & Model 5 \\
+ & Pooled OLS & Two-way FE & FE + controls & First diff.\ & Lagged emp. \\
+\midrule
+Employment rate & $0.637^{***}$ & $0.113$ & $0.209$ & $0.152$ & $0.016$ \\
+                & $(0.155)$     & $(0.269)$ & $(0.343)$ & $(0.112)$ & $(0.213)$ \\[4pt]
+Country FE      & No  & Yes & Yes & No  & Yes \\
+Year FE         & Yes & Yes & Yes & No  & Yes \\
+Additional controls & No & No & Yes & No & No \\
+\midrule
+$N$               & 159 & 159 & 153 & 132 & 132 \\
+$R^{2}$           & 0.299 & 0.007 & 0.038 & 0.018 & 0.000 \\
+$R^{2}$ (within)  & ---  & $-$0.096 & $-$0.120 & --- & $-$0.009 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\begin{tablenotes}
+\footnotesize
+\item \textit{Notes:} Standard errors clustered by country in parentheses.
+  $^{***}p<0.001$, $^{**}p<0.01$, $^{*}p<0.05$.
+  Model~1 is pooled OLS with year fixed effects.
+  Model~2 (main specification) is two-way country-and-year fixed effects.
+  Model~3 adds unemployment rate and job vacancy rate as controls.
+  Model~4 is first-difference estimation.
+  Model~5 uses employment rate lagged one year.
+  Hausman test (RE vs.\ FE): $\chi^{2}=27.99$, $p<0.001$, favouring fixed effects.
+  F-test for joint significance of country FEs in Model~2: $F=83.80$, $p<0.001$.
+  Additional controls in Model~3: unemployment rate and job vacancy rate.
+  Eurostat data ceiling: gender pay gap series ends at 2024 reference year
+  (last updated 26~February~2026).
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+% ------- FIGURE 1 ----------------------------------------------
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig1_tightness_gpg_scatter}
+  \caption{Labour Market Tightness and the Gender Pay Gap: Cross-Country Scatter.
+    Each point represents one country-year observation (27~EU member states,
+    2019--2024, $N=159$). The fitted line is from pooled OLS with year fixed
+    effects (Model~1 in Table~\ref{tab:regressions},
+    $\hat{\beta}=0.637^{***}$). The positive slope reflects a
+    between-country pattern; once country fixed effects are introduced
+    (Model~2), the coefficient collapses to 0.113 ($p=0.676$).}
+  \label{fig:scatter}
+\end{figure}
+
+\subsection{Robustness checks}
+\label{subsec:robustness}
+
+Table~\ref{tab:robustness} subjects the Model~2 null result to four independent
+robustness checks, all restricted to the same 2019--2024, 27-country panel.
+Splitting the sample by time window, the coefficient is positive and insignificant
+in 2019--2022 ($\hat{\beta}=0.300$, SE\,=\,0.326, $p=0.360$, $N=105$) and
+negative and insignificant in 2021--2024 ($\hat{\beta}=-0.176$, SE\,=\,0.160,
+$p=0.274$, $N=107$) --- the point estimate is unstable in sign across
+sub-periods, and neither sub-period result is significant.  Excluding Italy and
+Spain as potential outliers moves the coefficient only marginally
+($\hat{\beta}=0.143$, SE\,=\,0.282, $p=0.614$, $N=147$), still null.
+Substituting job vacancy rate for employment rate as the tightness proxy gives
+$\hat{\beta}=-0.410$ (SE\,=\,0.270, $p=0.132$, $N=153$) --- the sign reverses
+relative to the employment-rate specification, but this estimate is also not
+statistically significant.  Every row in Table~\ref{tab:robustness} is null.
+The overall robustness pattern is not ``one measure is significant and another is
+not''; it is uniform non-significance across every specification and every proxy
+we test, which is a stronger form of evidence against a stable tightness--pay-gap
+relationship than a single null result would be on its own.
+
+% ------- TABLE 5 -----------------------------------------------
+\begin{table}[htbp]
+\caption{Robustness Checks}
+\label{tab:robustness}
+\begin{threeparttable}
+\begin{tabular}{llcccc}
+\toprule
+Check & Specification & $\hat{\beta}$ & SE & $p$-value & $N$ \\
+\midrule
+\multicolumn{6}{l}{\textit{A. Full sample benchmark (Model 2)}} \\[2pt]
+ & Full sample, 2019--2024 & 0.113 & 0.269 & 0.676 & 159 \\[6pt]
+\multicolumn{6}{l}{\textit{B. Time-window splits}} \\[2pt]
+ & 2019--2022 & 0.300 & 0.326 & 0.360 & 105 \\
+ & 2021--2024 & $-$0.176 & 0.160 & 0.274 & 107 \\[6pt]
+\multicolumn{6}{l}{\textit{C. Outlier exclusion}} \\[2pt]
+ & Excluding Italy and Spain & 0.143 & 0.282 & 0.614 & 147 \\[6pt]
+\multicolumn{6}{l}{\textit{D. Alternative tightness proxy}} \\[2pt]
+ & Employment rate (benchmark) & 0.113 & 0.269 & 0.676 & 159 \\
+ & Job vacancy rate            & $-$0.410 & 0.270 & 0.132 & 153 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\footnotesize
+\item \textit{Notes:} All specifications are two-way (country + year) fixed
+  effects.  Dependent variable: gender pay gap (percentage points).  Standard
+  errors clustered by country.  No specification reaches statistical
+  significance at any conventional threshold.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\subsection{COVID-19 lockdown stringency as an exogenous cross-check}
+\label{subsec:covid_event}
+
+The checks in Section~\ref{subsec:robustness} vary the sample, the outlier
+set, and the tightness proxy, but all rely on ordinary year-to-year movement
+in employment rate --- variation that could in principle still be correlated
+with unobserved, time-varying national factors.  As a cross-check using
+variation plausibly unrelated to a country's underlying discrimination
+institutions, we exploit the 2020 COVID-19 lockdown shock: countries differed
+sharply in lockdown stringency for reasons largely disconnected from their
+gender-pay-gap institutions (public-health capacity, population density,
+political response), yet the shock produced large, cross-country-variable
+disruptions to employment during exactly the years this panel covers.
+
+We construct $\text{Stringency2020}_i$, each country's mean 2020 daily value
+on the Oxford COVID-19 Government Response Tracker's Stringency Index
+\citep{HaleEtAl2021}, and estimate an event-study specification interacting
+this time-invariant shock intensity with year dummies:
+
+\begin{equation}
+\text{GPG}_{it} = \sum_{k=2020}^{2024} \theta_k \left(\text{Stringency2020}_i
+  \times \mathbb{1}[t=k]\right) + \gamma_i + \delta_t + \varepsilon_{it},
+\label{eq:eventstudy}
+\end{equation}
+
+\noindent with country and year fixed effects as in Model~2, standard errors
+clustered by country, and 2019 as the omitted reference year.  If tightness
+genuinely drove the gender pay gap, countries hit harder by the 2020 shock
+should show a divergent path in $\theta_k$ relative to less-affected
+countries.
+
+Table~\ref{tab:eventstudy} and Figure~\ref{fig:covid_event} report the
+result: no $\theta_k$ is statistically distinguishable from zero in any year,
+2020--2024.  The point estimates drift from near zero in 2020
+($\hat\theta=-0.012$, $p=0.741$) to modestly positive by 2024
+($\hat\theta=0.085$, $p=0.190$), but every confidence interval spans zero
+throughout, and the widening intervals in the later years reflect
+accumulating imprecision rather than a strengthening relationship.  We note
+one limitation of this design explicitly: because the panel begins in 2019,
+there is only a single pre-treatment year, so we cannot formally test for
+pre-existing divergent trends between high- and low-stringency countries
+before the shock.  The design's identifying assumption --- that stringency
+is unrelated to gender-pay-gap institutions conditional on country and year
+effects --- is therefore plausible but not independently verifiable within
+this sample.
+
+This result is a stronger form of null than the observational checks in
+Section~\ref{subsec:robustness}, because it uses variation --- an
+exogenous public-health shock --- that has no obvious channel back to a
+country's wage-setting institutions, rather than ordinary employment-rate
+fluctuation that could in principle share unobserved drivers with the gender
+pay gap.\footnote{We also considered a two-stage least-squares specification
+instrumenting employment rate with $\text{Stringency2020}_i \times
+\text{Post}_t$.  This is not informative in a two-way fixed-effects design:
+$\text{Post}_t$ is a deterministic function of the year fixed effects already
+in the model, leaving almost no independent variation to identify the
+instrument (partial $F=0.627$, $p=0.430$).  We therefore rely on the
+event-study estimates above, which do not require this exclusion
+restriction, rather than reporting the 2SLS estimate as a robustness
+confirmation.}
+
+% ------- TABLE: COVID EVENT STUDY --------------------------------
+\begin{table}[htbp]
+\caption{Event Study: COVID-19 Lockdown Stringency and the Gender Pay Gap}
+\label{tab:eventstudy}
+\begin{threeparttable}
+\begin{tabular}{lccccc}
+\toprule
+Year & $\hat\theta_k$ & SE & $p$-value & 95\% CI (low) & 95\% CI (high) \\
+\midrule
+2019 (ref.) & 0.000  & --    & --    & --      & --    \\
+2020        & $-$0.012 & 0.035 & 0.741 & $-$0.080 & 0.057 \\
+2021        & 0.070  & 0.047 & 0.140 & $-$0.023 & 0.162 \\
+2022        & 0.026  & 0.036 & 0.475 & $-$0.045 & 0.096 \\
+2023        & 0.046  & 0.061 & 0.454 & $-$0.074 & 0.167 \\
+2024        & 0.085  & 0.065 & 0.190 & $-$0.042 & 0.212 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\footnotesize
+\item \textit{Notes:} Dependent variable: gender pay gap (percentage points).
+  Two-way (country + year) fixed effects, standard errors clustered by
+  country.  $\text{Stringency2020}_i$ is each country's mean 2020 Oxford
+  COVID-19 Government Response Tracker Stringency Index value
+  \citep{HaleEtAl2021}, interacted with year dummies; 2019 is the omitted
+  reference year.  No coefficient is statistically significant at
+  conventional thresholds.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+% ------- FIGURE: COVID EVENT STUDY --------------------------------
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig_covid_event_study}
+  \caption{Event Study: COVID-19 Lockdown Stringency and the Gender Pay Gap.
+    Coefficients on $\text{Stringency2020}_i \times \mathbb{1}[t=k]$ from
+    Equation~\ref{eq:eventstudy}, with 95\% confidence intervals (clustered by
+    country).  2019 is the omitted reference year.  No year shows a
+    statistically significant deviation from zero.}
+  \label{fig:covid_event}
+\end{figure}
+
+\subsection{Mechanism controls}
+\label{subsec:mechanism}
+
+A natural question is whether the pooled association in Model~1 reflects a
+genuine but confounded selection mechanism: countries with higher overall
+employment rates might also have systematically different male--female labour
+force participation gaps, which could affect the measured gender pay gap through
+workforce composition rather than through a labour-demand channel
+\citep{OlivettiPetrongolo2008}.  We test this directly by constructing a gender
+employment gap variable (male employment rate minus female employment rate, both
+age 20--64, Eurostat \texttt{lfsi\_emp\_a}) and adding it as a control in both
+the pooled and fixed-effects specifications.  Employment rate (total) and female
+employment rate are correlated at $r=0.95$ in this panel and cannot be included
+together as separate regressors without severe multicollinearity; the gender
+employment gap avoids this problem by construction.
+
+Table~\ref{tab:mechanism}, Panel~A shows that adding the gender employment gap
+to the pooled specification attenuates the employment-rate coefficient only
+modestly, from $\hat{\beta}=0.637$ to $\hat{\beta}=0.578$ --- a 9.3\% reduction
+--- and the coefficient remains highly significant ($p=0.003$).  Adding female
+part-time share as a further control produces negligible additional change
+($\hat{\beta}=0.643$ without the gender employment gap, $\hat{\beta}=0.584$
+with both controls).  The gender employment participation gap does not
+substantially explain the pooled cross-country association.
+
+Table~\ref{tab:mechanism}, Panel~B repeats the exercise under country and year
+fixed effects.  The baseline null result ($\hat{\beta}=0.113$, $p=0.676$) is
+essentially unchanged when the gender employment gap is added
+($\hat{\beta}=0.213$, SE\,=\,0.236, $p=0.368$, $N=159$): the point estimate
+moves but remains well within the range of statistical noise, and the
+specification remains clearly insignificant.  The gender employment gap alone,
+without employment rate, is also insignificant within-country
+($\hat{\beta}=0.140$, SE\,=\,0.206, $p=0.496$).
+
+We report this as a negative result on its own terms: the leading candidate
+selection mechanism we test does not explain the pooled correlation, and the
+within-country null persists whether or not this mechanism is controlled for.
+This does not rule out other unobserved between-country confounders ---
+industrial structure, collective bargaining coverage, or childcare policy regimes
+are plausible candidates we do not test directly --- but it forecloses one
+specific, testable selection story.
+
+% ------- TABLE 7 -----------------------------------------------
+\begin{table}[htbp]
+\caption{Mechanism Controls: Gender Employment Participation Gap}
+\label{tab:mechanism}
+\begin{threeparttable}
+\smallskip
+\textit{Panel A: Pooled OLS with year fixed effects}
+\smallskip
+\begin{tabular}{lcccc}
+\toprule
+Specification & $\hat{\beta}_{\text{emp.rate}}$ & SE & $p$-value & $N$ \\
+\midrule
+(a) Employment rate only [baseline]
+  & $0.637^{***}$ & 0.155 & $<$0.001 & 159 \\
+(b) + gender employment gap
+  & $0.578^{**}$  & 0.196 & 0.003    & 159 \\
+(c) + female part-time share
+  & $0.643^{***}$ & 0.163 & $<$0.001 & 159 \\
+(d) + gender employment gap + female part-time share
+  & $0.584^{**}$  & 0.208 & 0.005    & 159 \\
+\bottomrule
+\end{tabular}
+
+\bigskip
+\textit{Panel B: Two-way (country + year) fixed effects}
+\smallskip
+\begin{tabular}{lcccc}
+\toprule
+Specification & $\hat{\beta}_{\text{emp.rate}}$ & SE & $p$-value & $N$ \\
+\midrule
+(e) Employment rate only [existing null]
+  & $0.113$  & 0.269 & 0.676 & 159 \\
+(f) + gender employment gap
+  & $0.213$  & 0.236 & 0.368 & 159 \\
+(g) Gender employment gap only (no employment rate)
+  & $0.140$  & 0.206 & 0.496 & 159 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\footnotesize
+\item \textit{Notes:} Dependent variable: gender pay gap (percentage points).
+  Standard errors clustered by country.
+  $^{***}p<0.001$, $^{**}p<0.01$, $^{*}p<0.05$.
+  Gender employment gap\,=\,male minus female employment rate (ages 20--64,
+  Eurostat \texttt{lfsi\_emp\_a}).  Female part-time share from Eurostat
+  labour force survey.  Panel~A: pooled OLS; Panel~B: two-way FE.
+  The 9.3\% attenuation from spec.~(a) to spec.~(b) in Panel~A is not
+  statistically meaningful; the Olivetti--Petrongolo selection channel does
+  not explain the pooled cross-country association.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\subsection{Does bargaining power moderate the tightness--gap relationship?}
+\label{subsec:bargaining}
+
+Section~\ref{subsec:mechanism} names collective bargaining coverage as a
+plausible unobserved confound behind the pooled cross-country association,
+alongside industrial structure and childcare policy regimes, but does not
+test it directly.  There is also a specific, literature-motivated reason to
+expect tightness to matter conditionally rather than not at all:
+\citet{VaccaroEtAl2024} find that Germany's 2017 pay-transparency law reduced
+the gender pay gap only in establishments with works councils and collective
+bargaining coverage, with no improvement in establishments lacking these
+structures.  If institutional voice is similarly necessary for a
+competitive-equalisation channel to operate, tightness might compress the
+gender pay gap where bargaining coverage is high while showing no effect
+where it is low --- a pattern the pooled null in Section~\ref{subsec:pooled_fe}
+cannot distinguish from a true absence of any tightness effect.
+
+We construct $\text{BargCov}_i$, each country's adjusted collective
+bargaining coverage rate from the OECD/AIAS ICTWSS database, version~2.0
+\citep{OECDAIAS2025}, using the latest available pre-2019 value as a
+time-invariant institutional baseline.\footnote{For four countries (Austria,
+Belgium, France, and Italy), the OECD/AIAS database's own methodology notes
+that the reported adjusted coverage rate is modelled rather than directly
+measured from administrative or survey sources; we retain these countries for
+comparability with the rest of the panel but flag this as a data-quality
+caveat.}  Because $\text{BargCov}_i$ is time-invariant, it is absorbed by the
+country fixed effects on its own; it is identified only through its
+interaction with the within-country variation in employment rate:
+
+\begin{equation}
+\text{GPG}_{it} = \beta_1 \,\text{EmpRate}_{it}
+  + \beta_2 \left(\text{EmpRate}_{it} \times \text{BargCov}_i\right)
+  + \gamma_i + \delta_t + \varepsilon_{it}.
+\label{eq:bargaining}
+\end{equation}
+
+Table~\ref{tab:bargaining}, Panel~A reports our pre-specified test.  The
+interaction term is small and statistically indistinguishable from zero
+($\hat\beta_2=-0.0029$, SE\,=\,0.0026, $p=0.280$, $N=159$), and the
+employment-rate main effect remains null as in Model~2
+($\hat\beta_1=0.228$, $p=0.388$).  On this test, the tightness--gap null does
+not appear to be institutionally gated: it holds regardless of a country's
+baseline bargaining coverage.
+
+As a secondary, more exploratory cut, Panel~B replaces the continuous
+interaction with a binary above/below-median split on $\text{BargCov}_i$ and
+formally tests whether the implied slopes differ.  Here the difference is
+statistically significant ($p=0.023$): the implied slope is negative among
+above-median-coverage countries ($-0.112$) and positive, though
+insignificant on its own, among below-median-coverage countries ($0.309$,
+$p=0.233$) --- directionally consistent with competitive equalisation
+operating only where bargaining coverage is high, the pattern
+\citet{VaccaroEtAl2024} document for transparency legislation.  We report
+this cut honestly rather than suppress it, but we do not treat it as
+confirming institutional gating: it disagrees with our pre-specified
+continuous test, binary median-splits of continuous variables are known to
+be sensitive to the exact cutpoint chosen, and each half of the sample
+contains only 13--14 country clusters, which is thin for cluster-robust
+inference.  We flag the binary-split pattern as a candidate for future
+research using a longer panel or firm-level bargaining data, in the same
+spirit as our treatment of the exploratory ICT-sector result in
+Section~\ref{subsec:sector}, rather than as a second confirmed finding
+alongside the null in Panel~A.
+
+% ------- TABLE: BARGAINING COVERAGE INTERACTION ------------------
+\begin{table}[htbp]
+\caption{Does Collective Bargaining Coverage Moderate the Tightness--Gap
+         Relationship?}
+\label{tab:bargaining}
+\begin{threeparttable}
+\smallskip
+\textit{Panel A: Continuous interaction (primary, pre-specified test)}
+\smallskip
+\begin{tabular}{lccc}
+\toprule
+ & Coefficient & SE & $p$-value \\
+\midrule
+Employment rate                          & 0.228    & 0.264  & 0.388 \\
+Employment rate $\times$ BargCov         & $-$0.0029 & 0.0026 & 0.280 \\
+\midrule
+$N$ & \multicolumn{3}{r}{159 (27 countries)} \\
+\bottomrule
+\end{tabular}
+
+\bigskip
+\textit{Panel B: Binary median-split, formal test of slope difference (secondary)}
+\smallskip
+\begin{tabular}{lccc}
+\toprule
+ & Coefficient & SE & $p$-value \\
+\midrule
+Employment rate, below-median BargCov         & 0.309    & 0.258 & 0.233 \\
+Difference in slopes (above $-$ below median) & $-$0.421 & 0.182 & 0.023 \\
+Implied slope, above-median BargCov           & $-$0.112 & ---   & --- \\
+\midrule
+$N$ & \multicolumn{3}{r}{159 (27 countries); median BargCov\,=\,52.4} \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\footnotesize
+\item \textit{Notes:} Dependent variable: gender pay gap (percentage points).
+  Two-way (country + year) fixed effects, standard errors clustered by
+  country.  BargCov: adjusted collective bargaining coverage rate,
+  OECD/AIAS ICTWSS v2.0 \citep{OECDAIAS2025}, latest pre-2019 value,
+  time-invariant.  Panel~A is the pre-specified test; Panel~B is a secondary
+  robustness cut with 13--14 country clusters per half and should be
+  interpreted cautiously (see text).
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\subsection{Sector heterogeneity}
+\label{subsec:sector}
+
+In sharp contrast to the fragile tightness relationship, gender pay gaps differ
+substantially and robustly across sectors.  Restricting to single-letter NACE
+Rev.~2 sections to avoid double-counting sectors against their own aggregate
+rollups, an ANOVA across 19 disjoint sectors rejects the null of equal means
+decisively ($F=105.78$, $p<0.001$).  Financial and insurance activities has the
+highest mean gap in the sample at 24.96\% (SD\,=\,6.62, $N=154$), and
+Construction has the lowest at $-2.72$\% (SD\,=\,11.51, $N=154$) --- a spread
+of nearly 28 percentage points between the two extremes.  Every pairwise
+comparison of Finance against every other sector remains significant after
+Bonferroni correction for multiple comparisons (full pairwise results in
+Appendix~\ref{sec:appendixC}).  This sector effect is present
+in every year of the sample and is not sensitive to the specification choices
+that eliminate the tightness relationship.  Figure~\ref{fig:sectorbars}
+illustrates the sector distribution.
+
+The country-level null reported in Section~\ref{subsec:pooled_fe}
+($\hat{\beta}=0.113$) does not by itself rule out a tightness relationship
+operating differently within specific sectors, so we re-estimate the main
+two-way fixed-effects specification separately for Finance and for Information
+and Communication, the two highest-exposure sectors identified below
+(Table~\ref{tab:sectorfe}).  The Finance-sector coefficient is small and
+statistically insignificant ($\hat{\beta}=-0.047$, SE\,=\,0.343, $p=0.891$,
+$N=154$), consistent with the country-level null.  The ICT-sector coefficient,
+by contrast, is larger and nominally significant ($\hat{\beta}=0.832$,
+SE\,=\,0.391, $p=0.035$, $N=154$).  We report this result cautiously rather
+than as a second confirmed finding: it is one of only two sector-specific
+specifications we test, so it has not been subjected to a multiple-comparisons
+correction, and NACE sector composition differs enough across countries that a
+single-sector fixed-effects estimate is more susceptible to composition effects
+than the pooled country-level result.  We do not treat this result as overturning
+the paper's main country-level null claim; it is noted here as a candidate for
+future sector-specific investigation rather than as an established finding.
+
+% ------- TABLE 3 -----------------------------------------------
+\begin{table}[htbp]
+\caption{Sector Heterogeneity in Gender Pay Gaps}
+\label{tab:sector}
+\begin{threeparttable}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{p{8.5cm}crrrrr}
+\toprule
+Sector & Code & Mean GPG & SD & Min & Max & $N$ \\
+\midrule
+Financial and insurance activities         & K & 24.96 & 6.62 & 8.4 & 40.3 & 154 \\
+Information and communication              & J & 19.46 & 6.66 & 6.5 & 30.8 & 154 \\
+Wholesale and retail trade                 & G & 18.23 & 5.73 & 4.2 & 32.9 & 154 \\
+Human health and social work activities    & Q & 17.07 & 8.57 & $-$5.4 & 33.0 & 154 \\
+Manufacturing                              & C & 16.75 & 7.08 & 0.9 & 30.9 & 154 \\
+Arts, entertainment and recreation         & R & 16.55 & 13.58 & $-$8.4 & 67.3 & 154 \\
+Professional, scientific and technical act.\ & M & 16.31 & 7.12 & $-$5.4 & 28.1 & 154 \\
+Other service activities                   & S & 12.84 & 8.34 & $-$10.1 & 31.3 & 154 \\
+Real estate activities                     & L & 11.47 & 8.11 & $-$21.3 & 36.7 & 154 \\
+Education                                  & P &  9.95 & 5.73 & $-$6.4 & 23.5 & 154 \\
+Accommodation and food service activities  & I &  9.22 & 4.29 & 1.5 & 28.0 & 154 \\
+Electricity, gas, steam and air supply     & D &  8.48 & 7.43 & $-$9.1 & 23.5 & 142 \\
+Public administration and defence          & O &  8.07 & 5.28 & $-$4.1 & 20.2 & 126 \\
+Administrative and support service act.\   & N &  7.43 & 9.99 & $-$30.3 & 24.7 & 154 \\
+Mining and quarrying                       & B &  6.94 & 10.48 & $-$18.5 & 39.2 & 148 \\
+Transportation and storage                 & H &  3.79 & 8.68 & $-$21.0 & 32.3 & 154 \\
+Water supply; sewerage \& waste management & E & $-$0.28 & 12.28 & $-$54.8 & 20.9 & 152 \\
+Construction                               & F & $-$2.72 & 11.51 & $-$31.2 & 28.2 & 154 \\
+Agriculture, forestry and fishing          & A & \multicolumn{5}{c}{--- (no usable observations)} \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\begin{tablenotes}
+\footnotesize
+\item \textit{Notes:} GPG\,=\,unadjusted gender pay gap (percentage points,
+  female earnings as \% below male).  Single-letter NACE Rev.~2 sections only;
+  Agriculture (A) has no usable observations in the Eurostat source.
+  ANOVA across 18 sectors (excluding A): $F=105.78$, $p<0.001$.
+  Every pairwise comparison of Finance (K) against all other sectors is
+  significant after Bonferroni correction.
+  Sample: 27~EU member states, 2019--2024.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+% ------- FIGURE 3 ----------------------------------------------
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.88\textwidth]{fig3_sector_gpg_bars}
+  \caption{Gender Pay Gaps by Sector. Mean unadjusted gender pay gap
+    (percentage points) by NACE Rev.~2 single-letter section across 27~EU
+    member states, 2019--2024. Error bars show $\pm$1~standard deviation.
+    ANOVA $F=105.78$, $p<0.001$.}
+  \label{fig:sectorbars}
+\end{figure}
+
+% ------- TABLE 3c ----------------------------------------------
+\begin{table}[htbp]
+\caption{Sector-Specific Two-Way Fixed-Effects Estimates}
+\label{tab:sectorfe}
+\begin{threeparttable}
+\begin{tabular}{lccccl}
+\toprule
+Sector & $\hat{\beta}$ & SE & $p$-value & $N$ & Country-level $\hat{\beta}$ \\
+\midrule
+Financial and insurance activities & $-$0.047 & 0.343 & 0.891 & 154 & 0.113 \\
+Information and communication      & $0.832^{*}$ & 0.391 & 0.035 & 154 & 0.113 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\footnotesize
+\item \textit{Notes:} Both specifications are two-way (country + year) fixed
+  effects, estimated on the sector-specific subsample. Dependent variable:
+  gender pay gap for the named sector.  Standard errors clustered by country.
+  $^{*}p<0.05$.  The country-level $\hat{\beta}=0.113$ (Model~2,
+  Table~\ref{tab:regressions}) is shown for comparison.  The ICT estimate
+  should be interpreted cautiously: it is one of two sector-specific
+  specifications tested and has not been subjected to a multiple-comparisons
+  correction.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\subsection{Compliance exposure under the Directive's 5\% threshold}
+\label{subsec:exposure}
+
+Directive (EU) 2023/970 requires a joint pay assessment when an unadjusted
+gender pay gap of 5\% or more is not objectively justified.  We compute, for
+every country-sector-year cell in the 2019--2024 panel (excluding 2025 per
+Section~\ref{subsec:data_sources}), whether the observed gender pay gap meets or
+exceeds this threshold, and examine how exposure varies by sector and by each
+country's Hiring Pressure Index classification.
+
+Of 4,863 country-sector-year cells in the primary panel, 3,173 (65.2\%) have
+usable, non-missing gender pay gap data.  Restricting to Hiring Pressure Index
+quartiles (a time-invariant, latest-period country classification independent of
+the gender pay gap itself; see Section~\ref{subsec:composites}), exposure rises
+from 75.9\% in the lowest-tightness quartile to 86.0\% in the highest-tightness
+quartile (Q2:\,79.8\%, Q3:\,76.9\%).  This is the opposite of what a ``tight
+markets self-correct'' story would predict: the tightest labour markets in the
+sample do not show lower exposure to the Directive's threshold than the loosest
+ones; if anything, exposure is somewhat higher in the tightest quartile.  We
+deliberately lead with the HPI comparison rather than the parallel Equity Risk
+Score comparison, since ERS is constructed directly from the gender pay gap
+itself and an ERS--exposure relationship is close to tautological; the HPI
+result, built from signals with no gender pay gap input, is the informative test.
+
+Sector-level exposure (Table~\ref{tab:sectorexposure}, single-letter NACE
+sections only) is far more discriminating than the tightness classification.
+Financial and insurance activities and Information and Communication both show
+100\% exposure --- every observed country-year cell in these two sectors meets or
+exceeds the 5\% threshold across the sample period.  Wholesale and retail trade
+follows at 98.1\%, and Professional, scientific and technical activities at
+94.2\%.  At the country level (Table~\ref{tab:countryexposure}), Austria shows
+100\% exposure across its 114 usable cells, followed by Estonia (94.4\%),
+Czechia (93.7\%), and Latvia (92.9\%).
+
+Sector, not labour-market tightness, is the variable that discriminates sharply
+and consistently between high- and low-exposure cells in this data.  We propose
+sector-based exposure mapping --- flagging Finance and ICT specifically --- as a
+more actionable compliance-triage heuristic for regulators and employers than any
+classification built on labour-market tightness.  Figure~\ref{fig:exposure}
+illustrates sector-level exposure.
+
+% ------- TABLE 6 -----------------------------------------------
+\begin{table}[htbp]
+\caption{Compliance Exposure by Hiring Pressure Index and Equity Risk Score
+         Quartile}
+\label{tab:exposure}
+\begin{threeparttable}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{llrrr}
+\toprule
+Index & Quartile & $N$ usable & $N \geq 5\%$ & Exposure (\%) \\
+\midrule
+\multicolumn{5}{l}{\textit{HPI (full panel, time-invariant classification)}} \\[2pt]
+ & Q1 (lowest)  & 801 & 608 & 75.9 \\
+ & Q2           & 868 & 693 & 79.8 \\
+ & Q3           & 874 & 672 & 76.9 \\
+ & Q4 (highest) & 630 & 542 & 86.0 \\[4pt]
+\multicolumn{5}{l}{\textit{ERS (full panel, time-invariant classification)}} \\[2pt]
+ & Q1 (lowest)  & 838 & 551 & 65.8 \\
+ & Q2           & 780 & 604 & 77.4 \\
+ & Q3           & 813 & 692 & 85.1 \\
+ & Q4 (highest) & 742 & 668 & 90.0 \\[4pt]
+\multicolumn{5}{l}{\textit{HPI (2024 only, robustness)}} \\[2pt]
+ & Q1 (lowest)  & 143 & 108 & 75.5 \\
+ & Q2           & 143 & 111 & 77.6 \\
+ & Q3           & 142 & 103 & 72.5 \\
+ & Q4 (highest) & 105 &  91 & 86.7 \\[4pt]
+\multicolumn{5}{l}{\textit{ERS (2024 only, robustness)}} \\[2pt]
+ & Q1 (lowest)  & 139 &  86 & 61.9 \\
+ & Q2           & 127 &  99 & 78.0 \\
+ & Q3           & 145 & 119 & 82.1 \\
+ & Q4 (highest) & 122 & 109 & 89.3 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\begin{tablenotes}
+\footnotesize
+\item \textit{Notes:} Exposure is defined as gender pay gap $\geq 5\%$
+  (Directive joint-pay-assessment threshold).  HPI and ERS quartiles are
+  time-invariant, latest-period country classifications.  ERS is mechanically
+  derived from the gender pay gap ($\text{ERS}_\text{raw}=\text{pay\_gap}\times
+  5.5$); the ERS--exposure relationship is therefore largely tautological and
+  shown only for completeness.  HPI, which shares no input with the gender pay
+  gap, is the informative comparison.
+  Eurostat annual gender pay gap statistics (\texttt{earn\_gr\_gpgr2}) were last
+  updated 26~February~2026; the latest available reference year is 2024.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+% ------- TABLE 6b ----------------------------------------------
+\begin{table}[htbp]
+\caption{Sector-Level Compliance Exposure}
+\label{tab:sectorexposure}
+\begin{threeparttable}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{p{8.5cm}rrrr}
+\toprule
+Sector & $N$ usable & $N \geq 5\%$ & Mean GPG (\%) & Exposure (\%) \\
+\midrule
+Financial and insurance activities                & 154 & 154 & 24.96 & \textbf{100.0} \\
+Information and communication                     & 154 & 154 & 19.46 & \textbf{100.0} \\
+Wholesale and retail trade                        & 154 & 151 & 18.23 & 98.1 \\
+Professional, scientific and technical activities & 154 & 145 & 16.31 & 94.2 \\
+Manufacturing                                     & 154 & 141 & 16.75 & 91.6 \\
+Human health and social work activities           & 154 & 140 & 17.07 & 90.9 \\
+Arts, entertainment and recreation                & 154 & 138 & 16.55 & 89.6 \\
+Other service activities                          & 154 & 134 & 12.84 & 87.0 \\
+Accommodation and food service activities         & 154 & 134 &  9.22 & 87.0 \\
+Real estate activities                            & 154 & 129 & 11.47 & 83.8 \\
+Education                                         & 154 & 127 &  9.95 & 82.5 \\
+Administrative and support service activities     & 154 & 117 &  7.43 & 76.0 \\
+Public administration and defence                 & 126 &  86 &  8.07 & 68.3 \\
+Mining and quarrying                              & 148 &  96 &  6.94 & 64.9 \\
+Electricity, gas, steam and air supply            & 142 &  92 &  8.48 & 64.8 \\
+Transportation and storage                        & 154 &  78 &  3.79 & 50.6 \\
+Construction                                      & 154 &  55 & $-$2.72 & 35.7 \\
+Water supply; sewerage \& waste management        & 152 &  43 & $-$0.28 & 28.3 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\begin{tablenotes}
+\footnotesize
+\item \textit{Notes:} Exposure\,=\,share of country-year cells with gender pay
+  gap $\geq 5\%$ (Directive joint-pay-assessment threshold).  Single-letter
+  NACE Rev.~2 sections.  Agriculture (A) excluded (zero usable observations).
+  Sample: 27~EU member states, 2019--2024.  Sorted by exposure share
+  descending.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+% ------- TABLE 6c ----------------------------------------------
+\begin{table}[htbp]
+\caption{Country-Level Compliance Exposure}
+\label{tab:countryexposure}
+\begin{threeparttable}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{llrrrrrr}
+\toprule
+Code & Country & $N$ usable & $N \geq 5\%$ & Mean GPG (\%) & HPI & ERS & Exposure (\%) \\
+\midrule
+AT & Austria     & 114 & 114 & 17.70 &  88 &  97 & \textbf{100.0} \\
+EE & Estonia     & 124 & 117 & 17.67 &  69 & 100 & 94.4 \\
+CZ & Czechia     & 126 & 118 & 16.52 &  93 &  99 & 93.7 \\
+LV & Latvia      & 126 & 117 & 17.65 &  76 &  71 & 92.9 \\
+EL & Greece      &  57 &  52 & 12.16 &  42 &  74 & 91.2 \\
+NL & Netherlands & 126 & 114 & 13.03 & 100 &  56 & 90.5 \\
+DE & Germany     & 126 & 113 & 15.24 &  98 &  81 & 89.7 \\
+FI & Finland     & 126 & 113 & 12.33 &  44 &  87 & 89.7 \\
+IE & Ireland     &  36 &  32 & 11.16 &  79 &  44 & 88.9 \\
+DK & Denmark     & 126 & 110 & 10.61 &  55 &  74 & 87.3 \\
+CY & Cyprus      & 126 & 106 & 13.96 &  90 &  68 & 84.1 \\
+ES & Spain       & 126 & 106 &  8.99 &  48 &  39 & 84.1 \\
+SK & Slovakia    & 126 & 104 & 14.01 &  45 &  83 & 82.5 \\
+IT & Italy       & 126 & 102 & 13.48 &  71 &  34 & 81.0 \\
+HU & Hungary     & 126 & 102 & 14.60 &  88 &  90 & 81.0 \\
+FR & France      & 126 &  99 & 10.17 &  67 &  67 & 78.6 \\
+LT & Lithuania   & 126 &  98 & 12.46 &  78 &  52 & 77.8 \\
+MT & Malta       & 106 &  80 &  9.57 &  80 &  27 & 75.5 \\
+HR & Croatia     & 126 &  95 &  9.68 &  68 &  32 & 75.4 \\
+BG & Bulgaria    & 126 &  95 &  9.10 &  81 &  63 & 75.4 \\
+PL & Poland      & 126 &  95 & 10.62 &  82 &  23 & 75.4 \\
+PT & Portugal    & 114 &  84 & 11.00 &  69 &  39 & 73.7 \\
+SI & Slovenia    & 126 &  91 &  7.11 &  99 &  42 & 72.2 \\
+SE & Sweden      & 126 &  79 &  6.44 &  56 &  58 & 62.7 \\
+LU & Luxembourg  & 114 &  63 &  6.61 &  54 &   0 & 55.3 \\
+BE & Belgium     & 114 &  56 &  4.87 &  85 &   4 & 49.1 \\
+RO & Romania     & 126 &  60 &  4.85 &  42 &  18 & 47.6 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\begin{tablenotes}
+\footnotesize
+\item \textit{Notes:} Exposure\,=\,share of country-sector-year cells with
+  gender pay gap $\geq 5\%$.  $N$ usable counts cells with non-missing gender
+  pay gap data across all NACE sectors and years 2019--2024.  HPI and ERS are
+  time-invariant latest-period scores.  Sorted by exposure share descending.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+% ------- FIGURE 5 ----------------------------------------------
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.88\textwidth]{fig5_compliance_exposure}
+  \caption{Compliance Exposure by Sector. Share of country-year cells with
+    gender pay gap $\geq 5\%$ (Directive joint-pay-assessment threshold) by
+    NACE Rev.~2 section.  Financial and insurance activities and Information \&
+    Communication are at 100\% exposure across the full 2019--2024 sample.
+    Sample: 27~EU member states.}
+  \label{fig:exposure}
+\end{figure}
+
+\subsubsection{Out-of-sample validation}
+\label{subsec:oos_validation}
+
+The sector-exposure pattern above is descriptive: Table~\ref{tab:sectorexposure}
+shows that sector predicts exposure better than tightness \emph{within} the
+2019--2024 sample used to construct it.  To test whether this pattern
+generalises rather than merely describing the training data, we validate it
+out of sample.  We fit three logistic regression classifiers of
+$P(\text{GPG}_{st} \geq 5\%)$ on country-sector-year cells from 2019--2022
+only ($N=1{,}807$): a full model (sector fixed effects, country fixed
+effects, HPI, and employment rate), a tightness-only model (HPI and
+employment rate, no sector information), and a sector-only model (sector
+fixed effects only, no tightness information).  Each model is then used to
+predict exposure on the 2023--2024 cells ($N=917$), which were held out
+entirely during fitting.
+
+Table~\ref{tab:oosvalidation}, Panel~A reports the results.  The full model
+achieves a test-set AUC of 0.862; the sector-only model, with no tightness
+information at all, achieves 0.805 --- capturing most of the full model's
+discriminative power.  The tightness-only model achieves an AUC of 0.560,
+barely above the 0.500 no-skill baseline.  The accuracy column requires a
+caution the AUC does not: the tightness-only model's reported accuracy of
+76.1\% is identical to the test-set base rate (698 of 917 held-out cells,
+or 76.1\%, are actually exposed), and its confusion matrix confirms why ---
+it predicts ``exposed'' for every single test observation, with zero true
+negatives and zero false negatives.  This is a degenerate classifier with no
+discriminative content, not a moderately accurate one; AUC, not accuracy, is
+the informative statistic for this model.
+
+Panel~B confirms the AUC gaps are not an artefact of one train/test split.
+Both a DeLong test and a 2,000-iteration bootstrap agree closely: the
+full-model advantage over tightness-only ($\Delta\text{AUC}=0.302$, 95\% CI
+$[0.256, 0.348]$) and the sector-only advantage over tightness-only
+($\Delta\text{AUC}=0.245$, 95\% CI $[0.189, 0.301]$) are both significant at
+$p<0.0001$.  This converts the descriptive claim in
+Section~\ref{subsec:exposure} into a validated predictive one: sector
+membership, not labour-market tightness, generalises to compliance-threshold
+exposure in years the model never saw during training.
+
+% ------- TABLE: OUT-OF-SAMPLE VALIDATION ------------------------
+\begin{table}[htbp]
+\caption{Out-of-Sample Validation of Sector-Based Exposure Mapping}
+\label{tab:oosvalidation}
+\begin{threeparttable}
+\smallskip
+\textit{Panel A: Test-set performance (trained on 2019--2022, tested on 2023--2024)}
+\smallskip
+\begin{tabular}{lccc}
+\toprule
+Model & $N_{\text{train}}$ & $N_{\text{test}}$ & AUC \quad Accuracy (\%) \\
+\midrule
+Full (sector + country FE + HPI + employment rate) & 1,807 & 917 & 0.862 \quad 83.9 \\
+Sector-only (sector fixed effects, no tightness)    & 1,807 & 917 & 0.805 \quad 80.7 \\
+Tightness-only (HPI + employment rate, no sector)   & 1,807 & 917 & 0.560 \quad 76.1\sym{a} \\
+\bottomrule
+\end{tabular}
+
+\bigskip
+\textit{Panel B: Significance of AUC gaps vs.\ tightness-only}
+\smallskip
+\begin{tabular}{llccc}
+\toprule
+Comparison & Method & $\Delta$AUC & 95\% CI & $p$-value \\
+\midrule
+Full vs.\ tightness-only         & DeLong    & 0.302 & [0.256, 0.348] & $<$0.001 \\
+Full vs.\ tightness-only         & Bootstrap & 0.303 & [0.258, 0.348] & $<$0.001 \\
+Sector-only vs.\ tightness-only  & DeLong    & 0.245 & [0.189, 0.301] & $<$0.001 \\
+Sector-only vs.\ tightness-only  & Bootstrap & 0.246 & [0.192, 0.302] & $<$0.001 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\footnotesize
+\item \textit{Notes:} Training set: 1,807 country-sector-year cells, 2019--2022.
+  Test set: 917 held-out cells, 2023--2024, never used in fitting.  Test-set
+  base rate: 698/917 cells (76.1\%) are actually $\geq 5\%$ exposed.
+  Bootstrap: 2,000 resamples of the test set.
+  \sym{a} The tightness-only model's accuracy is identical to the test-set
+  base rate because it predicts ``exposed'' for every test observation
+  (0 true negatives, 0 false negatives); its accuracy figure reflects no
+  discriminative skill, unlike its AUC.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\subsection{Combined risk quadrant}
+\label{subsec:quadrant}
+
+Figure~\ref{fig:quadrant} plots each country's Hiring Pressure Index against its
+Equity Risk Score, divided into four quadrants at the midpoint of each axis.
+This classification is descriptive triage, not a causal or predictive claim:
+given Sections~\ref{subsec:pooled_fe}--\ref{subsec:mechanism}'s null tightness
+result, a country's position in this quadrant should not be read as implying that
+its labour-market tightness is driving its equity risk level.  Germany, Czechia,
+Hungary, and Austria fall in the ``Priority Intervention'' quadrant (high
+tightness, high equity risk); the addition of Austria to this group reflects a
+data-completeness correction rather than any change in the tightness--pay-gap
+relationship itself.  The quadrant is presented as a practical starting point for
+prioritising compliance review, to be read alongside --- not instead of --- the
+sector-level exposure evidence in Section~\ref{subsec:exposure}.
+Figure~\ref{fig:prioritycases} provides a closer look at the priority-quadrant
+countries.
+
+% ------- FIGURE 2 ----------------------------------------------
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig2_combined_risk_quadrant}
+  \caption{Combined Risk Quadrant. Each country is plotted by Hiring Pressure
+    Index (x-axis, higher = tighter labour market) against Equity Risk Score
+    (y-axis, higher = larger gender pay gap).  Quadrant boundaries at the
+    midpoint of each axis.  Countries in the top-right quadrant (high tightness,
+    high equity risk) are the ``Priority Intervention'' group: Germany, Czechia,
+    Hungary, and Austria.  \textit{Note:} Tightness is not a reliable
+    within-country predictor of equity risk (Section~\ref{subsec:pooled_fe});
+    the quadrant is a descriptive triage tool only.}
+  \label{fig:quadrant}
+\end{figure}
+
+% ------- FIGURE 4 ----------------------------------------------
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig4_priority_cases}
+  \caption{Priority Intervention Cases. Hiring Pressure Index and Equity Risk
+    Score for countries in the top-right quadrant of Figure~\ref{fig:quadrant}
+    (Germany, Czechia, Hungary, Austria). Both indices are time-invariant
+    latest-period scores; see Section~\ref{subsec:composites}.}
+  \label{fig:prioritycases}
+\end{figure}
+
+% ============================================================
+%  4. DISCUSSION
+% ============================================================
+\section{Discussion}
+\label{sec:discussion}
+
+The central empirical fact of this paper is a contrast, not a single number: a
+labour-market-tightness/gender-pay-gap correlation that looks real and
+policy-relevant when tested only across countries evaporates when tested within
+countries over time.  This pattern is consistent with the correlation being
+driven by time-invariant, country-level characteristics --- industrial
+composition, wage-setting institutions, historical labour-market structure ---
+that happen to be correlated with both a country's typical tightness level and
+its typical pay gap level, without either causing the other in the way
+competitive equalisation theory would require.  We tested two specific,
+well-motivated candidates for such a confound.  The gender employment
+participation gap, following \citet{OlivettiPetrongolo2008}, does not explain
+the pooled association (Section~\ref{subsec:mechanism}).  Collective bargaining
+coverage, motivated by \citet{VaccaroEtAl2024}'s finding that pay-transparency
+legislation is effective only where worker representation exists, does not
+moderate the within-country null on our pre-specified test, though a secondary,
+more exploratory cut suggests the relationship may differ by coverage level and
+warrants further investigation with richer data (Section~\ref{subsec:bargaining}).
+We additionally cross-checked the central null against a source of variation
+with no obvious channel back to national gender-discrimination institutions ---
+the differential severity of the 2020 COVID-19 lockdown shock across countries
+--- and found the same null result (Section~\ref{subsec:covid_event}), with the
+caveat that this design cannot rule out pre-existing divergent trends given only
+one pre-treatment year in the panel.  We cannot rule out other unobserved
+confounders we did not test directly, such as industrial composition or
+childcare policy regimes, and this remains a genuine limitation rather than a
+settled matter.
+
+The policy implication is direct and, we think, more useful than a confirmed
+causal finding would have been.  The Directive is being transposed on the
+assumption that market forces alone are not closing gender pay gaps; nothing in
+this paper contradicts that starting premise.  What this paper does show is that
+labour market tightness --- whether measured by employment rate or job vacancy
+rate --- is not a reliable signal, in either direction, for predicting where
+compliance risk under the Directive will concentrate.  A regulator or employer
+using ``how tight is this country's labour market'' as a triage heuristic for
+compliance risk would be using a heuristic with essentially no predictive power
+in this data (Section~\ref{subsec:exposure}).  This is not merely an in-sample
+pattern: a classifier trained only on 2019--2022 data and tested on 2023--2024
+confirms that sector-based prediction substantially and significantly
+outperforms tightness-based prediction out of sample
+(Section~\ref{subsec:oos_validation}).  Sector, by contrast, is a strong
+and stable predictor: Finance and Information and Communication show 100\%
+exposure to the Directive's 5\% threshold across the entire 2019--2024 sample, a
+pattern that holds regardless of country-level tightness conditions.
+
+A further limitation concerns the temporal alignment between this analysis and
+the Directive's implementation timeline.  Employer-level pay-gap reporting under
+the Directive begins in 2027 for the largest firms (250 or more employees),
+reporting on the 2026 calendar year.  This paper's analysis uses Eurostat's
+aggregate, macro-level gender pay gap series, which will continue to lag
+firm-level disclosures once those begin to accumulate.  The question of whether
+firm-level Directive disclosures, once available, show the same sector
+concentration and the same absence of a tightness relationship found here at the
+macro level is a natural and, we think, valuable extension once 2027 reporting
+data exists; it is a distinct empirical question from the one this paper answers,
+and we do not attempt to anticipate its answer here.
+
+Finally, we note explicitly that the principal components validation of the
+Hiring Pressure Index's weighting scheme (Appendix~\ref{sec:appendix}) is weak
+on the full, corrected panel (Spearman $\rho=0.657$, $p=0.156$) and does not
+meet conventional significance thresholds.  We report this transparently rather
+than omitting it or overstating it, consistent with this paper's broader stance
+that a claim which looked stronger on a partial or earlier sample should be
+re-tested, not carried forward uncritically, once fuller data is available.  This
+diagnostic result does not affect the paper's three main contributions, none of
+which depend on the PCA validation holding.
+
+% ============================================================
+%  5. CONCLUSION
+% ============================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper set out to test, using panel methods appropriate to the question, an
+empirical premise implicit in the EU Pay Transparency Directive: that labour
+market tightness bears a reliable relationship to the gender pay gap.  Using a
+27-country Eurostat panel spanning 2019--2024, we find that a positive,
+statistically significant cross-sectional association between employment rate and
+the gender pay gap does not survive the introduction of country and year fixed
+effects, and remains null across every robustness check and mechanism control we
+apply.  Labour market tightness, measured either by employment rate or job
+vacancy rate, is not a reliable predictor of gender pay gap levels within a given
+country over time, nor is it a useful predictor of which country-sector cells
+will exceed the Directive's 5\% compliance threshold.
+
+What is robust in this data is sector.  Gender pay gaps differ sharply and
+consistently across NACE sectors, with Financial and insurance activities and
+Information and Communication activities showing persistently high gaps and 100\%
+exposure to the Directive's compliance threshold across the entire sample period,
+regardless of the tightness conditions in the country where they operate.  We
+propose sector-based exposure mapping, rather than any labour-market-tightness
+heuristic, as the more actionable basis for compliance prioritisation as employers
+and regulators prepare for the Directive's 2027 reporting requirements.
+
+% ============================================================
+%  APPENDIX A
+% ============================================================
+\appendix
+\section{PCA Validation of the Hiring Pressure Index (Diagnostic)}
+\label{sec:appendix}
+
+The Hiring Pressure Index combines six underlying Eurostat signals --- job
+vacancy rate, unemployment rate, employment rate, labour market slack, and two
+labour-flow measures --- using hand-set weights (Section~\ref{subsec:composites}).
+To assess whether these weights track the dominant axis of variation in the
+underlying data, we run a principal components analysis on the six standardised
+input signals across 172 country-year observations spanning 25 countries with
+complete data on all six signals.
+
+The first principal component explains 46.4\% of total variance (eigenvalue\,=\,2.80),
+with the dominant loading on unemployment rate; the second component explains a
+further 24.5\% (cumulative 70.9\%; Table~\ref{tab:pca_eigen}).  Comparing the
+empirical HPI formula weights, normalised to $[-1, 1]$, against the first
+component's loadings (Table~\ref{tab:pca_loadings}), with component sign anchored
+so that higher values correspond to higher vacancy rate, the Spearman rank
+correlation is $\rho=0.657$ ($p=0.156$, $N=6$ signals).  This does not meet
+conventional significance thresholds.
+
+We report this result as a transparent diagnostic rather than as a validated
+methodological contribution.  An earlier analysis on a smaller, 22-country sample
+(since corrected for a sector-classification data issue affecting five countries)
+found a stronger and nominally significant correlation ($\rho=0.886$, $p=0.019$).
+The weaker result on the full, corrected 27-country sample is the one we report
+and rely on; we do not carry forward the earlier, more favourable estimate.
+This appendix result does not affect any of the paper's three main contributions
+(Section~\ref{sec:intro}), each of which is independent of whether the HPI
+weighting scheme is formally PCA-validated.
+
+% ------- TABLE A1 ----------------------------------------------
+\begin{table}[htbp]
+\caption{PCA Results: Eigenvalues and Variance Explained}
+\label{tab:pca_eigen}
+\begin{threeparttable}
+\begin{tabular}{lrrrr}
+\toprule
+Component & Eigenvalue & Var.\ explained (\%) & Cumulative (\%) \\
+\midrule
+PC1 & 2.802 & 46.44 & 46.44 \\
+PC2 & 1.479 & 24.51 & 70.94 \\
+PC3 & 0.939 & 15.56 & 86.50 \\
+PC4 & 0.547 &  9.06 & 95.56 \\
+PC5 & 0.200 &  3.31 & 98.87 \\
+PC6 & 0.068 &  1.13 & 100.00 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\footnotesize
+\item \textit{Notes:} PCA on six standardised HPI input signals
+  (job vacancy rate, unemployment rate, employment rate, labour slack rate,
+  flow-to-employment, flow-to-inactivity) across 172 country-year observations,
+  25 countries with complete data on all six signals.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+% ------- TABLE A2 ----------------------------------------------
+\begin{table}[htbp]
+\caption{PCA Factor Loadings on First Four Principal Components}
+\label{tab:pca_loadings}
+\begin{threeparttable}
+\begin{tabular}{lrrrr}
+\toprule
+Signal & PC1 & PC2 & PC3 & PC4 \\
+\midrule
+Job vacancy rate          &  0.399 &  0.338 & $-$0.093 &  0.830 \\
+Unemployment rate         & $-$0.519 &  0.227 & $-$0.367 &  0.064 \\
+Employment rate           &  0.506 & $-$0.001 & $-$0.326 & $-$0.418 \\
+Labour slack rate         & $-$0.446 &  0.493 & $-$0.227 & $-$0.050 \\
+Flow to employment        &  0.340 &  0.558 & $-$0.324 & $-$0.306 \\
+Flow to inactivity        &  0.027 &  0.529 &  0.770 & $-$0.189 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\footnotesize
+\item \textit{Notes:} Loadings on first four principal components from PCA on
+  six standardised HPI input signals.  PC1 eigenvalue\,=\,2.802 (46.4\% of
+  variance); PC2 eigenvalue\,=\,1.479 (24.5\%).
+  Spearman rank correlation between HPI formula weights (normalised) and PC1
+  loadings: $\rho=0.657$, $p=0.156$, $N=6$ signals (not significant).
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+% ------- FIGURE A1 + A2 ---------------------------------------
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{fig_a1_scree_plot}
+  \caption{Scree Plot: Principal Components of HPI Input Signals. Eigenvalues
+    for each of the six principal components from PCA on the standardised HPI
+    inputs (172 country-year observations). The elbow suggests two dominant
+    components (PC1: 46.4\%, PC2: 24.5\%; cumulative 70.9\%).}
+  \label{fig:scree}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.80\textwidth]{fig_a2_pca_biplot}
+  \caption{PCA Biplot: Six HPI Input Signals. Biplot of the first two principal
+    components across 172 country-year observations (25 countries with complete
+    data). Vectors show the loadings of each input signal on PC1 and PC2.
+    Spearman $\rho=0.657$ ($p=0.156$) between HPI formula weights and PC1
+    loadings; the HPI weighting is not formally PCA-validated at conventional
+    significance thresholds.}
+  \label{fig:biplot}
+\end{figure}
+
+\subsection*{Robustness to alternative weighting schemes}
+\label{subsec:hpi_weight_robustness}
+
+The comparison above tests whether the HPI formula's \emph{weights} track the
+dominant axis of variation among the six input signals, and finds only a weak,
+non-significant correlation.  This is a narrower test than asking whether the
+\emph{resulting index scores} are themselves sensitive to the specific
+weighting scheme chosen.  We test this separately by constructing three
+alternative country-year HPI variants from the same six underlying signals ---
+an equal-weighting scheme, a scheme that heavily weights job vacancy rate
+relative to the other five signals, and a scheme using the first principal
+component's own loadings as weights --- and computing each variant's Spearman
+rank correlation with the HPI actually used throughout this paper, across the
+full 189 country-year panel.
+
+All three alternative weighting schemes correlate strongly and significantly
+with the reported HPI: $\rho=0.734$ ($p<0.001$) for equal weighting,
+$\rho=0.889$ ($p<0.001$) for the vacancy-heavy scheme, and $\rho=0.838$
+($p<0.001$) for the PCA-loadings scheme (Table~\ref{tab:hpiweightrobustness}).
+This is a materially different result from the weight-vector comparison above,
+and a reassuring one: even though the paper's hand-set weights do not closely
+track the first principal component when compared as abstract weight vectors,
+the country-year rankings the HPI actually produces are not sensitive to that
+choice --- three plausible alternative weighting schemes, including one built
+directly from PC1, all reproduce substantially the same ordering.  The
+substantive results in this paper that depend on HPI (Sections~\ref{subsec:exposure}
+and~\ref{subsec:quadrant}) are therefore unlikely to be an artefact of the
+specific hand-set weights in Section~\ref{subsec:composites}.
+
+% ------- TABLE A3 -----------------------------------------------
+\begin{table}[htbp]
+\caption{HPI Robustness to Alternative Weighting Schemes}
+\label{tab:hpiweightrobustness}
+\begin{threeparttable}
+\begin{tabular}{lccc}
+\toprule
+HPI variant & Spearman $\rho$ & $p$-value & $N$ \\
+\midrule
+Equal weighting            & 0.734 & $<$0.001 & 189 \\
+Vacancy-rate-heavy weighting & 0.889 & $<$0.001 & 189 \\
+PCA-loadings weighting      & 0.838 & $<$0.001 & 189 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\footnotesize
+\item \textit{Notes:} Each variant is constructed from the same six
+  standardised input signals as the reported HPI (Section~\ref{subsec:composites})
+  under an alternative weighting scheme, then rank-correlated (Spearman) against
+  the HPI actually used throughout this paper, across the full 189 country-year
+  panel.  This tests sensitivity of the resulting index scores to the weighting
+  scheme, distinct from the weight-vector-level comparison against PC1 loadings
+  above ($N=6$ signals).
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+% ============================================================
+%  BIBLIOGRAPHY
+% ============================================================
+\newpage
+\bibliographystyle{apalike}
+\bibliography{references}
+
+% ============================================================
+%  END MATTER
+% ============================================================
+\newpage
+% ============================================================
+%  APPENDIX B
+% ============================================================
+\section{A Pre-Registered Design for Future Data: Exploiting Staggered
+         Transposition Timing}
+\label{sec:appendixB}
+
+The Directive's 7~June~2026 transposition deadline was met unevenly across
+the EU27: some member states transposed on schedule, others delayed
+implementation to 2027 or later, and several remained unresolved at the
+deadline.\footnote{Rolling summaries of national transposition status are
+maintained by international law firms tracking Directive compliance (e.g.,
+Baker McKenzie, Littler, and PwC publish periodically updated implementation
+trackers); we do not rely on any single tracker as authoritative and note
+that transposition status continues to evolve after this paper's writing.}
+This heterogeneity in \emph{when} the Directive's compliance obligations
+become legally binding is a genuine source of quasi-experimental variation
+distinct from anything used in Sections~\ref{sec:results}: rather than
+asking whether tightness predicts the gender pay gap, it asks whether
+anticipation of binding compliance obligations changes employer or
+labour-market behaviour around each country's actual transposition date.
+
+We cannot test this design in the present paper.  Eurostat's gender pay gap
+series (\texttt{earn\_gr\_gpgr2}) is restricted to reference years through
+2024 (Section~\ref{subsec:data_sources}), and firm-level disclosures under
+the Directive do not begin until 2027, reporting on the 2026 calendar year.
+There is therefore no post-transposition outcome data available for any
+country's transposition date as of this writing.  We record the design here
+so that it can be executed once the relevant data exists, rather than leaving
+it undocumented, and to make clear that the absence of a result in this
+appendix reflects a data-availability constraint rather than an oversight.
+
+\subsection*{Proposed specification}
+
+Let $T_i$ denote country $i$'s actual transposition date (or, where formal
+transposition remains unresolved, the date national courts began applying
+the Directive's substantive standard to existing discrimination claims,
+whichever is earlier and better documented).  A staggered-adoption
+event-study specification, following the standard structure used elsewhere
+in this paper, would take the form
+
+\begin{equation}
+Y_{it} = \sum_{k \neq -1} \theta_k \,\mathbb{1}[t - T_i = k]
+  + \gamma_i + \delta_t + \varepsilon_{it},
+\label{eq:transposition}
+\end{equation}
+
+\noindent where $Y_{it}$ is the outcome of interest (candidates include the
+gender pay gap itself once post-2024 data exists, or a firm-behaviour proxy
+such as job-posting salary-range disclosure rates once available), $k$
+indexes event time relative to each country's own transposition date, and
+$k=-1$ is the omitted reference period.  Given the well-documented
+econometric concerns with staggered-adoption designs under
+treatment-effect heterogeneity, any execution of Equation~\ref{eq:transposition}
+should use an estimator robust to this issue (e.g., \citealt{CallawaySantAnna2021}
+or \citealt{SunAbraham2021}) rather than standard two-way fixed effects, and
+should assess whether the timing of transposition is itself correlated with
+each country's pre-existing tightness or gender-pay-gap trajectory before
+treating $T_i$ as exogenous.
+
+We flag this design explicitly as an intended extension rather than a
+finding, consistent with this paper's treatment of other results that are
+not yet fully supported by available data (Section~\ref{subsec:bargaining}).
+
+% ============================================================
+%  APPENDIX C
+% ============================================================
+\section{Full Pairwise Comparisons: Finance Versus All Other Sectors}
+\label{sec:appendixC}
+
+Section~\ref{subsec:sector} reports that every pairwise comparison of
+Financial and insurance activities against every other NACE section remains
+significant after Bonferroni correction for multiple comparisons, but does not
+tabulate the underlying comparisons.  Table~\ref{tab:financepairwise} reports
+all 17 pairwise mean-difference tests in full.  Every comparison is significant
+at $p<0.001$ after Bonferroni adjustment, with mean differences ranging from
+27.7 percentage points (versus Construction) to 5.5 percentage points (versus
+Information and Communication, itself the second-highest-gap sector in the
+sample).
+
+% ------- TABLE C1 -----------------------------------------------
+\begin{table}[htbp]
+\caption{Pairwise Comparisons: Finance Versus All Other Sectors (Bonferroni-Adjusted)}
+\label{tab:financepairwise}
+\begin{threeparttable}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lrrrr}
+\toprule
+Sector (vs.\ Finance) & Mean difference (pp) & $t$-statistic & $p$-value & $p$-value (Bonferroni) \\
+\midrule
+Construction                                        & 27.67 & 25.87 & $<$0.001 & $<$0.001 \\
+Water supply; sewerage \& waste management          & 25.23 & 22.34 & $<$0.001 & $<$0.001 \\
+Transportation and storage                          & 21.17 & 24.08 & $<$0.001 & $<$0.001 \\
+Mining and quarrying                                & 18.01 & 17.78 & $<$0.001 & $<$0.001 \\
+Administrative and support service activities       & 17.52 & 18.15 & $<$0.001 & $<$0.001 \\
+Public administration and defence                   & 16.88 & 23.76 & $<$0.001 & $<$0.001 \\
+Electricity, gas, steam and air supply               & 16.48 & 20.09 & $<$0.001 & $<$0.001 \\
+Accommodation and food service activities           & 15.74 & 24.77 & $<$0.001 & $<$0.001 \\
+Education                                           & 15.01 & 21.29 & $<$0.001 & $<$0.001 \\
+Real estate activities                              & 13.49 & 15.99 & $<$0.001 & $<$0.001 \\
+Other service activities                            & 12.12 & 14.12 & $<$0.001 & $<$0.001 \\
+Professional, scientific and technical activities   &  8.65 & 11.04 & $<$0.001 & $<$0.001 \\
+Arts, entertainment and recreation                  &  8.41 &  6.91 & $<$0.001 & $<$0.001 \\
+Manufacturing                                       &  8.21 & 10.51 & $<$0.001 & $<$0.001 \\
+Human health and social work activities             &  7.89 &  9.04 & $<$0.001 & $<$0.001 \\
+Wholesale and retail trade                          &  6.72 &  9.53 & $<$0.001 & $<$0.001 \\
+Information and communication                       &  5.49 &  7.26 & $<$0.001 & $<$0.001 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\begin{tablenotes}
+\footnotesize
+\item \textit{Notes:} Mean difference\,=\,Finance's mean gender pay gap minus
+  the comparison sector's mean gender pay gap, in percentage points.  Two-sample
+  $t$-tests; $p$-values Bonferroni-adjusted for 17 simultaneous comparisons.
+  Sample: 27~EU member states, 2019--2024 (single-letter NACE Rev.~2 sections;
+  Agriculture excluded, zero usable observations).
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\section*{Data Availability Statement}
+
+All data underlying this study are publicly available from Eurostat's JSON-stat
+API (\url{https://ec.europa.eu/eurostat/web/json-and-unicode-web-services}).  The
+exact datasets, pull scripts, and versioned Parquet extracts used in this study,
+along with all analysis code and generated tables and figures, are archived at
+\url{https://github.com/SVamseekar/workforceguardai} and at Zenodo
+(DOI:\,\href{https://doi.org/10.5281/zenodo.20455974}{10.5281/zenodo.20455974};
+to be updated with a replication-package-specific record prior to submission).
+
+\section*{Funding}
+
+This research received no external funding.
+
+\section*{Conflicts of Interest}
+
+The author declares no conflicts of interest.
+
+\section*{Author Note}
+
+Marti Soura Vamseekar is an independent researcher.  M.Sc.\ Data Science,
+University of Greenwich, London, UK\@.  Correspondence:
+\href{mailto:martisoura@gmail.com}{martisoura@gmail.com}.
+ORCID:\;\href{https://orcid.org/0009-0005-4884-1292}{0009-0005-4884-1292}.
+
+\end{document}

@@ -85,6 +85,8 @@ data/eu_raw/
 
 # Local research / portfolio trees
 paper/
+!paper/TITLE_ALIGNMENT.md
+!paper/main.tex
 projects/
 
 # Scratch
