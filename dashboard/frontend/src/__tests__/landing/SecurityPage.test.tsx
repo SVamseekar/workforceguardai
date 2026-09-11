@@ -30,6 +30,7 @@ describe('SecurityPage', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/do not yet claim/i)
     expect(screen.getByText(/tamper-/i)).toBeInTheDocument()
     expect(screen.getByText(/does not currently hold SOC 2/i)).toBeInTheDocument()
-    expect(screen.getByText(/NEEDS MAINTAINER REVIEW/i)).toBeInTheDocument()
+    expect(screen.getByText(/us-central1-f/i)).toBeInTheDocument()
+    expect(screen.queryByText(/NEEDS MAINTAINER REVIEW/i)).not.toBeInTheDocument()
   })
 })
