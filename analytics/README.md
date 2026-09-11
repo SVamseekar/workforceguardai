@@ -34,8 +34,8 @@ pip install -r requirements-data.txt
 
 ## dbt profile
 
-Copy the example profile once so dbt can run inside the workspace without
-touching `~/.dbt`:
+CI copies `profiles.yml.example` to `profiles.yml` before dbt parse/run.
+Copy the example profile once so dbt can run locally without touching `~/.dbt`:
 
 ```bash
 cp analytics/profiles.yml.example analytics/profiles.yml
