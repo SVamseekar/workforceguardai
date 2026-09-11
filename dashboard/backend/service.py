@@ -185,6 +185,7 @@ INTERNAL_TAGGED_TABLES = frozenset(
         "fct_internal_skill_snapshot",
         "fct_internal_workforce_snapshot",
         "mart_company_decision_support",
+        "mart_equity_risk_score",
         "mart_internal_market_pay_benchmark",
         "mart_pay_transparency_category_review",
         "stg_internal__ats_requisition_snapshot",
@@ -2676,7 +2677,7 @@ class AnalyticsRepository:
             registry.get("formula_version", "1.0"),
             review_required,
         )
-        return {
+        payload = {
             "id": metric_id,
             "title": registry["metric_name"],
             "value": value,
@@ -2696,6 +2697,7 @@ class AnalyticsRepository:
                 "governance_target": {"target_type": "semantic_metric", "target_id": metric_id},
             },
         }
+        return payload
 
     def _latest_signal_value(
         self,
@@ -2808,7 +2810,184 @@ class AnalyticsRepository:
             "equity_risk_score": 2,
             "transition_readiness": 3,
         }
-        return sorted(metrics, key=lambda metric: metric_order.get(metric["id"], 99))
+        return self._apply_equity_risk_blend(
+            sorted(metrics, key=lambda metric: metric_order.get(metric["id"], 99)),
+            filters,
+        )
+
+    @staticmethod
+    def _category_equity_risk(
+        internal_gender_pay_gap: Optional[float],
+        market_gender_pay_gap: Optional[float],
+        female_share: Optional[float],
+    ) -> Dict[str, Any]:
+        gap = internal_gender_pay_gap if internal_gender_pay_gap is not None else market_gender_pay_gap
+        pay_gap_component = None if gap is None else max(gap, 0.0) * 5.5
+        representation_component = None if female_share is None else abs(female_share - 50.0) * 2.0
+        if pay_gap_component is None and representation_component is None:
+            score = None
+            basis = "unavailable"
+        else:
+            score = min(
+                100.0,
+                max(
+                    0.0,
+                    round(
+                        0.70 * (pay_gap_component or 0.0)
+                        + 0.30 * (representation_component or 0.0)
+                    ),
+                ),
+            )
+            if internal_gender_pay_gap is not None and female_share is not None:
+                basis = "blended"
+            elif internal_gender_pay_gap is not None:
+                basis = "internal"
+            else:
+                basis = "external"
+        return {
+            "pay_gap_component": pay_gap_component,
+            "representation_component": representation_component,
+            "category_equity_risk_score": score,
+            "equity_risk_evidence_basis": basis,
+        }
+
+    def _blended_equity_risk_score(self, filters: FilterState) -> Optional[Dict[str, Any]]:
+        if not self._internal_claim_trust_status().get("trusted"):
+            return None
+        tables = self._available_tables()
+        geo = filters.geography
+        rows: List[Dict[str, Any]] = []
+        if "mart_equity_risk_score" in tables:
+            if geo == "EU27_AVG":
+                rows = self._query(
+                    """
+                    select
+                        country_code,
+                        worker_category_id,
+                        headcount,
+                        female_share,
+                        internal_gender_pay_gap,
+                        market_gender_pay_gap,
+                        blended_equity_risk_score,
+                        equity_risk_evidence_basis
+                    from mart_equity_risk_score
+                    """
+                )
+            else:
+                rows = self._query(
+                    """
+                    select
+                        country_code,
+                        worker_category_id,
+                        headcount,
+                        female_share,
+                        internal_gender_pay_gap,
+                        market_gender_pay_gap,
+                        blended_equity_risk_score,
+                        equity_risk_evidence_basis
+                    from mart_equity_risk_score
+                    where country_code = ?
+                    """,
+                    [geo],
+                )
+        if not rows:
+            return None
+
+        total_weight = 0.0
+        weighted = 0.0
+        category_count = 0
+        female_shares = []
+        internal_gaps = []
+        market_gaps = []
+        bases = set()
+        for row in rows:
+            score = row.get("blended_equity_risk_score")
+            if score is None:
+                scored = self._category_equity_risk(
+                    row.get("internal_gender_pay_gap"),
+                    row.get("market_gender_pay_gap"),
+                    row.get("female_share"),
+                )
+                score = scored["category_equity_risk_score"]
+            if score is None:
+                continue
+            weight = float(row.get("headcount") or 0)
+            if weight <= 0:
+                weight = 1.0
+            weighted += float(score) * weight
+            total_weight += weight
+            category_count += 1
+            if row.get("female_share") is not None:
+                female_shares.append(float(row["female_share"]))
+            if row.get("internal_gender_pay_gap") is not None:
+                internal_gaps.append(float(row["internal_gender_pay_gap"]))
+            if row.get("market_gender_pay_gap") is not None:
+                market_gaps.append(float(row["market_gender_pay_gap"]))
+            if row.get("equity_risk_evidence_basis"):
+                bases.add(row["equity_risk_evidence_basis"])
+        if total_weight <= 0 or category_count == 0:
+            return None
+
+        value = round(weighted / total_weight)
+        basis = "blended" if "blended" in bases else next(iter(bases), "external")
+        avg_female = sum(female_shares) / len(female_shares) if female_shares else None
+        internal_gap = max(internal_gaps) if internal_gaps else None
+        market_gap = max(market_gaps) if market_gaps else None
+        skew_pct = None if avg_female is None else max(avg_female, 100.0 - avg_female)
+        summary_parts = []
+        if internal_gap is not None:
+            summary_parts.append(f"internal pay-gap {internal_gap:.1f}%")
+        if skew_pct is not None:
+            summary_parts.append(f"representation skew ({skew_pct:.0f}% one gender)")
+        summary_parts.append(f"across {category_count} worker categories")
+        if market_gap is not None:
+            summary_parts.append(f"market pay-gap {market_gap:.1f}%")
+        evidence_summary = "Blended basis: " + " + ".join(summary_parts[:2])
+        if len(summary_parts) > 2:
+            evidence_summary += "; " + "; ".join(summary_parts[2:])
+        evidence_summary += "."
+        return {
+            "value": float(value),
+            "basis": "blended" if basis in {"blended", "internal"} else "market_only",
+            "formula_version": "2.0",
+            "evidence_summary": evidence_summary,
+            "category_count": category_count,
+        }
+
+    def _apply_equity_risk_blend(
+        self, metrics: List[Dict[str, Any]], filters: FilterState
+    ) -> List[Dict[str, Any]]:
+        blended = self._blended_equity_risk_score(filters)
+        updated = []
+        for metric in metrics:
+            if metric.get("id") != "equity_risk_score":
+                updated.append(metric)
+                continue
+            if blended is None:
+                metric = dict(metric)
+                metric["basis"] = "market_only"
+                metric["formula_version"] = "1.0"
+                provenance = dict(metric.get("provenance") or {})
+                provenance["formula_version"] = "1.0"
+                metric["provenance"] = provenance
+                updated.append(metric)
+                continue
+            metric = dict(metric)
+            metric["value"] = blended["value"]
+            metric["basis"] = blended["basis"]
+            metric["formula_version"] = blended["formula_version"]
+            evidence = list(metric.get("evidence_bundle", {}).get("evidence") or [])
+            evidence.append({"label": "Score basis", "value": blended["evidence_summary"]})
+            metric["evidence_summary"] = [item["value"] for item in evidence]
+            bundle = dict(metric.get("evidence_bundle") or {})
+            bundle["evidence"] = evidence
+            provenance = dict(metric.get("provenance") or {})
+            provenance["formula_version"] = "2.0"
+            metric["provenance"] = provenance
+            bundle["provenance"] = [provenance]
+            metric["evidence_bundle"] = bundle
+            updated.append(metric)
+        return updated
 
     def _build_semantic_metrics(self, observed_metrics: Dict[str, Dict[str, Any]], filters: FilterState) -> List[Dict[str, Any]]:
         modeled_metrics = self._build_modeled_semantic_metrics(filters)
@@ -2897,7 +3076,7 @@ class AnalyticsRepository:
                 ],
             ),
         ]
-        return metrics
+        return self._apply_equity_risk_blend(metrics, filters)
 
     def _ranking_period(self, signal_name: str, requested_period: str) -> Optional[str]:
         return self._resolve_signal_period(signal_name, requested_period, None)

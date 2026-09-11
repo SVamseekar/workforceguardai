@@ -1605,6 +1605,14 @@ h3.analyst-console__response-top {
   color: var(--text-strong);
 }
 
+.copilot-panel__disclosure {
+  margin: 8px 0 0;
+  max-width: 28ch;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--text-muted, var(--text-secondary));
+}
+
 .copilot-panel__form {
   margin-bottom: 16px;
 }
