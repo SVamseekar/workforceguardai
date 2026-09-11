@@ -44,8 +44,9 @@ export function AnalystDemoTheater() {
         <h2>Ask compliance questions — get sourced answers, not summaries</h2>
         <p className="landing-section__lede">
           Built for compliance leads, people analytics, and HR reward teams preparing for Directive
-          (EU) 2023/970. The AI Analyst copilot answers in natural language — with datasets,
-          benchmark confidence, and next actions on every response.
+          (EU) 2023/970. The AI Analyst copilot answers in natural language by composing from
+          precomputed warehouse metrics — every number is sourced and reproducible, and it will
+          say when a question falls outside current coverage.
         </p>
       </div>
 
