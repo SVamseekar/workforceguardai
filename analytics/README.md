@@ -41,7 +41,8 @@ Copy the example profile once so dbt can run locally without touching `~/.dbt`:
 cp analytics/profiles.yml.example analytics/profiles.yml
 ```
 
-The example points DuckDB at `data/workforceguard_analytics.duckdb`. Override
+The example reads `WORKFORCEGUARD_DB_PATH` when set (CI does this), otherwise
+`../data/workforceguard_analytics.duckdb` relative to `analytics/`. Override
 `WORKFORCEGUARD_DB_PATH` if your warehouse file lives elsewhere.
 
 ## Example commands
