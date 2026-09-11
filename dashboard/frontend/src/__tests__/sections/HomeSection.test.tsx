@@ -109,4 +109,30 @@ describe('HomeSection', () => {
     await waitFor(() => expect(screen.getByText('Transition Readiness')).toBeInTheDocument())
     expect(screen.getByText('Proxy / in development')).toBeInTheDocument()
   })
+
+  it('labels Equity Risk Score as blended vs market-only from the basis field', async () => {
+    server.use(
+      http.get('/api/overview', () =>
+        HttpResponse.json({
+          ...MOCK_OVERVIEW,
+          semantic_metrics: [
+            {
+              id: 'equity_risk_score',
+              title: 'Equity risk score',
+              value: 41,
+              unit: 'score',
+              definition: 'Pay-equity pressure.',
+              implementation_status: 'proxy_live',
+              basis: 'blended',
+              evidence_summary: ['Blended basis: internal pay-gap 6.2%.'],
+            },
+          ],
+        }),
+      ),
+    )
+
+    renderInRouter(<HomeSection />)
+    await waitFor(() => expect(screen.getByText('Equity risk score')).toBeInTheDocument())
+    expect(screen.getByText('Blended (your payroll + market)')).toBeInTheDocument()
+  })
 })

@@ -28,7 +28,7 @@ Live at → **[workforceguardai.souravamseekar.com](https://workforceguardai.sou
 | ![Home](assets/demos/home.gif) | ![Market Intelligence](assets/demos/market.gif) |
 | **Compare** — side-by-side country and sector benchmarking | **Pay Analysis** — company vs market pay gap with derived scores |
 | ![Compare](assets/demos/compare.gif) | ![Pay Analysis](assets/demos/pay-analysis.gif) |
-| **Govern & Export** — hash-chained audit log and compliance evidence pack | **AI Analyst** — natural language questions with grounded evidence |
+| **Govern & Export** — hash-chained audit log and compliance evidence pack | **AI Analyst** — natural language questions answered from precomputed warehouse metrics, with citations and refusal on partial coverage |
 | ![Govern & Export](assets/demos/govern.gif) | ![AI Analyst](assets/demos/ai-analyst.gif) |
 
 ---
@@ -38,7 +38,7 @@ Live at → **[workforceguardai.souravamseekar.com](https://workforceguardai.sou
 WorkforceGuard turns public EU labour-market data and internal company payroll into decision-ready intelligence — with a full compliance audit trail built in.
 
 - **Labour market dashboard** — employment rate, unemployment, job vacancies, and gender pay gap across all 27 EU member states and 13 NACE sectors, sourced directly from Eurostat
-- **Benchmark-aware analyst** — ask natural-language questions; the copilot answers with grounded evidence, provenance citations, and benchmark context (prior period, EU average, or peer group)
+- **Benchmark-aware analyst** — ask natural-language questions; the copilot composes answers from precomputed warehouse metrics with provenance citations and benchmark context (prior period, EU average, or peer group), and refuses when coverage is insufficient
 - **Country × sector comparison** — side-by-side delta table with auto-generated narrative synthesis across any two geographies or sectors
 - **Pay transparency review** — upload internal payroll; the platform blends it against market benchmarks and surfaces review items flagged under the EU Pay Transparency Directive
 - **Governance and audit log** — every decision (approve, override, reverse, export) is written to a SQLite-backed hash-chained event log for legal-grade evidence packs
@@ -71,6 +71,20 @@ Eurostat API  ──►  Python ingestion  ──►  DuckDB  ──►  dbt mod
 **Frontend:** React 18 + TypeScript + Vite, TanStack Query for data fetching, Recharts for time-series visualisation, Tailwind CSS. Deployed on Vercel.
 
 **CI/CD:** GitHub Actions — PRs and pushes to `main` run CI (pre-commit hooks, tests, lint, frontend production build, secret scan). Deploy to GCP and Vercel runs only after CI passes on `main`. Releases are SemVer Git tags (`vX.Y.Z`) with GitHub Releases. Git and release process: [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Layout
+
+| Path | Purpose |
+|------|---------|
+| `dashboard/frontend/` | React UI (Vite, TanStack Query, Tailwind) |
+| `dashboard/backend/` | FastAPI API, auth, `AnalyticsRepository` |
+| `analytics/` | dbt models (Eurostat → marts) |
+| `scripts/` | Data ingestion and preparation |
+| `data/` | Parquet/DuckDB assets (LFS for select `.xlsx`); tenant and internal data gitignored except committed synthetic templates |
+| `assets/demos/` | README demo GIFs |
+| `configs/` | Environment/service configuration |
+| `deploy/` | GCP + Vercel deployment scripts |
+| `tests/` | Root-level data/script tests |
 
 ---
 
@@ -122,9 +136,12 @@ To run the dbt models against local data:
 
 ```bash
 cd analytics
+cp profiles.yml.example profiles.yml   # gitignored; points DuckDB at data/workforceguard_analytics.duckdb
 dbt run
 dbt test
 ```
+
+`analytics/profiles.yml` is local-only. The example file is the rebuild recipe for a new contributor.
 
 ---
 

@@ -2,7 +2,8 @@
 """
 Generates realistic demo company data for AeroTech Europe SAS.
 Run from the project root: python scripts/generate_demo_company.py
-Output: data/internal_raw/payroll_snapshot.csv and data/internal_raw/job_architecture.csv
+Output: data/internal_raw/payroll_snapshot.csv, job_architecture.csv, and
+hris_workforce_snapshot.csv (1:1 with payroll so female_share is real).
 """
 import csv
 import random
@@ -105,6 +106,41 @@ def write_payroll(rows):
     print(f"Written {len(rows)} rows to {path}")
 
 
+def write_hris(payroll_rows):
+    path = RAW_DIR / "hris_workforce_snapshot.csv"
+    fieldnames = [
+        "employee_id",
+        "country_code",
+        "worker_category_id",
+        "gender",
+        "employment_type",
+        "hire_date",
+        "termination_date",
+        "snapshot_date",
+        "employment_status",
+    ]
+    rows = []
+    for payroll in payroll_rows:
+        rows.append(
+            {
+                "employee_id": payroll["employee_id"],
+                "country_code": payroll["country_code"],
+                "worker_category_id": payroll["worker_category_id"],
+                "gender": payroll["gender"],
+                "employment_type": "full_time",
+                "hire_date": "2020-01-15",
+                "termination_date": "",
+                "snapshot_date": payroll["snapshot_date"],
+                "employment_status": payroll["employment_status"],
+            }
+        )
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+    print(f"Written {len(rows)} HRIS rows to {path}")
+
+
 def write_job_architecture():
     path = RAW_DIR / "job_architecture.csv"
     fieldnames = ["job_code", "job_family", "job_level", "worker_category_id",
@@ -129,5 +165,6 @@ def write_job_architecture():
 if __name__ == "__main__":
     rows = generate_payroll()
     write_payroll(rows)
+    write_hris(rows)
     write_job_architecture()
     print("Demo company data generated.")

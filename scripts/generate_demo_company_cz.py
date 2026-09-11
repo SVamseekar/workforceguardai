@@ -2,7 +2,8 @@
 """
 Generates realistic demo company data for Meridian Financial Services s.r.o.
 Run from the project root: python scripts/generate_demo_company_cz.py
-Output: data/demo_raw/meridian_cz/payroll_snapshot.csv and job_architecture.csv
+Output: data/demo_raw/meridian_cz/payroll_snapshot.csv, job_architecture.csv,
+and hris_workforce_snapshot.csv (1:1 with payroll so representation skew is real).
 """
 from __future__ import annotations
 
@@ -14,8 +15,10 @@ from demo_data.common import (
     PAYROLL_FIELDNAMES,
     SEED,
     UPLOAD_PAYROLL_FIELDNAMES,
+    hris_rows_from_payroll,
     normal_pay,
     write_csv,
+    write_hris,
     write_job_architecture,
     write_payroll,
 )
@@ -161,12 +164,17 @@ def generate_company_data(output_dir: Path, upload_sample_path: Path | None = No
     output_dir.mkdir(parents=True, exist_ok=True)
     payroll_rows = generate_payroll()
     payroll_count = write_payroll(output_dir / "payroll_snapshot.csv", payroll_rows)
+    hris_count = write_hris(
+        output_dir / "hris_workforce_snapshot.csv",
+        hris_rows_from_payroll(payroll_rows),
+    )
     job_arch_count = write_job_architecture(output_dir / "job_architecture.csv", JOB_ARCHITECTURE, version=VERSION)
     upload_count = 0
     if upload_sample_path is not None:
         upload_count = write_upload_sample(upload_sample_path)
     return {
         "payroll_rows": payroll_count,
+        "hris_rows": hris_count,
         "job_architecture_rows": job_arch_count,
         "upload_sample_rows": upload_count,
     }

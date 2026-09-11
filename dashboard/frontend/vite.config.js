@@ -26,6 +26,7 @@ export default defineConfig(({ mode }) => {
         input: {
           main: 'index.html',
           mission: 'mission.html',
+          security: 'security.html',
           privacy: 'privacy.html',
           terms: 'terms.html',
           disclaimer: 'disclaimer.html',

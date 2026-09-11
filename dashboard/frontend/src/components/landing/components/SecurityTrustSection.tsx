@@ -1,4 +1,5 @@
-import { Database, Lock, Shield, Users } from 'lucide-react'
+import { ArrowRight, Database, Lock, Shield, Users } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { SectionLabel } from './SectionLabel'
 
 const TRUST_ITEMS = [
@@ -51,6 +52,11 @@ export function SecurityTrustSection() {
           </article>
         ))}
       </div>
+      <p style={{ marginTop: 24 }}>
+        <Link to="/security" className="landing-cta landing-cta--secondary">
+          Read the full security &amp; trust overview <ArrowRight size={14} />
+        </Link>
+      </p>
     </section>
   )
 }
