@@ -1781,6 +1781,15 @@ class MainContractTests(unittest.TestCase):
         self.assertEqual(payload["status"], "ok")
         self.assertEqual(payload["service"], "WorkforceGuard Analytics API")
 
+    def test_health_detailed_reports_dependency_checks(self):
+        import asyncio
+
+        response = asyncio.run(main.health_check_detailed())
+        payload = json.loads(response.body)
+        self.assertIn(payload["status"], {"ok", "degraded"})
+        self.assertIn("duckdb", payload["checks"])
+        self.assertIn("auth_db", payload["checks"])
+
     def test_overview_and_ask_endpoint_functions_return_dicts(self):
         repo = main.repository_registry.get_for_tenant("test-contract-tenant")
         overview = main.get_overview(repo=repo)
