@@ -22,7 +22,7 @@ ANALYTICS_DB_PATH = ROOT_DIR / "data" / "workforceguard_analytics.duckdb"
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
-from service import AnalyticsRepository, OBSERVED_METRIC_IDS, tenant_schema_name  # noqa: E402
+from service import AnalyticsRepository, FilterState, OBSERVED_METRIC_IDS, tenant_schema_name  # noqa: E402
 import evidence_signing  # noqa: E402
 
 os.environ.setdefault(evidence_signing.SIGNING_KEY_ENV_VAR, evidence_signing.generate_signing_key_b64())
@@ -1767,6 +1767,128 @@ class InternalAssetTrustPromotionTests(unittest.TestCase):
             fully_trusted = repo._internal_claim_trust_status()
             self.assertTrue(fully_trusted["trusted"])
 
+    def test_category_equity_risk_parity_and_segregation(self):
+        parity = AnalyticsRepository._category_equity_risk(0.0, 0.0, 50.0)
+        self.assertEqual(parity["category_equity_risk_score"], 0)
+        self.assertEqual(parity["equity_risk_evidence_basis"], "blended")
+
+        segregated = AnalyticsRepository._category_equity_risk(0.0, 0.0, 100.0)
+        self.assertEqual(segregated["representation_component"], 100.0)
+        self.assertGreaterEqual(segregated["category_equity_risk_score"], 30)
+        self.assertEqual(segregated["equity_risk_evidence_basis"], "blended")
+
+    def _write_equity_risk_manifest(self, temp_dir: str, trusted: bool) -> Path:
+        internal_dir = Path(temp_dir) / "internal"
+        internal_dir.mkdir(parents=True)
+        manifest_dir = Path(temp_dir) / "internal_meta"
+        manifest_dir.mkdir(parents=True, exist_ok=True)
+        manifest_path = manifest_dir / "manifest.json"
+        manifest_path.write_text(
+            json.dumps(
+                {
+                    "generated_at": "2026-03-31T00:00:00+00:00",
+                    "assets": [
+                        {
+                            "asset_type": "internal_payroll_snapshot",
+                            "version": "local",
+                            "record_count": 4,
+                            "trusted_for_company_claims": trusted,
+                        },
+                        {
+                            "asset_type": "internal_job_architecture",
+                            "version": "local",
+                            "record_count": 1,
+                            "trusted_for_company_claims": trusted,
+                        },
+                    ],
+                    "missing_inputs": [],
+                }
+            ),
+            encoding="utf-8",
+        )
+        return internal_dir
+
+    def test_equity_risk_untrusted_stays_market_only(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = self._write_equity_risk_manifest(temp_dir, trusted=False)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+            filters = FilterState(
+                country="DE",
+                geography="DE",
+                geography_label="Germany",
+                sector="ALL",
+                sector_label="All sectors",
+                period="latest",
+            )
+            blended = repo._blended_equity_risk_score(filters)
+            self.assertIsNone(blended)
+            metrics = repo._apply_equity_risk_blend(
+                [{"id": "equity_risk_score", "value": 22.0, "provenance": {"formula_version": "1.0"}, "evidence_bundle": {"evidence": []}}],
+                filters,
+            )
+            self.assertEqual(metrics[0]["basis"], "market_only")
+            self.assertEqual(metrics[0]["formula_version"], "1.0")
+            self.assertEqual(metrics[0]["value"], 22.0)
+
+    def test_equity_risk_trusted_uses_blended_mart(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = self._write_equity_risk_manifest(temp_dir, trusted=True)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+            repo._available_tables = lambda: {"mart_equity_risk_score"}
+            repo._query = lambda sql, params=None: [
+                {
+                    "country_code": "DE",
+                    "worker_category_id": "eng-l3",
+                    "headcount": 10,
+                    "female_share": 20.0,
+                    "internal_gender_pay_gap": 6.2,
+                    "market_gender_pay_gap": 4.1,
+                    "blended_equity_risk_score": 41,
+                    "equity_risk_evidence_basis": "blended",
+                }
+            ]
+            filters = FilterState(
+                country="DE",
+                geography="DE",
+                geography_label="Germany",
+                sector="ALL",
+                sector_label="All sectors",
+                period="latest",
+            )
+            blended = repo._blended_equity_risk_score(filters)
+            self.assertEqual(blended["basis"], "blended")
+            self.assertEqual(blended["formula_version"], "2.0")
+            self.assertEqual(blended["value"], 41.0)
+            metrics = repo._apply_equity_risk_blend(
+                [{"id": "equity_risk_score", "value": 22.0, "provenance": {}, "evidence_bundle": {"evidence": []}}],
+                filters,
+            )
+            self.assertEqual(metrics[0]["basis"], "blended")
+            self.assertEqual(metrics[0]["formula_version"], "2.0")
+            self.assertEqual(metrics[0]["value"], 41.0)
+
+    def test_equity_risk_trusted_missing_rows_falls_back_to_market(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            internal_dir = self._write_equity_risk_manifest(temp_dir, trusted=True)
+            repo = AnalyticsRepository(ROOT_DIR, internal_data_dir=internal_dir)
+            repo._available_tables = lambda: {"mart_equity_risk_score"}
+            repo._query = lambda sql, params=None: []
+            filters = FilterState(
+                country="DE",
+                geography="DE",
+                geography_label="Germany",
+                sector="ALL",
+                sector_label="All sectors",
+                period="latest",
+            )
+            self.assertIsNone(repo._blended_equity_risk_score(filters))
+            metrics = repo._apply_equity_risk_blend(
+                [{"id": "equity_risk_score", "value": 18.0, "provenance": {}, "evidence_bundle": {"evidence": []}}],
+                filters,
+            )
+            self.assertEqual(metrics[0]["basis"], "market_only")
+            self.assertEqual(metrics[0]["formula_version"], "1.0")
+
 
 @unittest.skipIf(main is None, f"FastAPI app unavailable in test env: {MAIN_IMPORT_ERROR}")
 class MainContractTests(unittest.TestCase):
@@ -1780,6 +1902,15 @@ class MainContractTests(unittest.TestCase):
         payload = main.health_check()
         self.assertEqual(payload["status"], "ok")
         self.assertEqual(payload["service"], "WorkforceGuard Analytics API")
+
+    def test_health_detailed_reports_dependency_checks(self):
+        import asyncio
+
+        response = asyncio.run(main.health_check_detailed())
+        payload = json.loads(response.body)
+        self.assertIn(payload["status"], {"ok", "degraded"})
+        self.assertIn("duckdb", payload["checks"])
+        self.assertIn("auth_db", payload["checks"])
 
     def test_overview_and_ask_endpoint_functions_return_dicts(self):
         repo = main.repository_registry.get_for_tenant("test-contract-tenant")

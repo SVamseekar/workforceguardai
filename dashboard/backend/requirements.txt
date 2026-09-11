@@ -10,5 +10,6 @@ asyncpg
 itsdangerous
 authlib
 httpx
+slowapi
 reportlab
 pypdf

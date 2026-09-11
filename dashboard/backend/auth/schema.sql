@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS memberships (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-    role TEXT NOT NULL CHECK (role IN ('admin', 'member')),
+    role TEXT NOT NULL CHECK (role IN ('admin', 'member', 'sandbox')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE (user_id, tenant_id)
 );
@@ -45,3 +45,7 @@ CREATE TABLE IF NOT EXISTS sessions (
 
 -- Idempotent upgrade for databases created before auth_provider existed.
 ALTER TABLE sessions ADD COLUMN IF NOT EXISTS auth_provider TEXT;
+
+ALTER TABLE memberships DROP CONSTRAINT IF EXISTS memberships_role_check;
+ALTER TABLE memberships ADD CONSTRAINT memberships_role_check
+    CHECK (role IN ('admin', 'member', 'sandbox'));

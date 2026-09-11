@@ -73,6 +73,7 @@ data/internal_raw/*
 !data/internal_raw/.gitkeep
 !data/internal_raw/job_architecture.csv
 !data/internal_raw/payroll_snapshot.csv
+!data/internal_raw/hris_workforce_snapshot.csv
 data/demo_raw/*
 !data/demo_raw/.gitkeep
 data/governance_events.json

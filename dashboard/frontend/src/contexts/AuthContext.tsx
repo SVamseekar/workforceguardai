@@ -6,7 +6,7 @@ export type AuthProviderName = 'google' | 'microsoft'
 export interface AuthUser {
   id: string
   tenantId: string
-  role: 'admin' | 'member'
+  role: 'admin' | 'member' | 'sandbox'
   email: string
   displayName: string
   /** Provider used for the current browser session, if known. */

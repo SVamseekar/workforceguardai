@@ -64,3 +64,11 @@ models:
         tests:
           - unique
           - not_null
+
+  - name: mart_equity_risk_score
+    description: Tenant-scoped equity risk at worker-category grain, blending pay-gap intensity with representation skew when internal data is present.
+    columns:
+      - name: equity_risk_row_id
+        tests:
+          - unique
+          - not_null
