@@ -19,9 +19,10 @@ It is designed to support:
 - `macros/`
   Small helper macros for path and period handling
 - `profiles.yml.example`
-  Example local dbt profile for DuckDB
+  Example local dbt profile for DuckDB (copy to `profiles.yml`)
 - `profiles.yml`
-  Project-local DuckDB profile used for repo-scoped dbt commands
+  Machine-local DuckDB profile; gitignored. Reconstruct with
+  `cp profiles.yml.example profiles.yml`.
 
 ## Recommended local setup
 
@@ -33,8 +34,15 @@ pip install -r requirements-data.txt
 
 ## dbt profile
 
-This repo ships with `analytics/profiles.yml`, so you can run dbt inside the workspace
-without touching `~/.dbt`.
+Copy the example profile once so dbt can run inside the workspace without
+touching `~/.dbt`:
+
+```bash
+cp analytics/profiles.yml.example analytics/profiles.yml
+```
+
+The example points DuckDB at `data/workforceguard_analytics.duckdb`. Override
+`WORKFORCEGUARD_DB_PATH` if your warehouse file lives elsewhere.
 
 ## Example commands
 
