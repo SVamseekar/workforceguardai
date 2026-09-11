@@ -255,6 +255,7 @@ class MainSchemaContaminationGuardTests(unittest.TestCase):
             "fct_internal_skill_snapshot",
             "fct_internal_workforce_snapshot",
             "mart_company_decision_support",
+            "mart_equity_risk_score",
             "mart_internal_market_pay_benchmark",
             "mart_pay_transparency_category_review",
             "stg_internal__ats_requisition_snapshot",

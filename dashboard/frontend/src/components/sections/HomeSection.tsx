@@ -186,6 +186,12 @@ export function HomeSection() {
                   {Boolean(sm.implementation_status) && sm.implementation_status !== 'live' && (
                     <ToneChip tone="watch">Proxy / in development</ToneChip>
                   )}
+                  {sm.id === 'equity_risk_score' && sm.basis === 'blended' && (
+                    <ToneChip tone="good">Blended (your payroll + market)</ToneChip>
+                  )}
+                  {sm.id === 'equity_risk_score' && sm.basis !== 'blended' && (
+                    <ToneChip tone="neutral">Market-only</ToneChip>
+                  )}
                   <div className="score-pulse__track">
                     <div className="score-pulse__fill" style={{ width: `${pct}%`, background: barColor, opacity: isUnavailable ? 0.25 : 1 }} />
                   </div>
