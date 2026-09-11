@@ -72,6 +72,20 @@ Eurostat API  ──►  Python ingestion  ──►  DuckDB  ──►  dbt mod
 
 **CI/CD:** GitHub Actions — PRs and pushes to `main` run CI (pre-commit hooks, tests, lint, frontend production build, secret scan). Deploy to GCP and Vercel runs only after CI passes on `main`. Releases are SemVer Git tags (`vX.Y.Z`) with GitHub Releases. Git and release process: [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Layout
+
+| Path | Purpose |
+|------|---------|
+| `dashboard/frontend/` | React UI (Vite, TanStack Query, Tailwind) |
+| `dashboard/backend/` | FastAPI API, auth, `AnalyticsRepository` |
+| `analytics/` | dbt models (Eurostat → marts) |
+| `scripts/` | Data ingestion and preparation |
+| `data/` | Parquet/DuckDB assets (LFS for select `.xlsx`); tenant and internal data gitignored except committed synthetic templates |
+| `assets/demos/` | README demo GIFs |
+| `configs/` | Environment/service configuration |
+| `deploy/` | GCP + Vercel deployment scripts |
+| `tests/` | Root-level data/script tests |
+
 ---
 
 ## Data sources
@@ -122,9 +136,12 @@ To run the dbt models against local data:
 
 ```bash
 cd analytics
+cp profiles.yml.example profiles.yml   # gitignored; points DuckDB at data/workforceguard_analytics.duckdb
 dbt run
 dbt test
 ```
+
+`analytics/profiles.yml` is local-only. The example file is the rebuild recipe for a new contributor.
 
 ---
 
