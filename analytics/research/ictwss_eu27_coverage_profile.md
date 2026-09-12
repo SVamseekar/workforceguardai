@@ -1,7 +1,15 @@
 # OECD/AIAS ICTWSS — EU27 bargaining-coverage profile (issue #87 PR1)
 
 **Date:** 2026-09-11
-**Scope:** Data feasibility only. No econometric specification and no product-facing research view.
+**Updated:** 2026-09-12 — PR2 ran the interaction despite the missing *annual*
+BargCov panel. Time-invariant AdjCov is absorbed by country FE; the interaction
+with within-country employment rate is still identified. Results, decision
+rule, and product implication:
+[`institutional_bargaining_moderation.md`](institutional_bargaining_moderation.md).
+Primary continuous interaction p = 0.280. No product composite.
+
+**Scope (PR1):** Data feasibility only. No econometric specification and no
+product-facing research view.
 
 ## Sources
 
@@ -35,8 +43,18 @@ A true annual EU27 bargaining-coverage panel for 2019–2024 **is not supported*
 | Annual observations 2019, 2020, 2021, 2022, 2023, 2024 | **No** — many countries have multi-year gaps |
 | Within-country year-to-year identifying variation | **Weak / often null** in the 2019–2024 window for most EU members |
 
-**Recommendation:** do not estimate a panel-interaction regression on this vintage. If a later ICTWSS release (end-2026) fills 2019–2024, re-open PR2. Until then, treat institutional bargaining as a **slow-moving country trait**, not a yearly conditioning variable.
+**Recommendation (PR1, superseded for identification):** do not treat ICTWSS
+v2.0 as an *annual* 2019–2024 BargCov panel. Treat institutional bargaining as
+a **slow-moving country trait**.
+
+**What PR2 actually estimated:** a two-way FE interaction of employment rate
+with time-invariant BargCov. That is the correct spec when the conditioner does
+not move inside the window. It is not a yearly BargCov panel, and the write-up
+does not claim one. See
+[`institutional_bargaining_moderation.md`](institutional_bargaining_moderation.md).
 
 ## Null-result stance
 
-This PR documents a **feasibility null**: the public ICTWSS v2.0 release does not provide the annual time variation the original research issue asked for. That is a data finding, not a product feature.
+PR1 documented a **feasibility null** for annual BargCov variation. PR2
+documents an **econometric null** on the pre-specified continuous interaction
+(p = 0.280). Neither is a product feature.

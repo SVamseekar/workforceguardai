@@ -1,0 +1,2 @@
+spec,n,n_countries,median_bargcov,coef_employment_rate_below_median,se_employment_rate_below_median,pvalue_employment_rate_below_median,coef_interaction_diff_in_slopes,se_interaction_diff_in_slopes,pvalue_interaction_diff_in_slopes,implied_above_median_slope,r2_within
+Model 6b (secondary): binary median-split BargCov interaction,159,27,52.4,0.3093373469388912,0.25830667592381096,0.23335493252225126,-0.42112008460810957,0.18226194731729806,0.022497946802920277,-0.11178273766921837,0.0011273599537531265

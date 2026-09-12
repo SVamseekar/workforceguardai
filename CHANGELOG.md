@@ -9,6 +9,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the release process.
 
 ## [Unreleased]
 
+### Added
+
+- Tracked EU27 ICTWSS AdjCov cross-section and a two-way FE interaction of
+  employment rate with bargaining coverage (issue #87). Primary continuous
+  interaction is null (p = 0.280); no product composite.
+
 ### Changed
 
 - Dependency floors: pandas 3.0.5, dbt-core 1.12.3, dbt-duckdb 1.11.0,

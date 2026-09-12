@@ -5,6 +5,7 @@ esco_taxonomy,ESCO taxonomy,esco,1.2.1,"European occupations and skills backbone
 esco_nace_crosswalk,ESCO-NACE crosswalk,esco,2026-rev2.1,"Official bridge between occupations and economic sectors."
 cedefop_skills,Cedefop skills intelligence,cedefop,2026,"Skills demand and transition context for later phases."
 eurofound_conditions,Eurofound working conditions,eurofound,2026,"Working-conditions context for workforce quality and retention signals."
+oecd_aias_ictwss,OECD/AIAS ICTWSS,oecd,2.0,"Adjusted collective bargaining coverage (AdjCov) for EU27 as a time-invariant country trait. Latest pre-2019 values from v2.0 (Sept 2025); Spain 2018 from Eurofound Working Life Country Profile (Nov 2024) because ICTWSS v2.0 dropped pre-2021 Spain rows. Not an annual 2019–2024 panel."
 internal_payroll_snapshot,Internal payroll snapshot,internal,local,"Employer-provided payroll snapshot used for company-aware benchmarking in Phase 3."
 internal_job_architecture,Internal job architecture,internal,local,"Employer-provided role and worker-category mapping used to align internal jobs for Phase 3."
 internal_hris_workforce_snapshot,Internal HRIS workforce snapshot,internal,local,"Employer-provided HRIS workforce snapshot used for internal composition and workforce condition benchmarking in Phase 3."

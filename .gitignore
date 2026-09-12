@@ -90,6 +90,9 @@ paper/
 !paper/main.tex
 projects/
 
+# Linked git worktrees (never commit worktree contents)
+.worktrees/
+
 # Scratch
 screenshot-*.png
 /image.png

@@ -6,3 +6,4 @@ pyarrow>=25.0.1
 pyyaml>=6.0.3
 requests>=2.34.2
 openpyxl>=3.1.5
+linearmodels>=6.0
