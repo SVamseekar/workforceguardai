@@ -1,0 +1,2 @@
+spec,n,n_countries,coef_employment_rate,se_employment_rate,pvalue_employment_rate,coef_interaction,se_interaction,pvalue_interaction,ci95_low_interaction,ci95_high_interaction,r2_within
+Model 6: Two-way FE + tightness x BargCov interaction,159,27,0.2283163431210531,0.2636803745107798,0.38821323778107386,-0.0028564805627916325,0.0026313895552289475,0.2797713104756372,-0.008064327072831206,0.002351365947247941,-0.04997755934796366
