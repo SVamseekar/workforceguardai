@@ -11,12 +11,19 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the release process.
 
 ### Added
 
+- Pay-gap heat calculator: hourly conversion, mean/median, variable pay,
+  quartile female shares, small-n suppression (≥5), and sector-matched
+  market comparators. Review states never read as legally justified.
+- Dedicated marketing routes for heat, product, Directive mapping,
+  transposition, research, demo, onboarding, contact, and FAQ.
 - Tracked EU27 ICTWSS AdjCov cross-section and a two-way FE interaction of
   employment rate with bargaining coverage (issue #87). Primary continuous
   interaction is null (p = 0.280); no product composite.
 
 ### Changed
 
+- Marketing site is separate pages instead of one long scroll. Copy states
+  heat is a review map, not a Directive compliance determination.
 - Dependency floors: pandas 3.0.5, dbt-core 1.12.3, dbt-duckdb 1.11.0,
   frontend minor/patch group, plus jest-dom 7 and jsdom 30.
 - Pre-commit hooks match GitHub practice: local file hygiene plus the same

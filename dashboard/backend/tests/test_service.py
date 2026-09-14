@@ -691,7 +691,7 @@ class AnalyticsRepositoryTests(unittest.TestCase):
                     select *
                     from (
                         values
-                            ('DE::eng_ic::2026-03-31', 'DE', '2026-03-31'::date, 'eng_ic', 'J62', 'urn:esco:occupation:1', 'EUR', 4, 2, 2, 102500, 92500, 112500, 17.8)
+                            ('DE::eng_ic::2026-03-31', 'DE', '2026-03-31'::date, 'eng_ic', 'J62', 'urn:esco:occupation:1', 'EUR', 10, 5, 5, 102500, 92500, 112500, 17.8)
                     ) as seeded(
                         internal_pay_snapshot_id, country_code, snapshot_date, worker_category_id, nace_code,
                         esco_uri, pay_currency, headcount, female_count, male_count, avg_base_pay,
@@ -718,7 +718,7 @@ class AnalyticsRepositoryTests(unittest.TestCase):
                     select *
                     from (
                         values
-                            ('DE::eng_ic::2026-03-31', 'DE', '2026-03-31'::date, 'eng_ic', 'Engineering Individual Contributor', 'Engineering', 'IC3', 'J62', 4, 2, 2, 17.8, 'B-S', '2024', 18.0, -0.2, true)
+                            ('DE::eng_ic::2026-03-31', 'DE', '2026-03-31'::date, 'eng_ic', 'Engineering Individual Contributor', 'Engineering', 'IC3', 'J62', 10, 5, 5, 17.8, 'B-S', '2024', 18.0, -0.2, true)
                     ) as seeded(
                         benchmark_row_id, country_code, snapshot_date, worker_category_id, worker_category_label,
                         primary_job_family, representative_job_level, representative_nace_code, headcount,
@@ -747,6 +747,7 @@ class AnalyticsRepositoryTests(unittest.TestCase):
             self.assertGreater(overview["company_benchmark"]["headcount"], 0)
             self.assertEqual(overview["company_benchmark"]["market_sector_id"], "B-S")
             self.assertTrue(overview["pay_transparency"]["available"])
+            self.assertNotIn("justified_difference_count", overview["pay_transparency"]["summary"])
             self.assertEqual(overview["pay_transparency"]["evidence_basis"], "blended")
             self.assertEqual(overview["pay_transparency"]["summary"]["category_count"], 1)
             self.assertEqual(overview["pay_transparency"]["summary"]["unresolved_review_item_count"], 1)
@@ -785,10 +786,11 @@ class AnalyticsRepositoryTests(unittest.TestCase):
             self.assertNotIn("Benchmark basis", answer["answer"])
             self.assertTrue(answer["internal_data_available"])
 
-            compliance_answer = repo.answer_question("Run the pay transparency compliance simulation", geography="DE")
-            self.assertEqual(compliance_answer["category"], "compliance")
-            self.assertEqual(compliance_answer["evidence_basis"], "blended")
-            self.assertIn("unresolved review items", compliance_answer["answer"])
+            heat_answer = repo.answer_question("Run the pay-gap heat for our categories", geography="DE")
+            self.assertEqual(heat_answer["category"], "pay_transparency")
+            self.assertEqual(heat_answer["evidence_basis"], "blended")
+            self.assertIn("need review", heat_answer["answer"])
+            self.assertIn("not a Directive compliance determination", heat_answer["answer"])
 
     def test_build_internal_data_status_finds_tables_in_a_real_tenant_schema(self):
         """Every real tenant's internal-tagged dbt models land in their own
@@ -971,7 +973,7 @@ class AnalyticsRepositoryTests(unittest.TestCase):
             repo = AnalyticsRepository(ROOT_DIR, analytics_db_path=db_path)
             response = repo.answer_question("Run the pay transparency compliance simulation", geography="DE")
 
-            self.assertEqual(response["category"], "compliance")
+            self.assertEqual(response["category"], "pay_transparency")
             self.assertFalse(response["internal_data_available"])
             self.assertEqual(response["evidence_basis"], "external")
             self.assertIn("not active", response["answer"])
@@ -1367,7 +1369,9 @@ class IngestUploadedPayrollTests(unittest.TestCase):
             self.assertEqual(result["record_count"], 15)
             self.assertEqual(result["snapshot_date"], "2025-12-31")
             self.assertTrue(result["validation"]["passed"])
-            self.assertEqual(result["validation"]["warnings"], [])
+            self.assertTrue(
+                all("weekly_hours" in warning for warning in result["validation"]["warnings"])
+            )
 
     def test_output_parquet_written_to_internal_dir(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -1381,6 +1385,8 @@ class IngestUploadedPayrollTests(unittest.TestCase):
             df = pd.read_parquet(internal_dir / "payroll_snapshot.parquet")
             self.assertEqual(len(df), 10)
             self.assertIn("base_pay_amount", df.columns)
+            self.assertIn("hourly_total", df.columns)
+            self.assertIn("variable_pay_amount", df.columns)
 
     def test_manifest_updated_as_untrusted_until_promoted(self):
         """Upload alone must never flip trust -- ADR-5 gates company claims
@@ -1495,7 +1501,9 @@ class IngestUploadedPayrollTests(unittest.TestCase):
             self.assertEqual(result["status"], "accepted")
             self.assertTrue(result["validation"]["passed"])
             self.assertTrue(len(result["validation"]["warnings"]) > 0)
-            self.assertIn("job_codes not in job architecture", result["validation"]["warnings"][0])
+            self.assertTrue(
+                any("job_codes not in job architecture" in warning for warning in result["validation"]["warnings"])
+            )
 
     def test_accepts_non_binary_gender(self):
         with tempfile.TemporaryDirectory() as temp_dir:

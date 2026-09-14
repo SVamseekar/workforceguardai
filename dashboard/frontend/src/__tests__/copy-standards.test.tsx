@@ -47,7 +47,7 @@ const RICH_OVERVIEW = {
     summary: { unresolved_review_item_count: 1 },
     categories: [
       { id: 'cat-1', label: 'Senior engineers', gap_value: 8.2, review_state: 'unresolved_review_item', note: '' },
-      { id: 'cat-2', label: 'Junior staff', gap_value: 2.1, review_state: 'justified_difference', note: '' },
+      { id: 'cat-2', label: 'Junior staff', gap_value: 2.1, review_state: 'below_trigger', note: '' },
     ],
   },
   governance: {

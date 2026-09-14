@@ -6,14 +6,9 @@ import { ToneChip } from '../primitives/ToneChip'
 import { EvidenceDrawer } from '../shared/EvidenceDrawer'
 import { DataState } from '../shared/DataState'
 import { FilterBar } from '../shared/FilterBar'
+import { REVIEW_STATE_LABELS, reviewStateTone } from '../../lib/payReview'
 
 type AnyObj = Record<string, unknown>
-
-const REVIEW_STATE_LABELS: Record<string, string> = {
-  observed_gap: 'Pay gap identified',
-  justified_difference: 'Documented difference',
-  unresolved_review_item: 'Needs review',
-}
 
 const numberFormatter = new Intl.NumberFormat('en-IE', {
   maximumFractionDigits: 1,
@@ -37,6 +32,7 @@ export function PayAnalysisSection() {
     recordGovernanceAction,
     actionLoading,
     uploadPayroll,
+    uploadJobArchitecture,
     trustActionLoading,
     promoteInternalAssetTrust,
     revokeInternalAssetTrust,
@@ -122,17 +118,17 @@ export function PayAnalysisSection() {
               {
                 n: '1',
                 title: 'Select a country',
-                body: 'Use the Country filter above — France, Germany, and Ireland have full EU Pay Transparency Directive simulation available.',
+                body: 'Use the Country filter above. Heat is available for any country where you have payroll loaded.',
               },
               {
                 n: '2',
-                title: 'Upload your payroll CSV',
-                body: 'Go to Home and upload a payroll CSV (columns: gender, salary, department). Your data stays local — it powers the internal pay gap benchmark.',
+                title: 'Upload job architecture, then payroll',
+                body: 'Required payroll columns: employee_id, job_code, country_code, worker_category_id, gender, base_salary, currency, snapshot_date. Optional: weekly_hours, pay_frequency, variable_pay_amount.',
               },
               {
                 n: '3',
                 title: 'Review your benchmark',
-                body: 'Your internal pay gap is compared against the live Eurostat market benchmark for your country and sector. Categories with gaps above the Article 9 threshold are flagged for review.',
+                body: 'Your internal unadjusted hourly gap is compared with a sector-matched Eurostat market figure (country all-sector if no sector match). Gaps at 5% and 10% are review flags, not a legal finding.',
               },
             ].map(step => (
               <li key={step.n} style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
@@ -279,19 +275,19 @@ export function PayAnalysisSection() {
         </section>
       )}
 
-      {/* Pay Transparency Compliance */}
+      {/* Pay-gap heat */}
       {Boolean(payTransparency.available) && (
         <section className="comparison-section">
           <div className="panel" style={{ minHeight: 'auto', padding: 22 }}>
             <div className="panel__header panel__header--tight">
               <div>
-                <p className="panel__eyebrow">EU Pay Transparency Directive</p>
-                <h2>Pay transparency compliance</h2>
+                <p className="panel__eyebrow">Pay gap heat — not a legal filing</p>
+                <h2>Category pay review</h2>
               </div>
               <ToneChip tone={(ptSummary.unresolved_review_item_count as number) > 0 ? 'watch' : 'good'}>
                 {(ptSummary.unresolved_review_item_count as number) > 0
                   ? `${ptSummary.unresolved_review_item_count} need review`
-                  : 'All reviewed'}
+                  : 'No 10%+ items'}
               </ToneChip>
             </div>
 
@@ -300,22 +296,49 @@ export function PayAnalysisSection() {
                 const internalGap = cat.gap_value as number | undefined
                 const marketGap = cat.market_gap as number | undefined
                 const diff = (internalGap != null && marketGap != null) ? (internalGap - marketGap) : null
-                const needsArticle9 = cat.review_state === 'unresolved_review_item' && diff != null && Math.abs(diff) >= 1
+                const quartiles = (cat.quartile_female_share_pct as number[] | undefined) ?? []
                 return (
                   <div key={cat.id as string} className="compliance-review-item">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <strong>{cat.label as string}</strong>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                         <span>{formatValue(cat.gap_value)}</span>
-                        <ToneChip tone={cat.review_state === 'unresolved_review_item' ? 'watch' : 'neutral'}>
+                        <ToneChip tone={reviewStateTone(cat.review_state as string)}>
                           {REVIEW_STATE_LABELS[cat.review_state as string] ?? cat.review_state as string}
                         </ToneChip>
                       </div>
                     </div>
                     {Boolean(cat.note) && <p>{cat.note as string}</p>}
-                    {needsArticle9 && (
+                    <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                      Mean total {formatValue(cat.mean_gap_total ?? cat.gap_value)}
+                      {' · '}Median total {formatValue(cat.median_gap_total)}
+                      {' · '}Mean base {formatValue(cat.mean_gap_base)}
+                      {' · '}Mean variable {formatValue(cat.mean_gap_variable)}
+                      {' · '}Median variable {formatValue(cat.median_gap_variable)}
+                    </p>
+                    {Boolean(cat.market_match) && (
+                      <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                        Market comparator: {
+                          cat.market_match === 'sector'
+                            ? 'matched NACE sector'
+                            : cat.market_match === 'country_all_sector'
+                              ? 'country all-sector fallback'
+                              : 'unavailable'
+                        }
+                      </p>
+                    )}
+                    <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                      Variable pay received — women {formatValue(cat.female_variable_incidence_pct)} / men {formatValue(cat.male_variable_incidence_pct)}
+                      {quartiles.length === 4 ? ` · Women in pay quartiles Q1–Q4: ${quartiles.map((value) => (value == null ? '—' : `${Number(value).toFixed(0)}%`)).join(' / ')}` : ''}
+                    </p>
+                    {cat.sample_status === 'suppressed' && (
+                      <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: 'var(--tone-watch)', lineHeight: 1.5 }}>
+                        Too few women or men (need at least 5 of each) to publish a gap for this category.
+                      </p>
+                    )}
+                    {Boolean(cat.market_outlier) && diff != null && (
                       <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: 'var(--tone-watch)', lineHeight: 1.5, fontWeight: 500 }}>
-                        Internal gap is {Math.abs(diff!).toFixed(1)} pts {diff! > 0 ? 'above' : 'below'} the market benchmark — justification required under Article 9 of the EU Pay Transparency Directive.
+                        Internal heat is {Math.abs(diff).toFixed(1)} pts {diff > 0 ? 'above' : 'below'} the matched market comparator. That is a review flag, not a legal verdict.
                       </p>
                     )}
                     {isAdmin ? (
@@ -325,7 +348,11 @@ export function PayAnalysisSection() {
                             key={action.code as string}
                             className={`governance-button governance-button--${action.code}`}
                             disabled={actionLoading}
-                            onClick={() => recordGovernanceAction(action.code as string, 'pay_category', cat.id as string)}
+                            onClick={() => recordGovernanceAction(
+                              action.code as string,
+                              ((cat.governance_target as AnyObj | undefined)?.target_type as string) || 'pay_transparency_category',
+                              ((cat.governance_target as AnyObj | undefined)?.target_id as string) || (cat.id as string),
+                            )}
                           >
                             {action.label as string}
                           </button>
@@ -375,18 +402,39 @@ export function PayAnalysisSection() {
             <p>This analysis uses illustrative data based on 2025 public aggregates. Upload your company data to see your real numbers.</p>
           </div>
           {isAdmin ? (
-            <label className="panel__action" style={{ cursor: 'pointer' }}>
-              Upload your data →
-              <input
-                type="file"
-                accept=".csv"
-                style={{ display: 'none' }}
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file && uploadPayroll) uploadPayroll(file)
-                }}
-              />
-            </label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+              <label className="panel__action" style={{ cursor: 'pointer' }}>
+                Upload payroll CSV
+                <input
+                  type="file"
+                  accept=".csv"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file && uploadPayroll) uploadPayroll(file)
+                  }}
+                />
+              </label>
+              <label className="panel__action" style={{ cursor: 'pointer' }}>
+                Upload job architecture CSV
+                <input
+                  type="file"
+                  accept=".csv"
+                  style={{ display: 'none' }}
+                  aria-label="Upload job architecture CSV File"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file && uploadJobArchitecture) uploadJobArchitecture(file)
+                  }}
+                />
+              </label>
+              <a href="/templates/payroll_upload_template.csv" download style={{ fontSize: '0.75rem' }}>
+                Download payroll template
+              </a>
+              <a href="/templates/job_architecture_upload_template.csv" download style={{ fontSize: '0.75rem' }}>
+                Download job architecture template
+              </a>
+            </div>
           ) : (
             <span className="admin-only-hint">Payroll upload requires an admin account.</span>
           )}

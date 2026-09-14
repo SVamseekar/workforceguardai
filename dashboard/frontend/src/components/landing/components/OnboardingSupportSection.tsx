@@ -7,7 +7,7 @@ const STEPS = [
   {
     icon: Rocket,
     title: 'Request a tailored demo',
-    desc: 'We map your reporting countries, worker categories, and Directive timeline — then walk through Pay Analysis and evidence export live.',
+    desc: 'We map your reporting countries and worker categories — then walk through pay-gap heat and evidence export live.',
   },
   {
     icon: Shield,

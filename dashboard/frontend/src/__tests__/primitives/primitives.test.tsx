@@ -127,9 +127,19 @@ describe('StatusBadge', () => {
     expect(screen.getByText('Needs review')).toBeInTheDocument()
   })
 
-  it('translates justified_difference to "Documented difference"', () => {
+  it('translates justified_difference to "Below 5% trigger"', () => {
     render(<StatusBadge status="justified_difference" />)
-    expect(screen.getByText('Documented difference')).toBeInTheDocument()
+    expect(screen.getByText('Below 5% trigger')).toBeInTheDocument()
+  })
+
+  it('translates below_trigger to "Below 5% trigger"', () => {
+    render(<StatusBadge status="below_trigger" />)
+    expect(screen.getByText('Below 5% trigger')).toBeInTheDocument()
+  })
+
+  it('translates insufficient_sample to "Too few people to report"', () => {
+    render(<StatusBadge status="insufficient_sample" />)
+    expect(screen.getByText('Too few people to report')).toBeInTheDocument()
   })
 
   it('translates blended to "Evidence source: Combined"', () => {

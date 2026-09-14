@@ -24,7 +24,7 @@ describe('PayAnalysisSection', () => {
     await waitFor(() =>
       expect(screen.getByText('Representative example')).toBeInTheDocument(),
     )
-    expect(screen.getByText(/Upload your data/)).toBeInTheDocument()
+    expect(screen.getByText('Upload payroll CSV')).toBeInTheDocument()
   })
 
   it('renders compliance table when pay_transparency is available', async () => {
@@ -50,7 +50,7 @@ describe('PayAnalysisSection', () => {
 
     renderInRouter(<PayAnalysisSection />)
     await waitFor(() =>
-      expect(screen.getByText('Pay transparency compliance')).toBeInTheDocument(),
+      expect(screen.getByText('Category pay review')).toBeInTheDocument(),
     )
     expect(screen.getByText('Senior engineers')).toBeInTheDocument()
     expect(screen.getByText('Needs review')).toBeInTheDocument()
@@ -147,5 +147,38 @@ describe('PayAnalysisSection', () => {
     renderInRouter(<PayAnalysisSection />)
     await waitFor(() => expect(screen.getByText('Transition Readiness')).toBeInTheDocument())
     expect(screen.getByText('Proxy / in development')).toBeInTheDocument()
+  })
+
+  it('shows honest heat labels instead of justified/compliance verdicts', async () => {
+    server.use(
+      http.get('/api/overview', () =>
+        HttpResponse.json({
+          ...MOCK_OVERVIEW,
+          internal_data: { available: true },
+          pay_transparency: {
+            available: true,
+            summary: { unresolved_review_item_count: 0, below_trigger_count: 1, insufficient_sample_count: 1 },
+            categories: [
+              { id: 'cat-small', label: 'Specialists', gap_value: null, review_state: 'insufficient_sample', sample_status: 'suppressed', note: '' },
+              { id: 'cat-low', label: 'Operations', gap_value: 2.1, review_state: 'below_trigger', mean_gap_total: 2.1, median_gap_total: 1.8, market_match: 'country_all_sector', note: '' },
+            ],
+          },
+        }),
+      ),
+    )
+
+    renderInRouter(<PayAnalysisSection />)
+    await waitFor(() => expect(screen.getByText('Category pay review')).toBeInTheDocument())
+    expect(screen.getByText('Below 5% trigger')).toBeInTheDocument()
+    expect(screen.getByText('Too few people to report')).toBeInTheDocument()
+    expect(screen.getByText(/country all-sector fallback/i)).toBeInTheDocument()
+    expect(screen.queryByText('Documented difference')).not.toBeInTheDocument()
+    expect(screen.queryByText(/not Directive compliant/i)).not.toBeInTheDocument()
+  })
+
+  it('offers a job architecture upload control', async () => {
+    renderInRouter(<PayAnalysisSection />)
+    expect(await screen.findByLabelText('Upload job architecture CSV File')).toBeInTheDocument()
+    expect(screen.getByText('Download payroll template')).toBeInTheDocument()
   })
 })

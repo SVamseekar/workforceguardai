@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { ChevronRight } from 'lucide-react'
 import { MARKET_INTELLIGENCE_SCOPE } from '../constants'
 import { LANDING_FACTS } from '../landingFacts'
@@ -123,9 +124,9 @@ export function CountryExposureViz() {
               </li>
             ))}
           </ul>
-          <a href="#product-tour" className="landing-cta landing-cta--ghost landing-exposure-viz__scope-cta">
+          <Link to="/product" className="landing-cta landing-cta--ghost landing-exposure-viz__scope-cta">
             Explore all modules <ChevronRight size={14} />
-          </a>
+          </Link>
         </div>
       </div>
     </section>

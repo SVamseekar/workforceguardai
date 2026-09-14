@@ -66,8 +66,8 @@ export const LIVE_PROOF_STATS = [
   },
   {
     value: `${LANDING_FACTS.directive.jointAssessmentThresholdPct}%`,
-    label: 'Joint pay assessment trigger',
-    detail: 'Directive (EU) 2023/970 when the gap is unjustified by category.',
+    label: '5% review flag',
+    detail: 'Unadjusted hourly heat at 5% is a review flag, not an unexplained-gap finding.',
   },
   {
     value: `${LANDING_FACTS.research.eu27FinanceSectorGapPct}%`,

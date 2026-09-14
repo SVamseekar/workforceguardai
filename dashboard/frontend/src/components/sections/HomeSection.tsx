@@ -65,7 +65,7 @@ const HANDOFF_META: Record<string, { icon: typeof FileText; desc: string; route:
 export function HomeSection() {
   const {
     overview, filters, setFilters, loading, error,
-    exporting, uploadPayroll, exportEvidencePack,
+    exporting, uploadPayroll, uploadJobArchitecture, exportEvidencePack,
   } = useOverviewData()
   const { isAdmin } = useAuth()
   const navigate = useNavigate()
@@ -506,9 +506,9 @@ export function HomeSection() {
                   <Scale size={18} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <strong className="workflow-card__title">Unlock Pay Transparency Simulation</strong>
+                  <strong className="workflow-card__title">Unlock pay-gap heat</strong>
                   <p className="workflow-card__desc">
-                    Select a country above — <strong>France (FR)</strong>, <strong>Germany (DE)</strong> or <strong>Ireland (IE)</strong> — to simulate EU Pay Transparency Directive compliance against your internal pay categories.
+                    Select a country above to run pay-gap heat against your internal worker categories. This is a review map, not a compliance certificate.
                   </p>
                 </div>
               </div>
@@ -527,11 +527,15 @@ export function HomeSection() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <div>
                 <p className="panel__eyebrow" style={{ margin: '0 0 3px' }}>Pay Transparency</p>
-                <h2 style={{ margin: 0, fontSize: '1.05rem' }}>EU Directive simulation</h2>
+                <h2 style={{ margin: 0, fontSize: '1.05rem' }}>Category pay-gap heat</h2>
               </div>
               {ptAvailable && (
                 <span className={`tone-chip ${unresolvedCount > 0 ? 'tone-chip--watch' : 'tone-chip--good'}`}>
-                  {unresolvedCount > 0 ? `${unresolvedCount} unresolved` : 'All clear'}
+                  {unresolvedCount > 0
+                    ? `${unresolvedCount} need review`
+                    : ((ptSummary.observed_gap_count as number) > 0
+                      ? `${ptSummary.observed_gap_count} pay gaps identified`
+                      : 'No 10%+ items')}
                 </span>
               )}
             </div>
@@ -554,23 +558,24 @@ export function HomeSection() {
 
                 {/* Top review items */}
                 {ptTopItems.slice(0, 3).map((item, i) => {
-                  const cat     = item.worker_category as AnyObj
-                  const intGap  = (item.internal_gap as number).toFixed(1)
-                  const mktGap  = (item.market_gap as number).toFixed(1)
-                  const delta   = item.gap_to_market as number
-                  const isAbove = delta > 0
+                  const cat = (item.worker_category as AnyObj) ?? {}
+                  const intGap = item.internal_gap
+                  const mktGap = item.market_gap
+                  const delta = typeof item.gap_to_market === 'number' ? item.gap_to_market : null
+                  const isAbove = typeof delta === 'number' && delta > 0
                   return (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 12px', borderRadius: 8, background: 'var(--bg-elevated)', border: '1px solid var(--border-light)', marginBottom: 7 }}>
                       <div style={{ minWidth: 0 }}>
                         <strong style={{ fontSize: '0.83rem', color: 'var(--text-strong)', display: 'block' }}>
-                          {cat.label as string}
+                          {(cat.label as string) ?? 'Category'}
                         </strong>
                         <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                          Internal {intGap}% · Market benchmark {mktGap}%
+                          Internal {typeof intGap === 'number' ? `${intGap.toFixed(1)}%` : '—'}
+                          {' · '}Market {typeof mktGap === 'number' ? `${mktGap.toFixed(1)}%` : '—'}
                         </span>
                       </div>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: Math.abs(delta) > 1 ? 'var(--tone-watch)' : 'var(--tone-good)', flexShrink: 0, marginLeft: 10 }}>
-                        {isAbove ? '+' : ''}{delta.toFixed(1)} pts
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: typeof delta === 'number' && Math.abs(delta) > 1 ? 'var(--tone-watch)' : 'var(--tone-good)', flexShrink: 0, marginLeft: 10 }}>
+                        {typeof delta === 'number' ? `${isAbove ? '+' : ''}${delta.toFixed(1)} pts` : '—'}
                       </span>
                     </div>
                   )
@@ -587,7 +592,7 @@ export function HomeSection() {
                 </div>
                 <div>
                   <p style={{ margin: '0 0 8px', fontSize: '0.83rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
-                    {ptNote || 'Select a specific country to simulate compliance under the EU Pay Transparency Directive (2023/970).'}
+                    {ptNote || 'Select a specific country to see category pay-gap heat. This does not determine Directive compliance.'}
                   </p>
                   <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--accent-primary)', fontWeight: 600 }}>
                     → Try: France (FR), Germany (DE) or Ireland (IE)
@@ -654,13 +659,29 @@ export function HomeSection() {
                 </p>
               )}
               {isAdmin ? (
-                <div className="upload-dropzone">
-                  <input type="file" accept=".csv" onChange={e => { const f = e.target.files?.[0]; if (f) uploadPayroll(f) }} aria-label="Upload Payroll CSV File" />
-                  <Upload size={18} style={{ margin: '0 auto 5px', color: 'var(--text-muted)' }} />
-                  <span style={{ fontSize: '0.79rem', fontWeight: 600, display: 'block', color: 'var(--text-strong)', marginBottom: 2 }}>
-                    {benchmarkAvail ? 'Replace payroll CSV' : 'Upload payroll CSV'}
-                  </span>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Drag & drop or click to browse</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div className="upload-dropzone">
+                    <input type="file" accept=".csv" onChange={e => { const f = e.target.files?.[0]; if (f) uploadPayroll(f) }} aria-label="Upload Payroll CSV File" />
+                    <Upload size={18} style={{ margin: '0 auto 5px', color: 'var(--text-muted)' }} />
+                    <span style={{ fontSize: '0.79rem', fontWeight: 600, display: 'block', color: 'var(--text-strong)', marginBottom: 2 }}>
+                      {benchmarkAvail ? 'Replace payroll CSV' : 'Upload payroll CSV'}
+                    </span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Drag & drop or click to browse</span>
+                  </div>
+                  <div className="upload-dropzone">
+                    <input type="file" accept=".csv" onChange={e => { const f = e.target.files?.[0]; if (f && uploadJobArchitecture) uploadJobArchitecture(f) }} aria-label="Upload job architecture CSV File" />
+                    <Upload size={18} style={{ margin: '0 auto 5px', color: 'var(--text-muted)' }} />
+                    <span style={{ fontSize: '0.79rem', fontWeight: 600, display: 'block', color: 'var(--text-strong)', marginBottom: 2 }}>
+                      Upload job architecture CSV
+                    </span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Required for equal-work categories</span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                    Templates:{' '}
+                    <a href="/templates/payroll_upload_template.csv" download>payroll</a>
+                    {' · '}
+                    <a href="/templates/job_architecture_upload_template.csv" download>job architecture</a>
+                  </p>
                 </div>
               ) : (
                 <p className="admin-only-hint" style={{ margin: 0 }}>

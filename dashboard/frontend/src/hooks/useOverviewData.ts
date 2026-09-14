@@ -221,6 +221,29 @@ export function useOverviewData() {
     },
   })
 
+  const uploadJobArchitectureMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData()
+      formData.append('file', file)
+      const response = await api.post('/upload/job-architecture', formData)
+      return response.data as { record_count: number }
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['overview'] })
+      setNotice({ type: 'success', message: `Job architecture accepted — ${data.record_count} jobs loaded.` })
+    },
+    onError: (err) => {
+      if (axios.isAxiosError(err) && err.response?.status === 403) {
+        setNotice({ type: 'error', message: 'Only admins can upload job architecture.' })
+        return
+      }
+      const detail = axios.isAxiosError(err)
+        ? (err.response?.data?.detail ?? 'Upload failed. Check the file format and try again.')
+        : 'Upload failed. Check the file format and try again.'
+      setNotice({ type: 'error', message: detail })
+    },
+  })
+
   const promoteTrustMutation = useMutation({
     mutationFn: async (assetType: string) => {
       await api.post(`/internal-data/${assetType}/promote`, {})
@@ -276,6 +299,7 @@ export function useOverviewData() {
       governanceMutation.mutate({ actionCode, targetType, targetId, reason }),
     scheduleBrief: (template: { id: string; label: string }) => scheduleMutation.mutateAsync(template),
     uploadPayroll: (file: File) => uploadMutation.mutateAsync(file),
+    uploadJobArchitecture: (file: File) => uploadJobArchitectureMutation.mutateAsync(file),
     promoteInternalAssetTrust: (assetType: string) => promoteTrustMutation.mutate(assetType),
     revokeInternalAssetTrust: (assetType: string, reason: string) => revokeTrustMutation.mutate({ assetType, reason }),
   }

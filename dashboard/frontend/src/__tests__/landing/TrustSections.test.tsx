@@ -2,7 +2,8 @@ import { render, screen } from '@testing-library/react'
 import { HelmetProvider } from 'react-helmet-async'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { LandingPage } from '../../components/landing/LandingPage'
+import { SecurityPage } from '../../components/landing/SecurityPage'
+import { TranspositionPage } from '../../components/landing/TranspositionPage'
 
 vi.mock('../../lib/api', () => ({
   api: {
@@ -24,11 +25,11 @@ describe('landing trust sections', () => {
     })))
   })
 
-  it('renders transposition tracker, partner proof, and security trust sections', () => {
+  it('renders transposition tracker on its own page', () => {
     render(
       <HelmetProvider>
         <MemoryRouter>
-          <LandingPage />
+          <TranspositionPage />
         </MemoryRouter>
       </HelmetProvider>,
     )
@@ -42,13 +43,18 @@ describe('landing trust sections', () => {
     ).toBeInTheDocument()
     expect(screen.getByRole('table')).toBeInTheDocument()
     expect(screen.getByText(/Belgium \(Wallonia-Brussels\)/i)).toBeInTheDocument()
-    expect(screen.getByText(/published research/i)).toBeInTheDocument()
-    expect(
-      screen.getByRole('heading', {
-        level: 2,
-        name: /built for sensitive payroll and compliance workflows/i,
-      }),
-    ).toBeInTheDocument()
-    expect(screen.getByText(/SHA-256 governance chain/i)).toBeInTheDocument()
+  })
+
+  it('renders the security trust centre', () => {
+    render(
+      <HelmetProvider>
+        <MemoryRouter>
+          <SecurityPage />
+        </MemoryRouter>
+      </HelmetProvider>,
+    )
+
+    expect(screen.getByRole('heading', { level: 1, name: /what we protect/i })).toBeInTheDocument()
+    expect(screen.getByText(/SHA-256/i)).toBeInTheDocument()
   })
 })

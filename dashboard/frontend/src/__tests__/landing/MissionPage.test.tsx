@@ -27,10 +27,10 @@ describe('MissionPage', () => {
       </HelmetProvider>,
     )
 
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/enforceable/i)
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/reviewable/i)
     expect(screen.getByText(/Transparency must be provable/i)).toBeInTheDocument()
     expect(screen.getByText(/Methodology belongs in the open/i)).toBeInTheDocument()
-    const missionLinks = screen.getAllByRole('link', { name: /^Mission$/i })
+    const missionLinks = screen.getAllByRole('link', { name: /why workforceguard/i })
     expect(missionLinks.some((link) => link.getAttribute('href') === '/mission')).toBe(true)
   })
 })

@@ -81,6 +81,23 @@ describe('useOverviewData', () => {
     expect(result.current.notice?.message).toBe('Upload accepted — 42 employees loaded.')
   })
 
+  it('uploadJobArchitecture posts file and shows success notice', async () => {
+    vi.spyOn(api, 'post').mockResolvedValueOnce({ data: { record_count: 8 } })
+
+    const { result } = renderHook(() => useOverviewData(), { wrapper: makeWrapper() })
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    const file = new File(['job_code,job_family\nSE-1,Engineering'], 'jobs.csv', { type: 'text/csv' })
+
+    await act(async () => {
+      await result.current.uploadJobArchitecture(file)
+    })
+
+    expect(api.post).toHaveBeenCalledWith('/upload/job-architecture', expect.any(FormData))
+    expect(result.current.notice?.type).toBe('success')
+    expect(result.current.notice?.message).toBe('Job architecture accepted — 8 jobs loaded.')
+  })
+
   it('uploadPayroll shows error notice on failure', async () => {
     vi.spyOn(api, 'post').mockRejectedValueOnce(
       Object.assign(new axios.AxiosError('Upload rejected'), {

@@ -11,14 +11,8 @@ import { PayAnalysisSection } from './components/sections/PayAnalysisSection'
 import { GovernSection } from './components/sections/GovernSection'
 import { CompareSection } from './components/sections/CompareSection'
 import { ResearchSection } from './components/sections/ResearchSection'
-import { LandingPage } from './components/landing/LandingPage'
 import { SANDBOX_CTA_ENABLED } from './components/landing/site'
-import { MissionPage } from './components/landing/MissionPage'
-import { SecurityPage } from './components/landing/SecurityPage'
-import { PrivacyPage } from './components/landing/PrivacyPage'
-import { TermsPage } from './components/landing/TermsPage'
-import { DisclaimerPage } from './components/landing/DisclaimerPage'
-import { RefundsPage } from './components/landing/RefundsPage'
+import { LANDING_ROUTE_ELEMENTS } from './components/landing/landingRoutes'
 import { AuthProvider } from './contexts/AuthContext'
 import { useAuth } from './hooks/useAuth'
 import { LoginScreen } from './components/auth/LoginScreen'
@@ -119,13 +113,7 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/mission" element={<MissionPage />} />
-            <Route path="/security" element={<SecurityPage />} />
-            <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/terms" element={<TermsPage />} />
-            <Route path="/disclaimer" element={<DisclaimerPage />} />
-            <Route path="/refunds" element={<RefundsPage />} />
+            {LANDING_ROUTE_ELEMENTS}
             <Route
               path="/sandbox"
               element={

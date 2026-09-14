@@ -1,0 +1,3 @@
+employee_id,job_code,job_title,country_code,worker_category_id,gender,base_salary,currency,snapshot_date,weekly_hours,pay_frequency,variable_pay_amount,employment_status
+emp-001,SE-IC-1,Software Engineer,FR,eng_ic,female,54000,EUR,2025-12-31,40,annual,2000,active
+emp-002,SE-IC-1,Software Engineer,FR,eng_ic,male,61000,EUR,2025-12-31,40,annual,4000,active

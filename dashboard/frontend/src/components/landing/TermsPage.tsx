@@ -17,10 +17,10 @@ function TermsContent() {
       </p>
       <h2>Service scope</h2>
       <p>
-        WorkforceGuard AI provides EU workforce intelligence and pay-transparency compliance analytics.
-        The platform helps HR, people analytics, and compliance teams benchmark against Eurostat data,
-        review payroll against Directive (EU) 2023/970 workflows, and export evidence with provenance.
-        It is an analytics tool — not legal advice.
+        WorkforceGuard AI provides EU workforce intelligence and pay-gap heat analytics.
+        The platform helps HR, people analytics, and reward teams benchmark against Eurostat data,
+        review payroll by worker category, and export evidence with provenance.
+        It is an analytics tool — not legal advice and not a Directive compliance determination.
       </p>
       <h2>Organisation access</h2>
       <p>

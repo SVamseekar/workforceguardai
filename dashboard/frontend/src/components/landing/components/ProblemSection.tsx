@@ -7,14 +7,14 @@ const CHAOS = [
   'Eurostat tables reconciled manually across member states',
   'Gaps computed in spreadsheets with no versioned methodology',
   'Joint pay assessment triggers discovered after leadership sign-off',
-  'No defensible audit trail when regulators ask for proof',
+  'No hash-chained log when counsel asks how a number was produced',
 ]
 
 const SOLUTION = [
   'Live EU benchmarks with provenance on every metric',
   'Payroll kept separate from public market data until you benchmark',
-  'Category review with 5% and 10% threshold flagging',
-  'Tamper-evident governance log for every compliance decision',
+  'Category heat with 5% and 10% review flags and small-n suppression',
+  'Tamper-evident governance log for every review decision',
 ]
 
 const TIMELINE = [
