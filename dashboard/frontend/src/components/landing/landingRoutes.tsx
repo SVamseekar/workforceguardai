@@ -1,0 +1,39 @@
+import type { ReactElement } from 'react'
+import { Route } from 'react-router-dom'
+import { ContactPage } from './ContactPage'
+import { DemoPage } from './DemoPage'
+import { DirectivePage } from './DirectivePage'
+import { DisclaimerPage } from './DisclaimerPage'
+import { FaqPage } from './FaqPage'
+import { LandingPage } from './LandingPage'
+import { MissionPage } from './MissionPage'
+import { OnboardingPage } from './OnboardingPage'
+import { PayGapHeatPage } from './PayGapHeatPage'
+import { PrivacyPage } from './PrivacyPage'
+import { ProblemPage } from './ProblemPage'
+import { ProductPage } from './ProductPage'
+import { RefundsPage } from './RefundsPage'
+import { ResearchPage } from './ResearchPage'
+import { SecurityPage } from './SecurityPage'
+import { TermsPage } from './TermsPage'
+import { TranspositionPage } from './TranspositionPage'
+
+export const LANDING_ROUTE_ELEMENTS: ReactElement[] = [
+  <Route key="home" path="/" element={<LandingPage />} />,
+  <Route key="product" path="/product" element={<ProductPage />} />,
+  <Route key="heat" path="/pay-gap-heat" element={<PayGapHeatPage />} />,
+  <Route key="directive" path="/directive" element={<DirectivePage />} />,
+  <Route key="transposition" path="/transposition" element={<TranspositionPage />} />,
+  <Route key="problem" path="/problem" element={<ProblemPage />} />,
+  <Route key="research" path="/research" element={<ResearchPage />} />,
+  <Route key="demo" path="/demo" element={<DemoPage />} />,
+  <Route key="onboarding" path="/onboarding" element={<OnboardingPage />} />,
+  <Route key="contact" path="/contact" element={<ContactPage />} />,
+  <Route key="faq" path="/faq" element={<FaqPage />} />,
+  <Route key="mission" path="/mission" element={<MissionPage />} />,
+  <Route key="security" path="/security" element={<SecurityPage />} />,
+  <Route key="privacy" path="/privacy" element={<PrivacyPage />} />,
+  <Route key="terms" path="/terms" element={<TermsPage />} />,
+  <Route key="disclaimer" path="/disclaimer" element={<DisclaimerPage />} />,
+  <Route key="refunds" path="/refunds" element={<RefundsPage />} />,
+]

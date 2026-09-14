@@ -26,7 +26,7 @@ models:
           - not_null
 
   - name: mart_pay_transparency_category_review
-    description: Phase 4 pay-transparency simulation mart classifying worker-category pay gaps into observed, monitored, and unresolved review states.
+    description: Pay-transparency heat mart. Classifies category gaps as insufficient sample, below 5% trigger, observed gap, or needs review. Never labels a gap as legally justified.
     columns:
       - name: pay_transparency_review_id
         tests:

@@ -4,10 +4,10 @@ export const SITE_NAME = 'WorkforceGuard AI'
 export const SITE_LOCALE = 'en_GB'
 
 export const DEFAULT_TITLE =
-  'WorkforceGuard AI — EU Pay Transparency Compliance & Workforce Intelligence'
+  'WorkforceGuard AI — Pay-gap heat for EU employers'
 
 export const DEFAULT_DESCRIPTION =
-  'WorkforceGuard AI helps EU employers prepare for Directive (EU) 2023/970 with gender pay gap benchmarking across the EU27, payroll-aware compliance review, and a hash-chained audit log ready for regulators.'
+  'WorkforceGuard AI computes unadjusted hourly pay-gap heat by worker category across the EU27. Mean, median, variable pay, quartiles, and small-n suppression — for human review, not a Directive verdict.'
 
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`
 
@@ -16,11 +16,11 @@ export const SITE_KEYWORDS = [
   'Directive EU 2023/970',
   'gender pay gap reporting',
   'EU27 pay gap benchmarking',
-  'pay transparency compliance',
+  'pay-gap heat',
   'workforce intelligence',
   'Eurostat labour analytics',
-  'joint pay assessment',
-  'HR compliance software',
+  'gender pay gap hourly',
+  'small-n suppression',
   'people analytics EU',
 ].join(', ')
 

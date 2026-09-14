@@ -13,9 +13,9 @@ export function ProductTour() {
       <div id="product-tour" className="landing-anchor" tabIndex={-1} />
       <div className="landing-section__header">
         <SectionLabel>Product</SectionLabel>
-        <h2>One workspace for intelligence, review, and regulatory evidence</h2>
+        <h2>One workspace for intelligence, review, and evidence</h2>
         <p className="landing-section__lede">
-          Five integrated views — explore each module with screenshots from the live dashboard.
+          Five integrated views — explore each module with screenshots from the live dashboard. Heat is not a filing.
         </p>
       </div>
 

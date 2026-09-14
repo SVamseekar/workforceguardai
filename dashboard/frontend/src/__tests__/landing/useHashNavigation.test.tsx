@@ -1,10 +1,7 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { HelmetProvider } from 'react-helmet-async'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { LandingPage } from '../../components/landing/LandingPage'
-import { PrivacyPage } from '../../components/landing/PrivacyPage'
+import { renderLanding } from './renderLanding'
 
 vi.mock('../../lib/api', () => ({
   api: {
@@ -12,20 +9,7 @@ vi.mock('../../lib/api', () => ({
   },
 }))
 
-function renderRoutes(initialEntry = '/') {
-  return render(
-    <HelmetProvider>
-      <MemoryRouter initialEntries={[initialEntry]}>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/privacy" element={<PrivacyPage />} />
-        </Routes>
-      </MemoryRouter>
-    </HelmetProvider>,
-  )
-}
-
-describe('landing hash navigation', () => {
+describe('landing hash and demo navigation', () => {
   beforeEach(() => {
     vi.stubGlobal('localStorage', {
       getItem: vi.fn(() => null),
@@ -37,37 +21,30 @@ describe('landing hash navigation', () => {
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
     })))
-    if (!HTMLElement.prototype.scrollIntoView) {
-      HTMLElement.prototype.scrollIntoView = () => {}
-    }
-    vi.spyOn(HTMLElement.prototype, 'scrollIntoView').mockImplementation(() => {})
   })
 
-  it('scrolls to contact when Request a demo is clicked', async () => {
+  it('opens the contact page when Request a walkthrough is clicked', async () => {
     const user = userEvent.setup()
-    renderRoutes()
+    renderLanding('/')
 
-    await user.click(screen.getAllByRole('button', { name: /request a demo/i })[0])
+    await user.click(screen.getAllByRole('button', { name: /request a walkthrough/i })[0])
 
     await waitFor(() => {
-      expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalled()
+      expect(screen.getByRole('heading', { level: 1, name: /book a walkthrough/i })).toBeInTheDocument()
     })
   })
 
-  it('scrolls to compliance when See compliance mapping is clicked', async () => {
-    const user = userEvent.setup()
-    renderRoutes()
-
-    await user.click(screen.getByRole('button', { name: /see compliance mapping/i }))
+  it('redirects legacy /#research to the research page', async () => {
+    renderLanding('/#research')
 
     await waitFor(() => {
-      expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalled()
+      expect(screen.getByRole('heading', { level: 1, name: /tight labour markets/i })).toBeInTheDocument()
     })
   })
 
-  it('navigates from privacy to home research section without a blank page', async () => {
+  it('navigates from privacy to research without a blank page', async () => {
     const user = userEvent.setup()
-    renderRoutes('/privacy')
+    renderLanding('/privacy')
 
     expect(screen.getByRole('heading', { level: 1, name: /privacy policy/i })).toBeInTheDocument()
 
@@ -75,13 +52,12 @@ describe('landing hash navigation', () => {
     await user.click(researchLinks[researchLinks.length - 1])
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { level: 2, name: /tight labour markets/i })).toBeInTheDocument()
-      expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalled()
+      expect(screen.getByRole('heading', { level: 1, name: /tight labour markets/i })).toBeInTheDocument()
     })
   })
 
   it('renders the full privacy policy from the top', () => {
-    renderRoutes('/privacy')
+    renderLanding('/privacy')
 
     expect(screen.getByRole('heading', { level: 1, name: /privacy policy/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 2, name: /data we collect/i })).toBeInTheDocument()

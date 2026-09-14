@@ -95,7 +95,7 @@ export function GovernSection() {
                   To create entries: go to <strong style={{ color: 'var(--text-strong)' }}>Pay Analysis</strong>, select a country, then approve, override, or reverse pay transparency categories using the action buttons.
                 </p>
                 <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.88rem', lineHeight: 1.6 }}>
-                  All decisions are included in the evidence pack and are legally defensible under Article 9 of the EU Pay Transparency Directive.
+                  All decisions are included in the evidence pack. The log is tamper-evident — it does not by itself prove Directive compliance.
                 </p>
               </div>
             ) : (
@@ -135,9 +135,9 @@ export function GovernSection() {
         <section className="comparison-section">
           <div className="panel" style={{ minHeight: 'auto', padding: 22 }}>
             <p className="panel__eyebrow">Evidence Pack</p>
-            <h2 style={{ margin: '6px 0 4px', fontSize: '1.15rem' }}>Download compliance evidence</h2>
+            <h2 style={{ margin: '6px 0 4px', fontSize: '1.15rem' }}>Download review evidence</h2>
             <p style={{ margin: '0 0 16px', fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
-              A cryptographically hash-chained JSON bundle containing all market data, pay simulation states, and {eventCount} governance {eventCount === 1 ? 'decision' : 'decisions'} — ready for legal or regulatory review.
+              A hash-chained JSON bundle of market metrics, pay-gap heat, and {eventCount} governance {eventCount === 1 ? 'decision' : 'decisions'} for counsel and reviewers. It is not a regulatory filing.
             </p>
 
             <div className="product-notes" style={{ marginBottom: 20 }}>

@@ -33,8 +33,8 @@ const BELIEFS = [
   },
   {
     icon: ShieldCheck,
-    title: 'Compliance is a workflow, not a checkbox',
-    body: 'Directive (EU) 2023/970 asks employers to justify differences, run joint assessments, and retain evidence. That requires approve, override, and reverse decisions with context — recorded in a log regulators can verify years later.',
+    title: 'Review is a workflow, not a checkbox',
+    body: 'Directive (EU) 2023/970 asks employers to measure gaps, justify differences, and retain evidence. Heat flags categories. Humans record approve, override, and reverse with a reason — in a log counsel can inspect years later.',
   },
   {
     icon: BookOpen,
@@ -62,13 +62,13 @@ const COMMITMENTS = [
   {
     label: 'Built for the deadline',
     detail:
-      'Member states must transpose the Pay Transparency Directive by 7 June 2026. The platform is shaped around that timeline — reporting, threshold flagging, and exportable evidence packs.',
+      'Member states must transpose the Pay Transparency Directive by 7 June 2026. The platform is shaped around that timeline — heat, threshold flags, and exportable evidence for review.',
   },
 ]
 
 const MISSION_TITLE = 'Our Mission — WorkforceGuard AI'
 const MISSION_DESCRIPTION =
-  'WorkforceGuard AI exists to make EU pay transparency operational: provable benchmarks, payroll-aware review workflows, and audit-ready evidence under Directive (EU) 2023/970.'
+  'WorkforceGuard AI exists to make pay-gap heat operational: provable Eurostat benchmarks, payroll-aware review workflows, and evidence you can show counsel — not a compliance stamp.'
 
 function MissionContent() {
   const { openDemo } = useLandingDemo()
@@ -99,20 +99,20 @@ function MissionContent() {
             Our mission
           </p>
           <h1>
-            Make pay transparency
-            <em> enforceable</em>
+            Make pay gaps
+            <em> reviewable</em>
             — not just reportable
           </h1>
           <p className="mission-hero__lede">
             Equal pay for work of equal value is one of the EU&apos;s founding promises. The Pay
             Transparency Directive turns that promise into an operational obligation: measure gaps,
-            justify differences, assess them jointly, and leave a trace that survives scrutiny from
-            regulators, employees, and the people who hold the budgets.
+            justify differences, assess them jointly, and leave a trace. Heat is the measurement
+            step. Counsel still owns justification and assessment.
           </p>
           <p className="mission-hero__lede mission-hero__lede--secondary">
-            WorkforceGuard AI exists to close the gap between the law&apos;s intent and what
-            employers can actually defend — by turning public EU labour-market evidence and your own
-            payroll into decisions backed by provenance, not spreadsheets assembled under pressure.
+            WorkforceGuard AI turns public EU labour-market evidence and the job groups you map
+            into a review map with provenance — not a spreadsheet assembled under pressure, and not
+            a legal determination.
           </p>
         </div>
       </section>

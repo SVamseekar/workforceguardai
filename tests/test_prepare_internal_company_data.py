@@ -49,22 +49,9 @@ class PrepareInternalCompanyDataTests(unittest.TestCase):
 
         prepared = prepare_payroll_snapshot(frame, "local")
 
-        self.assertEqual(
-            list(prepared.columns),
-            [
-                "employee_id",
-                "job_code",
-                "job_title",
-                "country_code",
-                "worker_category_id",
-                "gender",
-                "base_pay_amount",
-                "pay_currency",
-                "snapshot_date",
-                "employment_status",
-                "version",
-            ],
-        )
+        self.assertEqual(list(prepared.columns), PAYROLL_OUTPUT_COLUMNS)
+        self.assertIn("hourly_total", prepared.columns)
+        self.assertIn("variable_pay_amount", prepared.columns)
         self.assertEqual(prepared.iloc[0]["country_code"], "DE")
         self.assertEqual(prepared.iloc[0]["gender"], "female")
         self.assertEqual(prepared.iloc[0]["pay_currency"], "EUR")

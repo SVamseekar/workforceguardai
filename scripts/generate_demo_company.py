@@ -84,6 +84,9 @@ def generate_payroll():
                     "worker_category_id": category_id,
                     "gender": gender,
                     "base_pay_amount": normal_pay(median),
+                    "variable_pay_amount": max(0, int(normal_pay(median) * (0.08 if gender == "male" else 0.05))),
+                    "weekly_hours": 40,
+                    "pay_frequency": "annual",
                     "pay_currency": CURRENCY,
                     "snapshot_date": SNAPSHOT_DATE,
                     "employment_status": "active",
@@ -98,7 +101,8 @@ def generate_payroll():
 def write_payroll(rows):
     path = RAW_DIR / "payroll_snapshot.csv"
     fieldnames = ["employee_id", "job_code", "job_title", "country_code", "worker_category_id",
-                  "gender", "base_pay_amount", "pay_currency", "snapshot_date", "employment_status", "version"]
+                  "gender", "base_pay_amount", "variable_pay_amount", "weekly_hours", "pay_frequency",
+                  "pay_currency", "snapshot_date", "employment_status", "version"]
     with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()

@@ -1,10 +1,10 @@
+import { REVIEW_STATE_LABELS } from '../../lib/payReview'
+
 const STATUS_LABELS: Record<string, string> = {
   'internal mart active': 'Company data connected',
   'internal mart inactive': 'No company data loaded',
   'external-only answers': 'Market data only',
-  'observed_gap': 'Pay gap identified',
-  'unresolved_review_item': 'Needs review',
-  'justified_difference': 'Documented difference',
+  ...REVIEW_STATE_LABELS,
   blended: 'Evidence source: Combined',
   internal: 'Evidence source: Company data',
   external: 'Evidence source: Market data',

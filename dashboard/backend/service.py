@@ -16,6 +16,7 @@ from typing import Any, Dict, Iterable, List, Optional
 import duckdb
 
 import evidence_signing
+from pay_gap_metrics import attach_review_fields, review_state_label
 
 
 AGGREGATE_SECTORS = {
@@ -1379,6 +1380,7 @@ class AnalyticsRepository:
             from mart_internal_market_pay_benchmark
             where upper(country_code) = upper(?)
               and market_benchmark_available = true
+              and internal_gender_pay_gap is not null
               {sector_clause}
             order by headcount desc, abs(internal_pay_gap) desc
             limit 1
@@ -1435,6 +1437,81 @@ class AnalyticsRepository:
             ],
         }
 
+    def _pay_transparency_scope(self, filters: FilterState) -> tuple[str, List[Any]]:
+        params: List[Any] = [filters.geography]
+        sector_clause = ""
+        if filters.sector != "ALL":
+            sector_clause = "and starts_with(upper(coalesce(representative_nace_code, '')), upper(?))"
+            params.append(filters.sector)
+        return sector_clause, params
+
+    def _load_pay_transparency_rows(self, filters: FilterState) -> List[Dict[str, Any]]:
+        sector_clause, params = self._pay_transparency_scope(filters)
+        review_sql = f"""
+            select
+                worker_category_id,
+                coalesce(worker_category_label, worker_category_id) as worker_category_label,
+                headcount,
+                female_count,
+                male_count,
+                round(cast(internal_gender_pay_gap as double), 1) as internal_pay_gap,
+                round(cast(median_gender_pay_gap as double), 1) as median_gender_pay_gap,
+                round(cast(mean_gap_base as double), 1) as mean_gap_base,
+                round(cast(mean_gap_variable as double), 1) as mean_gap_variable,
+                round(cast(median_gap_variable as double), 1) as median_gap_variable,
+                female_variable_incidence_pct,
+                male_variable_incidence_pct,
+                q1_female_share_pct,
+                q2_female_share_pct,
+                q3_female_share_pct,
+                q4_female_share_pct,
+                hours_basis,
+                market_match,
+                review_state,
+                market_outlier,
+                round(cast(market_gender_pay_gap as double), 1) as market_pay_gap,
+                round(cast(gap_to_market as double), 1) as gap_to_market,
+                cast(snapshot_date as varchar) as snapshot_date,
+                market_sector_id,
+                market_period_code,
+                representative_nace_code,
+                market_benchmark_available
+            from mart_pay_transparency_category_review
+            where upper(country_code) = upper(?)
+              {sector_clause}
+            order by abs(coalesce(internal_gender_pay_gap, 0)) desc, headcount desc
+        """
+        try:
+            rows = self._query(review_sql, params)
+            if rows:
+                return rows
+        except Exception:
+            pass
+        fallback_sql = f"""
+            select
+                worker_category_id,
+                coalesce(worker_category_label, worker_category_id) as worker_category_label,
+                headcount,
+                female_count,
+                male_count,
+                round(cast(internal_gender_pay_gap as double), 1) as internal_pay_gap,
+                round(cast(market_gender_pay_gap as double), 1) as market_pay_gap,
+                round(cast(gap_to_market as double), 1) as gap_to_market,
+                cast(snapshot_date as varchar) as snapshot_date,
+                market_sector_id,
+                market_period_code,
+                representative_nace_code,
+                market_benchmark_available
+            from mart_internal_market_pay_benchmark
+            where upper(country_code) = upper(?)
+              {sector_clause}
+            order by abs(coalesce(internal_gender_pay_gap, 0)) desc, headcount desc
+        """
+        try:
+            return self._query(fallback_sql, params)
+        except Exception:
+            return []
+
     def _build_pay_transparency_simulation(
         self,
         filters: FilterState,
@@ -1450,16 +1527,18 @@ class AnalyticsRepository:
                 "confidence": "low",
                 "coverage_status": "unavailable",
                 "evidence_basis": "external",
-                "formula_version": "pay-transparency-review-v1",
+                "formula_version": "pay-transparency-review-v2",
                 "thresholds": {
                     "observed_gap_pct": 5.0,
                     "unresolved_review_pct": 10.0,
                     "market_delta_pct": 2.0,
+                    "min_cell_size": 5,
                 },
                 "summary": {
                     "category_count": 0,
                     "observed_gap_count": 0,
-                    "justified_difference_count": 0,
+                    "below_trigger_count": 0,
+                    "insufficient_sample_count": 0,
                     "unresolved_review_item_count": 0,
                     "max_internal_gap": None,
                 },
@@ -1480,37 +1559,7 @@ class AnalyticsRepository:
         if filters.geography == "EU27_AVG" or len(filters.geography) != 2:
             return unavailable("Pay-transparency simulation currently requires a country-level scope such as DE or FR.")
 
-        params: List[Any] = [filters.geography]
-        sector_clause = ""
-        if filters.sector != "ALL":
-            sector_clause = "and starts_with(upper(coalesce(representative_nace_code, '')), upper(?))"
-            params.append(filters.sector)
-
-        rows = self._query(
-            f"""
-            select
-                worker_category_id,
-                coalesce(worker_category_label, worker_category_id) as worker_category_label,
-                headcount,
-                female_count,
-                male_count,
-                round(cast(internal_gender_pay_gap as double), 1) as internal_pay_gap,
-                round(cast(market_gender_pay_gap as double), 1) as market_pay_gap,
-                round(cast(gap_to_market as double), 1) as gap_to_market,
-                cast(snapshot_date as varchar) as snapshot_date,
-                market_sector_id,
-                market_period_code,
-                representative_nace_code,
-                market_benchmark_available
-            from mart_internal_market_pay_benchmark
-            where upper(country_code) = upper(?)
-              and internal_gender_pay_gap is not null
-              {sector_clause}
-            order by abs(internal_gender_pay_gap) desc, headcount desc
-            """,
-            params,
-        )
-
+        rows = self._load_pay_transparency_rows(filters)
         if not rows:
             return unavailable(
                 "The internal benchmark mart does not contain category-level pay-gap rows for this scope yet."
@@ -1520,35 +1569,71 @@ class AnalyticsRepository:
             "observed_gap_pct": 5.0,
             "unresolved_review_pct": 10.0,
             "market_delta_pct": 2.0,
+            "min_cell_size": 5,
         }
+
         review_items = []
         for row in rows:
-            internal_gap = float(row["internal_pay_gap"])
+            extras = row
+            if row.get("review_state"):
+                classified = {
+                    "review_state": row["review_state"],
+                    "review_label": review_state_label(row["review_state"]),
+                    "sample_status": (
+                        "suppressed" if row["review_state"] == "insufficient_sample" else "reportable"
+                    ),
+                    "mean_gap_total": (
+                        None if row["review_state"] == "insufficient_sample" else row.get("internal_pay_gap")
+                    ),
+                    "market_outlier": bool(row.get("market_outlier")),
+                }
+            else:
+                classified = attach_review_fields(
+                    {
+                        "female_count": row["female_count"],
+                        "male_count": row["male_count"],
+                        "internal_gender_pay_gap": row["internal_pay_gap"],
+                        "market_gender_pay_gap": row["market_pay_gap"],
+                    }
+                )
+            review_state = classified["review_state"]
+            internal_gap = classified.get("mean_gap_total")
+            if internal_gap is None and review_state != "insufficient_sample":
+                internal_gap = row.get("internal_pay_gap")
             market_gap = float(row["market_pay_gap"]) if row["market_pay_gap"] is not None else None
             market_delta = float(row["gap_to_market"]) if row["gap_to_market"] is not None else None
-            absolute_gap = abs(internal_gap)
-            absolute_delta = abs(market_delta) if market_delta is not None else 0.0
-
-            if absolute_gap >= thresholds["unresolved_review_pct"] or absolute_delta >= thresholds["market_delta_pct"]:
-                review_state = "unresolved_review_item"
-                review_label = "Unresolved review item"
-                priority = "high" if absolute_gap >= thresholds["unresolved_review_pct"] else "medium"
+            if review_state == "unresolved_review_item":
+                priority = "high"
                 rationale = (
-                    "Internal category gap or gap-to-market exceeds the review threshold and requires documented human review."
+                    "Unadjusted mean hourly pay gap is at least 10% in this worker category. "
+                    "This is heat for human review, not a finding that the company is non-compliant."
                 )
-            elif absolute_gap >= thresholds["observed_gap_pct"]:
-                review_state = "observed_gap"
-                review_label = "Observed gap"
+            elif review_state == "observed_gap":
                 priority = "medium"
-                rationale = "A category-level pay gap is observed, but it is below the unresolved review threshold."
-            else:
-                review_state = "justified_difference"
-                review_label = "No unresolved gap"
+                rationale = (
+                    "Unadjusted mean hourly pay gap is at least 5% in this worker category — "
+                    "the Directive's joint-pay-assessment trigger uses 5% when the gap is also unexplained."
+                )
+            elif review_state == "insufficient_sample":
                 priority = "low"
                 rationale = (
-                    "The observed category gap is below the review threshold. Any formal justification still belongs in the governance record."
+                    "Fewer than 5 women or 5 men in this category, so a published gap would be statistically fragile."
                 )
+            else:
+                priority = "low"
+                rationale = (
+                    "Unadjusted mean hourly pay gap is below 5%. That is not a legal justification — "
+                    "it only means this metric does not cross the Directive's 5% trigger."
+                )
+            if classified.get("market_outlier"):
+                rationale += " Category heat also differs from the matched market comparator by at least 2 points."
 
+            quartile_shares = [
+                extras.get("q1_female_share_pct"),
+                extras.get("q2_female_share_pct"),
+                extras.get("q3_female_share_pct"),
+                extras.get("q4_female_share_pct"),
+            ]
             review_items.append(
                 {
                     "id": f"pay_transparency_category_review:{row['worker_category_id']}",
@@ -1560,6 +1645,18 @@ class AnalyticsRepository:
                     "female_count": int(row["female_count"] or 0),
                     "male_count": int(row["male_count"] or 0),
                     "internal_gap": internal_gap,
+                    "mean_gap_total": internal_gap,
+                    "median_gap_total": extras.get("median_gender_pay_gap"),
+                    "mean_gap_base": extras.get("mean_gap_base"),
+                    "mean_gap_variable": extras.get("mean_gap_variable"),
+                    "median_gap_variable": extras.get("median_gap_variable"),
+                    "female_variable_incidence_pct": extras.get("female_variable_incidence_pct"),
+                    "male_variable_incidence_pct": extras.get("male_variable_incidence_pct"),
+                    "quartile_female_share_pct": quartile_shares,
+                    "hours_basis": extras.get("hours_basis") or "assumed_default",
+                    "market_match": extras.get("market_match"),
+                    "market_outlier": bool(classified.get("market_outlier")),
+                    "sample_status": classified["sample_status"],
                     "market_gap": market_gap,
                     "gap_to_market": market_delta,
                     "snapshot_date": row["snapshot_date"],
@@ -1567,7 +1664,7 @@ class AnalyticsRepository:
                     "market_sector_id": row["market_sector_id"],
                     "representative_nace_code": row["representative_nace_code"],
                     "review_state": review_state,
-                    "review_label": review_label,
+                    "review_label": review_state_label(review_state),
                     "priority": priority,
                     "rationale": rationale,
                     "evidence_basis": "blended" if row["market_benchmark_available"] else "internal",
@@ -1585,14 +1682,21 @@ class AnalyticsRepository:
                 target["target_id"],
             )
 
+        reportable_gaps = [
+            abs(item["internal_gap"]) for item in review_items if item.get("internal_gap") is not None
+        ]
+        below_trigger_count = sum(1 for item in review_items if item["review_state"] == "below_trigger")
         summary = {
             "category_count": len(review_items),
             "observed_gap_count": sum(1 for item in review_items if item["review_state"] == "observed_gap"),
-            "justified_difference_count": sum(1 for item in review_items if item["review_state"] == "justified_difference"),
+            "below_trigger_count": below_trigger_count,
+            "insufficient_sample_count": sum(
+                1 for item in review_items if item["review_state"] == "insufficient_sample"
+            ),
             "unresolved_review_item_count": sum(
                 1 for item in review_items if item["review_state"] == "unresolved_review_item"
             ),
-            "max_internal_gap": max(abs(item["internal_gap"]) for item in review_items),
+            "max_internal_gap": max(reportable_gaps) if reportable_gaps else None,
             "approved_count": sum(1 for item in review_items if item["human_review"]["state"] == "approved"),
             "overridden_count": sum(1 for item in review_items if item["human_review"]["state"] == "overridden"),
             "reversed_count": sum(1 for item in review_items if item["human_review"]["state"] == "reversed"),
@@ -1624,7 +1728,7 @@ class AnalyticsRepository:
             "confidence": "medium",
             "coverage_status": coverage_status,
             "evidence_basis": evidence_basis,
-            "formula_version": "pay-transparency-review-v1",
+            "formula_version": "pay-transparency-review-v2",
             "thresholds": thresholds,
             "summary": summary,
             "review_items": review_items,
@@ -1633,7 +1737,7 @@ class AnalyticsRepository:
                 key=lambda item: (
                     item["human_review"]["state"] != "pending_review",
                     {"high": 0, "medium": 1, "low": 2}.get(item["priority"], 3),
-                    -abs(item["internal_gap"]),
+                    -(abs(item["internal_gap"]) if item.get("internal_gap") is not None else -1),
                 ),
             )[:3],
             "workflow": {
@@ -1652,8 +1756,8 @@ class AnalyticsRepository:
             },
             "provenance": provenance,
             "note": (
-                "This Phase 4 simulation classifies modeled worker-category pay gaps into observed gaps, "
-                "low-risk monitored differences, and unresolved review items. It is a review workflow, not an automated HR decision."
+                "Heat map of unadjusted mean hourly pay by worker category. "
+                "It is not a Directive compliance determination and does not decide whether a gap is legally justified."
             ),
         }
 
@@ -4350,8 +4454,7 @@ class AnalyticsRepository:
 
         REQUIRED_COLUMNS = {
             "employee_id", "job_code", "country_code",
-            "worker_category_id", "gender", "base_salary",
-            "currency", "snapshot_date",
+            "worker_category_id", "gender", "snapshot_date",
         }
         VALID_GENDERS = {"female", "male", "non_binary"}
 
@@ -4360,12 +4463,20 @@ class AnalyticsRepository:
         except Exception as e:
             raise ValueError(f"Could not parse CSV: {e}") from e
 
-        missing = REQUIRED_COLUMNS - set(df.columns.str.lower())
+        df.columns = df.columns.str.lower()
+        if "base_salary" not in df.columns and "base_pay_amount" in df.columns:
+            df = df.rename(columns={"base_pay_amount": "base_salary"})
+        if "currency" not in df.columns and "pay_currency" in df.columns:
+            df = df.rename(columns={"pay_currency": "currency"})
+        if "weekly_hours" not in df.columns and "contracted_weekly_hours" in df.columns:
+            df = df.rename(columns={"contracted_weekly_hours": "weekly_hours"})
+        if "variable_pay_amount" not in df.columns and "bonus" in df.columns:
+            df = df.rename(columns={"bonus": "variable_pay_amount"})
+
+        missing = REQUIRED_COLUMNS | {"base_salary", "currency"}
+        missing = missing - set(df.columns)
         if missing:
             raise ValueError(f"Missing required columns: {', '.join(sorted(missing))}")
-
-        # Normalise column names to lowercase
-        df.columns = df.columns.str.lower()
 
         if len(df) < 10:
             raise ValueError(f"Upload must contain at least 10 employees. Got {len(df)}.")
@@ -4406,6 +4517,10 @@ class AnalyticsRepository:
         if "job_title" not in df.columns:
             df["job_title"] = df["job_code"]
 
+        from pay_gap_metrics import enrich_payroll_rows
+
+        df = pd.DataFrame(enrich_payroll_rows(df.to_dict(orient="records")))
+
         # Warnings
         warnings = []
         job_arch_path = self.internal_data_dir / "job_architecture.parquet"
@@ -4419,6 +4534,10 @@ class AnalyticsRepository:
                     f"{len(unknown_codes)} job_codes not in job architecture — "
                     f"those rows will have no NACE/ESCO mapping: {sorted(unknown_codes)[:5]}"
                 )
+        if (df.get("hours_basis") == "assumed_default").any() if "hours_basis" in df.columns else False:
+            warnings.append(
+                "weekly_hours was not provided for some rows — hourly pay uses a 40-hour full-time assumption."
+            )
 
         # Write parquet
         out_path = self.internal_data_dir / "payroll_snapshot.parquet"
@@ -5082,7 +5201,7 @@ class AnalyticsRepository:
         if pay_transparency.get("available"):
             unresolved_count = pay_transparency["summary"]["unresolved_review_item_count"]
             notes.append(
-                f"Phase 4 pay-transparency simulation is active with {unresolved_count} unresolved category review items."
+                f"Pay-gap heat is active with {unresolved_count} categories that need review (10%+ unadjusted hourly gap)."
             )
         else:
             append_note_once(pay_transparency["note"])
@@ -5307,6 +5426,8 @@ class AnalyticsRepository:
             keyword in normalized
             for keyword in [
                 "pay transparency",
+                "pay-gap heat",
+                "pay gap heat",
                 "transparency exposure",
                 "compliance simulation",
                 "compliance simulator",
@@ -5321,17 +5442,18 @@ class AnalyticsRepository:
                 top_sentence = (
                     f" The highest-priority category is {top_item['worker_category']['label']} with a "
                     f"{top_item['internal_gap']:.1f}% internal gap."
-                    if top_item
+                    if top_item and top_item.get("internal_gap") is not None
                     else ""
                 )
                 return response(
-                    "compliance",
+                    "pay_transparency",
                     pay_transparency.get("confidence", "medium"),
                     (
-                        f"The Phase 4 pay-transparency simulation reviewed {summary['category_count']} worker categories "
-                        f"and found {summary['unresolved_review_item_count']} unresolved review items, "
+                        f"Pay-gap heat reviewed {summary['category_count']} worker categories "
+                        f"and found {summary['unresolved_review_item_count']} items that need review, "
                         f"{summary['observed_gap_count']} observed gaps, and "
-                        f"{summary['justified_difference_count']} monitored low-risk differences."
+                        f"{summary.get('below_trigger_count', 0)} categories below the 5% trigger. "
+                        "This is not a Directive compliance determination."
                         f"{top_sentence}"
                     ),
                     [
@@ -5347,7 +5469,7 @@ class AnalyticsRepository:
                     ],
                     limitations=[
                         pay_transparency["note"],
-                        "The simulation does not decide whether a difference is legally justified; that requires documented human review.",
+                        "Heat does not decide whether a difference is legally justified; that requires documented human review.",
                     ],
                     evidence_basis=pay_transparency["evidence_basis"],
                     include_benchmark_citation=False,
@@ -5360,11 +5482,11 @@ class AnalyticsRepository:
                 )
 
             return response(
-                "compliance",
+                "pay_transparency",
                 "low",
-                "The pay-transparency simulation is not active because trusted internal category-level pay data is not available for this scope.",
+                "Pay-gap heat is not active because trusted internal category-level pay data is not available for this scope.",
                 [
-                    {"label": "Simulation status", "value": "Unavailable"},
+                    {"label": "Heat status", "value": "Unavailable"},
                     {"label": "Current basis", "value": pay_transparency.get("evidence_basis", "external")},
                 ],
                 [metric["provenance"] for metric in overview["metrics"][:2]],

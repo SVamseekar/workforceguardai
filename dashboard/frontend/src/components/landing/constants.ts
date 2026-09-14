@@ -50,21 +50,21 @@ export const PRODUCT_TOUR_TABS: ProductTourTab[] = [
     id: 'pay',
     label: 'Pay Analysis',
     icon: Scale,
-    headline: 'Payroll blended against EU benchmarks',
-    desc: 'Upload payroll and see category-level gender pay gaps ranked by compliance exposure, with threshold flagging for joint pay assessment.',
+    headline: 'Pay-gap heat against EU benchmarks',
+    desc: 'Upload job architecture and payroll to see category-level unadjusted hourly gaps, small-n suppression, and 5% / 10% review flags.',
     screenshot: '/screenshots/pay-analysis.png',
     accentColor: '#f59e0b',
-    bullets: ['5% and 10% threshold flagging', 'Internal vs market gap deltas', 'Approve / override / reverse workflow'],
+    bullets: ['Hourly mean and median heat', 'Sector-matched market comparator', 'Approve / override / reverse log'],
   },
   {
     id: 'govern',
     label: 'Govern & Export',
     icon: ShieldCheck,
     headline: 'Hash-chained audit log and evidence packs',
-    desc: 'Every compliance decision is written to a SHA-256 hash-chained governance log with live integrity checks and one-click export.',
+    desc: 'Review decisions are written to a SHA-256 hash-chained governance log with live integrity checks and one-click export for counsel.',
     screenshot: '/screenshots/govern-export.png',
     accentColor: '#10b981',
-    bullets: ['Tamper-evident event chain', 'Integrity verified on every API call', 'Structured evidence bundle for regulators'],
+    bullets: ['Tamper-evident event chain', 'Integrity verified on every API call', 'Evidence bundle for reviewers — not a filing'],
   },
 ]
 
@@ -89,7 +89,7 @@ export const AI_ANALYST_HIGHLIGHTS = [
 export const MARKET_INTELLIGENCE_SCOPE = [
   { label: 'Market Intelligence', detail: 'Live Eurostat panels with country × sector filters', active: true },
   { label: 'Compare', detail: 'Peer-country similarity baskets and side-by-side deltas' },
-  { label: 'Pay Analysis', detail: 'Payroll gaps ranked with Directive threshold flagging' },
+  { label: 'Pay Analysis', detail: 'Payroll heat with 5% / 10% review flags and small-n suppression' },
   { label: 'Govern & Export', detail: 'Tamper-evident audit log and evidence bundles' },
 ] as const
 
@@ -107,9 +107,9 @@ const [risk, tech, ops] = demo.reviewCategories
 export const ANALYST_DEMO_SCENES: AnalystDemoScene[] = [
   {
     persona: 'Compliance lead',
-    question: 'Which worker categories in our payroll need a joint pay assessment under the Directive?',
+    question: 'Which worker categories in our payroll show the most pay-gap heat?',
     answer:
-      `${risk.label} (${risk.internalGapPct}% internal gap) and ${tech.label} (${tech.internalGapPct}%) are unresolved_review_item. ${ops.label} is at ${ops.internalGapPct}% — monitor against the ${LANDING_FACTS.directive.unresolvedReviewThresholdPct}% review threshold.`,
+      `${risk.label} (${risk.internalGapPct}% internal gap) and ${tech.label} (${tech.internalGapPct}%) need review. ${ops.label} is at ${ops.internalGapPct}% — watch against the ${LANDING_FACTS.directive.unresolvedReviewThresholdPct}% review flag. This is not a joint pay assessment.`,
     provenance: [
       { label: 'Source', value: 'Pay transparency review' },
       { label: 'Demo tenant', value: `${demo.payrollRows} payroll rows · ${demo.jobCodes} job codes` },
@@ -131,9 +131,9 @@ export const ANALYST_DEMO_SCENES: AnalystDemoScene[] = [
   },
   {
     persona: 'HR reward · evidence pack',
-    question: 'Prepare an evidence bundle for Q1 compliance sign-off.',
+    question: 'Prepare an evidence bundle for Q1 review with counsel.',
     answer:
-      `Export bundles category-level gaps for ${demo.reviewCategories.length} worker categories, Eurostat provenance, and governance events. Chain integrity verified on API — ${demo.reviewCategories.length} unresolved items ready for approve/override/reverse.`,
+      `Export bundles category-level heat for ${demo.reviewCategories.length} worker categories, Eurostat provenance, and governance events. Chain integrity verified on API. Counsel still decides what is unexplained.`,
     provenance: [
       { label: 'Governance', value: 'Tamper-evident audit log' },
       { label: 'Export', value: 'JSON evidence bundle' },
@@ -148,12 +148,12 @@ export const WORKFLOW_STEPS = [
     time: 'Step 1',
     title: 'Upload payroll',
     body: 'CSV upload with job codes mapped to worker categories. Payroll stays tenant-isolated from the public EU reference layer.',
-    action: 'Manifest marked trusted',
+    action: 'Admin promotes trusted assets',
   },
   {
     time: 'Step 2',
     title: 'Flag gaps',
-    body: 'Categories crossing the 5% Directive threshold surface as review items, ranked by exposure and market delta.',
+    body: 'Categories crossing 5% and 10% unadjusted hourly flags surface for review, ranked by heat and market delta.',
     action: '2 unresolved · 1 observed',
   },
   {

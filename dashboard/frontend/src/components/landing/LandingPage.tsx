@@ -1,53 +1,19 @@
 import { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../lib/api'
-import {
-  GitCompare, MessageSquare, ArrowRight, Database, Sparkles, ChevronRight,
-} from 'lucide-react'
+import { ArrowRight, Database, MessageSquare, Sparkles } from 'lucide-react'
 import { Seo } from '../seo/Seo'
 import { buildHomeJsonLd, DEFAULT_DESCRIPTION, DEFAULT_TITLE } from '../../lib/seo'
-import { AnalystDemoTheater } from './components/AnalystDemoTheater'
-import { ComplianceMappingSection } from './components/ComplianceMappingSection'
-import { ContactSection } from './components/ContactSection'
-import { CountryExposureViz } from './components/CountryExposureViz'
 import { LiveProofBand } from './components/LiveProofBand'
-import { OnboardingSupportSection } from './components/OnboardingSupportSection'
 import { PartnerProofStrip } from './components/PartnerProofStrip'
-import { ProblemSection } from './components/ProblemSection'
-import { ProductTour } from './components/ProductTour'
-import { SecurityTrustSection } from './components/SecurityTrustSection'
-import { TranspositionStatusSection } from './components/TranspositionStatusSection'
 import { LandingShell, useLandingDemo } from './LandingShell'
-import { countrySample, LANDING_FACTS } from './landingFacts'
-import { RESEARCH_PAPER_LABEL, RESEARCH_PAPER_URL, SANDBOX_CTA_ENABLED } from './site'
-
+import { LANDING_FACTS } from './landingFacts'
+import { HUB_PAGES, SANDBOX_CTA_ENABLED } from './site'
+import { FAQS } from './faqs'
 import { useScrollReveal } from './useScrollReveal'
 import './landing.css'
 
-const { market, research } = LANDING_FACTS
-
-const FAQS = [
-  {
-    q: 'Is this a substitute for legal advice on the Pay Transparency Directive?',
-    a: 'No. WorkforceGuard is an analytics and evidence platform. Final compliance determinations should be reviewed by qualified legal counsel in your member state.',
-  },
-  {
-    q: 'What happens to uploaded payroll data?',
-    a: 'Payroll is kept in a tenant-isolated layer, separate from public EU benchmarks, until you run company-specific comparisons.',
-  },
-  {
-    q: 'Is the methodology published?',
-    a: `Yes — ${RESEARCH_PAPER_LABEL} documents a ${research.panelCountries}-country, ${research.panelSectors}-sector Eurostat panel (${market.yearRange}) with open methodology.`,
-  },
-  {
-    q: 'Can I open the dashboard without a demo?',
-    a: 'Sign in with Google or Microsoft if your organisation is provisioned. New teams should request a demo so we can seed the right tenant and walk through pay transparency workflows.',
-  },
-  {
-    q: 'How do I reach support?',
-    a: 'Email workforceguardai@souravamseekar.com for demo follow-ups, technical questions, or GDPR requests. We aim to reply within one business day.',
-  },
-]
+const { market } = LANDING_FACTS
 
 function ProductShowcase() {
   return (
@@ -79,7 +45,7 @@ function ProductShowcase() {
 }
 
 function LandingHomeContent() {
-  const { openDemo, goToHash } = useLandingDemo()
+  const { openDemo } = useLandingDemo()
   useScrollReveal()
 
   return (
@@ -98,16 +64,17 @@ function LandingHomeContent() {
               <Sparkles size={14} className="landing-hero__badge-icon" />
               <span>Directive (EU) 2023/970</span>
               <span className="landing-hero__badge-sep" />
-              <span className="landing-hero__badge-deadline">Transposition · 7 Jun 2026</span>
+              <span className="landing-hero__badge-deadline">Heat for review · not a verdict</span>
             </div>
             <h1 className="landing-hero-enter landing-hero-enter--2">
-              Pay transparency compliance,
-              <em> built on Eurostat data</em>
-              {' '}and a hash-chained audit trail
+              Pay-gap heat for human review,
+              <em> built on Eurostat</em>
+              {' '}and the job groups you map
             </h1>
             <p className="landing-hero__lede landing-hero-enter landing-hero-enter--3">
-              Map Eurostat labour-market data and your payroll to Directive (EU) 2023/970 workflows —
-              composite indices, category-level review, and evidence export with provenance on every figure.
+              Convert payroll to hourly pay, compute mean and median gaps, suppress small cells, and
+              flag 5% and 10% categories. WorkforceGuard does not say you are — or are not —
+              Directive-compliant.
             </p>
             <p className="landing-hero__proof landing-hero-enter landing-hero-enter--4">
               <Database size={14} aria-hidden="true" />
@@ -126,7 +93,7 @@ function LandingHomeContent() {
                 className="landing-cta landing-cta--primary landing-cta--large landing-cta--shimmer"
                 onClick={openDemo}
               >
-                Request a demo <ArrowRight size={18} className="landing-cta__arrow" />
+                Request a walkthrough <ArrowRight size={18} className="landing-cta__arrow" />
               </button>
               {SANDBOX_CTA_ENABLED ? (
                 <Link
@@ -137,22 +104,21 @@ function LandingHomeContent() {
                 </Link>
               ) : null}
               <Link
+                to="/pay-gap-heat"
+                className="landing-cta landing-cta--ghost landing-cta--large"
+              >
+                How heat works
+              </Link>
+              <Link
                 to="/app"
                 className="landing-cta landing-cta--ghost landing-cta--large"
                 title="Organisation sign-in via Google or Microsoft"
               >
                 Sign in to dashboard
               </Link>
-              <button
-                type="button"
-                className="landing-cta landing-cta--ghost landing-cta--large"
-                onClick={() => goToHash('#compliance')}
-              >
-                See compliance mapping
-              </button>
             </div>
             <p className="landing-hero__action-note">
-              Organisation sign-in is for provisioned teams only. New to WorkforceGuard? Start with a demo above.
+              Organisation sign-in is for provisioned teams only. New to WorkforceGuard? Start with a walkthrough.
             </p>
           </div>
         </div>
@@ -160,79 +126,22 @@ function LandingHomeContent() {
 
       <LiveProofBand />
       <PartnerProofStrip />
-      <CountryExposureViz />
-      <ProblemSection />
-      <TranspositionStatusSection />
-      <ProductTour />
-      <ComplianceMappingSection />
-      <SecurityTrustSection />
-      <AnalystDemoTheater />
 
       <section className="landing-section landing-reveal">
-        <div id="research" className="landing-anchor" tabIndex={-1} />
-        <div className="landing-research">
-          <div className="landing-research__copy">
-            <p className="landing-section__eyebrow">Research-backed</p>
-            <h2>Tight labour markets have not closed gender pay gaps</h2>
-            <p>
-              Our Eurostat panel ({research.panelCountries} countries, {research.panelSectors} sectors,{' '}
-              {market.yearRange}) finds employment rate and gender pay gap correlate positively
-              (r ≈ {research.employmentGapCorrelation}) — the five tightest labour markets in the
-              sample all record gaps above the EU27 average of {research.eu27UnadjustedGapPct}%.
-            </p>
-            <p>
-              WorkforceGuard implements the same composite indices cited in our{' '}
-              <a href={RESEARCH_PAPER_URL} target="_blank" rel="noopener noreferrer">
-                {RESEARCH_PAPER_LABEL}
-              </a>
-              {' '}preprint — Hiring Pressure, Labour Resilience, Equity Risk, and Transition Readiness
-              {' '}(in-development proxy, see <Link to="/disclaimer">disclaimer</Link>).
-            </p>
-          </div>
-          <div className="landing-research__panel">
-            <div className="landing-research__quadrant" aria-hidden="true">
-              <span className="landing-research__axis landing-research__axis--y">Equity Risk</span>
-              <span className="landing-research__axis landing-research__axis--x">Hiring Pressure</span>
-              <span className="landing-research__dot landing-research__dot--a" />
-              <span className="landing-research__dot landing-research__dot--b" />
-              <span className="landing-research__dot landing-research__dot--c" />
-              <span className="landing-research__zone">High exposure zone</span>
-            </div>
-            <GitCompare size={18} />
-            <h3>Combined Risk Quadrant</h3>
-            <p>
-              Hungary finance gap {countrySample('HU').financeGpgPct}% (HPI {countrySample('HU').hpi}),
-              Germany {countrySample('DE').financeGpgPct}% (ERS {countrySample('DE').ers}), Italy ERS{' '}
-              {countrySample('IT').ers} — tight markets do not guarantee low equity risk.
-            </p>
-            <Link to="/app/compare" className="landing-cta landing-cta--secondary">
-              Explore the comparison <ChevronRight size={14} />
-            </Link>
-          </div>
+        <div className="landing-section__header">
+          <p className="landing-section__eyebrow">Explore</p>
+          <h2>Each topic on its own page</h2>
+          <p className="landing-section__lede">
+            The old one-page scroll is split so you can send a colleague a single URL.
+          </p>
         </div>
-      </section>
-
-      <OnboardingSupportSection />
-      <ContactSection />
-
-      <section className="landing-section landing-section--alt landing-reveal">
-        <div id="faq" className="landing-anchor" tabIndex={-1} />
-        <div className="landing-section__split">
-          <div className="landing-section__header landing-section__header--left">
-            <p className="landing-section__eyebrow">FAQ</p>
-            <h2>Common questions</h2>
-            <p className="landing-section__lede">
-              Legal scope, payroll isolation, methodology, and access.
-            </p>
-          </div>
-          <div className="landing-faq-list landing-stagger">
-            {FAQS.map((item) => (
-              <details className="landing-faq-item landing-stagger__item" key={item.q}>
-                <summary>{item.q}</summary>
-                <p>{item.a}</p>
-              </details>
-            ))}
-          </div>
+        <div className="landing-hub">
+          {HUB_PAGES.map((page) => (
+            <Link key={page.to} to={page.to} className="landing-hub__card">
+              <h3>{page.title}</h3>
+              <p>{page.lede}</p>
+            </Link>
+          ))}
         </div>
       </section>
 
@@ -241,9 +150,9 @@ function LandingHomeContent() {
           <div className="landing-cta-section__glow" aria-hidden="true" />
           <div className="landing-cta-section__ring" aria-hidden="true" />
           <MessageSquare size={28} />
-          <h2>See where your organisation stands</h2>
+          <h2>See where the heat sits</h2>
           <p>
-            Book a tailored walkthrough for your reporting countries and worker categories, or sign in
+            Book a walkthrough for your reporting countries and worker categories, or sign in
             if your organisation already has access.
           </p>
           <div className="landing-cta-section__actions">
@@ -252,7 +161,7 @@ function LandingHomeContent() {
               className="landing-cta landing-cta--primary landing-cta--large landing-cta--shimmer"
               onClick={openDemo}
             >
-              Request a demo <ArrowRight size={18} className="landing-cta__arrow" />
+              Request a walkthrough <ArrowRight size={18} className="landing-cta__arrow" />
             </button>
             <Link
               to="/app"
@@ -264,7 +173,6 @@ function LandingHomeContent() {
           </div>
         </div>
       </section>
-
     </>
   )
 }

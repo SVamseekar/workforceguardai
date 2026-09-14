@@ -43,8 +43,8 @@ function SecurityContent() {
           </p>
           <h1>What we protect, and what we do not yet claim</h1>
           <p className="mission-hero__lede">
-            WorkforceGuard AI handles employer payroll and pay-equity data used for regulatory
-            compliance under Directive (EU) 2023/970. This page describes how the platform
+            WorkforceGuard AI can handle employer payroll used for pay-gap heat under
+            Directive (EU) 2023/970 review work. This page describes how the platform
             protects that data today — including the parts that are still in progress.
           </p>
         </div>

@@ -4,6 +4,19 @@ with latest_market_period as (
     where signal_name = 'gender_pay_gap'
 ),
 
+market_sector as (
+    select
+        geo_id as country_code,
+        sector_id,
+        period_code as market_period_code,
+        signal_value as market_gender_pay_gap
+    from {{ ref('fct_labour_market_region_sector') }}
+    where signal_name = 'gender_pay_gap'
+      and period_code = (select period_code from latest_market_period)
+      and sector_id is not null
+      and length(sector_id) = 1
+),
+
 market_candidates as (
     select
         geo_id as country_code,
@@ -21,7 +34,7 @@ market_candidates as (
       and sector_id in ('B-S', 'A-S')
 ),
 
-market_benchmark as (
+market_country as (
     select
         country_code,
         sector_id as market_sector_id,
@@ -48,7 +61,6 @@ internal_snapshot as (
     select *
     from {{ ref('fct_internal_pay_snapshot') }}
     where snapshot_date = (select snapshot_date from latest_internal_snapshot)
-      and internal_gender_pay_gap is not null
 ),
 
 joined as (
@@ -65,15 +77,37 @@ joined as (
         i.female_count,
         i.male_count,
         i.internal_gender_pay_gap,
-        m.market_sector_id,
-        m.market_period_code,
-        m.market_gender_pay_gap,
-        round(i.internal_gender_pay_gap - m.market_gender_pay_gap, 1) as gap_to_market
+        i.median_gender_pay_gap,
+        i.mean_gap_base,
+        i.mean_gap_variable,
+        i.median_gap_variable,
+        i.female_variable_incidence_pct,
+        i.male_variable_incidence_pct,
+        i.q1_female_share_pct,
+        i.q2_female_share_pct,
+        i.q3_female_share_pct,
+        i.q4_female_share_pct,
+        i.hours_basis,
+        coalesce(ms.sector_id, mc.market_sector_id) as market_sector_id,
+        coalesce(ms.market_period_code, mc.market_period_code) as market_period_code,
+        coalesce(ms.market_gender_pay_gap, mc.market_gender_pay_gap) as market_gender_pay_gap,
+        case
+            when ms.market_gender_pay_gap is not null then 'sector'
+            when mc.market_gender_pay_gap is not null then 'country_all_sector'
+            else 'unavailable'
+        end as market_match,
+        round(
+            i.internal_gender_pay_gap - coalesce(ms.market_gender_pay_gap, mc.market_gender_pay_gap),
+            1
+        ) as gap_to_market
     from internal_snapshot i
     left join {{ ref('dim_worker_category') }} w
         on i.worker_category_id = w.worker_category_id
-    left join market_benchmark m
-        on i.country_code = m.country_code
+    left join market_sector ms
+        on i.country_code = ms.country_code
+       and upper(left(coalesce(w.representative_nace_code, i.nace_code, ''), 1)) = ms.sector_id
+    left join market_country mc
+        on i.country_code = mc.country_code
 ),
 
 final as (
@@ -90,9 +124,21 @@ final as (
         female_count,
         male_count,
         internal_gender_pay_gap,
+        median_gender_pay_gap,
+        mean_gap_base,
+        mean_gap_variable,
+        median_gap_variable,
+        female_variable_incidence_pct,
+        male_variable_incidence_pct,
+        q1_female_share_pct,
+        q2_female_share_pct,
+        q3_female_share_pct,
+        q4_female_share_pct,
+        hours_basis,
         market_sector_id,
         market_period_code,
         market_gender_pay_gap,
+        market_match,
         gap_to_market,
         case
             when market_gender_pay_gap is not null then true

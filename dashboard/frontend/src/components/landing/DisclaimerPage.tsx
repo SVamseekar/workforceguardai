@@ -40,6 +40,13 @@ function DisclaimerContent() {
         job-architecture data you provide. WorkforceGuard surfaces confidence and provenance to help
         reviewers challenge weak inputs — but cannot verify source HRIS records on your behalf.
       </p>
+      <h2>Pay-gap heat is not a legal verdict</h2>
+      <p>
+        Category heat is an unadjusted hourly comparison in the worker groups you mapped. Small
+        cells are suppressed. A 5% or 10% flag is a review prompt, not a finding that a gap is
+        unexplained or that the organisation is non-compliant. Equal-value mapping and joint pay
+        assessment remain human and legal work.
+      </p>
       <h2>AI-assisted summaries</h2>
       <p>
         Natural-language explanations in the product are generated on top of sourced metrics. They may

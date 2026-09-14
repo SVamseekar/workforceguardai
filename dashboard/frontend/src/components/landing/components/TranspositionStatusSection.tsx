@@ -25,8 +25,8 @@ export function TranspositionStatusSection() {
         <p className="landing-section__lede">
           Directive (EU) 2023/970 must be transposed by{' '}
           <strong>{TRANSPOSITION_DEADLINE}</strong>. Employers in countries without national
-          implementation must interpret the EU text directly — WorkforceGuard maps Directive
-          obligations even when national guidance is missing.
+          implementation must interpret the EU text directly — WorkforceGuard shows pay-gap heat
+          against that text. National guidance still comes from counsel.
         </p>
       </div>
 

@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ChevronDown, Menu, Moon, Sun, X } from 'lucide-react'
 import { LogoMark } from '../shared/LogoMark'
 import { AmbientEffects } from './components/AmbientEffects'
@@ -78,6 +78,7 @@ function NavLinkItem({
 
 export function LandingShell({ children }: LandingShellProps) {
   const location = useLocation()
+  const navigate = useNavigate()
   const onHome = location.pathname === '/'
   const moreMenuId = useId()
 
@@ -139,7 +140,8 @@ export function LandingShell({ children }: LandingShellProps) {
   const toggleTheme = () => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))
   const openDemo = () => {
     setMoreOpen(false)
-    goToHash('#contact')
+    closeNav()
+    navigate('/contact')
   }
 
   const handleHashClick = (event: React.MouseEvent<HTMLAnchorElement>, hash: string) => {

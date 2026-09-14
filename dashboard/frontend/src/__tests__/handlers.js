@@ -69,6 +69,10 @@ export const handlers = [
     HttpResponse.json({ record_count: 42, status: 'accepted' }),
   ),
 
+  http.post('/api/upload/job-architecture', () =>
+    HttpResponse.json({ record_count: 8, status: 'accepted' }),
+  ),
+
   http.get('/api/freshness', () =>
     HttpResponse.json({ pulled_at: '2026-05-11T02:00:00Z', source_label: 'Eurostat' }),
   ),

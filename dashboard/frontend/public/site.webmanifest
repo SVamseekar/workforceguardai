@@ -1,7 +1,7 @@
 {
   "name": "WorkforceGuard AI",
   "short_name": "WorkforceGuard",
-  "description": "EU pay transparency compliance and workforce intelligence platform.",
+  "description": "Pay-gap heat and workforce intelligence for EU employers.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0b1220",

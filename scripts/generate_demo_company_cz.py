@@ -100,6 +100,11 @@ def generate_payroll() -> list[dict[str, object]]:
                         "worker_category_id": category_id,
                         "gender": gender,
                         "base_pay_amount": normal_pay(median, round_to=CZK_ROUND_TO),
+                        "variable_pay_amount": max(
+                            0, int(normal_pay(median, round_to=CZK_ROUND_TO) * (0.08 if gender == "male" else 0.05))
+                        ),
+                        "weekly_hours": 40,
+                        "pay_frequency": "annual",
                         "pay_currency": CURRENCY,
                         "snapshot_date": SNAPSHOT_DATE,
                         "employment_status": "active",
@@ -146,6 +151,9 @@ def generate_upload_sample_rows() -> list[dict[str, object]]:
                 "base_salary": salary,
                 "currency": CURRENCY,
                 "snapshot_date": SNAPSHOT_DATE,
+                "weekly_hours": 40,
+                "pay_frequency": "annual",
+                "variable_pay_amount": int(salary * (0.08 if gender == "male" else 0.05)),
                 "job_title": JOB_TITLE_MAP[job_code],
                 "employment_status": "active",
                 "version": "upload-demo-v1",

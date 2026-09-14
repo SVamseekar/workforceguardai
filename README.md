@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**EU workforce intelligence and pay-transparency compliance platform for HR, people analytics, and strategy teams.**
+**EU workforce intelligence and pay-gap heat for HR, people analytics, and reward teams. Review maps, not a Directive verdict.**
 ## Research Paper
 
 This system is described in:
@@ -35,20 +35,20 @@ Live at → **[workforceguardai.souravamseekar.com](https://workforceguardai.sou
 
 ## What it does
 
-WorkforceGuard turns public EU labour-market data and internal company payroll into decision-ready intelligence — with a full compliance audit trail built in.
+WorkforceGuard turns public EU labour-market data and internal company payroll into decision-ready intelligence — with a hash-chained review log. Pay-gap heat is not a legal determination.
 
 - **Labour market dashboard** — employment rate, unemployment, job vacancies, and gender pay gap across all 27 EU member states and 13 NACE sectors, sourced directly from Eurostat
 - **Benchmark-aware analyst** — ask natural-language questions; the copilot composes answers from precomputed warehouse metrics with provenance citations and benchmark context (prior period, EU average, or peer group), and refuses when coverage is insufficient
 - **Country × sector comparison** — side-by-side delta table with auto-generated narrative synthesis across any two geographies or sectors
-- **Pay transparency review** — upload internal payroll; the platform blends it against market benchmarks and surfaces review items flagged under the EU Pay Transparency Directive
-- **Governance and audit log** — every decision (approve, override, reverse, export) is written to a SQLite-backed hash-chained event log for legal-grade evidence packs
-- **Compliance evidence pack** — one-click export of all metrics, provenance, and governance events as a structured bundle ready for regulatory filing
+- **Pay-gap heat** — upload job architecture and payroll; the platform converts to hourly pay, computes mean/median/variable/quartile indicators, suppresses small cells, and flags 5% and 10% categories for human review
+- **Governance and audit log** — every decision (approve, override, reverse, export) is written to a SQLite-backed hash-chained event log
+- **Review evidence pack** — one-click export of metrics, provenance, and governance events as a structured bundle for counsel — not a national filing
 
 ---
 
 ## EU regulatory context
 
-The [EU Pay Transparency Directive](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32023L0970) (2023/970) requires member-state transposition by **7 June 2026** and employer reporting from **June 2027** (≥250 employees). CSRD and Article 9 SFDR impose parallel workforce disclosure obligations. WorkforceGuard is designed specifically for this compliance surface — not generic HR analytics.
+The [EU Pay Transparency Directive](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32023L0970) (2023/970) requires member-state transposition by **7 June 2026** and employer reporting from **June 2027** (≥250 employees). WorkforceGuard computes unadjusted hourly heat in the worker categories you map. It does **not** decide equal value, unexplained gaps, or whether an employer is compliant.
 
 ---
 

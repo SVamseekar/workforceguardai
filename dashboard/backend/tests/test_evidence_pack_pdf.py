@@ -64,7 +64,7 @@ class EvidencePackPdfTests(unittest.TestCase):
                 "id": "pay_transparency_category_review:sales_reps",
                 "worker_category": {"id": "sales_reps", "label": "Sales Representatives"},
                 "review_state": "unresolved_review_item",
-                "review_label": "Unresolved review item",
+                "review_label": "Needs review",
                 "priority": "high",
             }
         ]
@@ -72,7 +72,7 @@ class EvidencePackPdfTests(unittest.TestCase):
         reader = PdfReader(io.BytesIO(pdf_bytes))
         text = "\n".join(page.extract_text() for page in reader.pages)
         self.assertIn("Sales Representatives", text)
-        self.assertIn("Unresolved review item", text)
+        self.assertIn("Needs review", text)
 
     def test_renders_pdf_with_none_values(self):
         """Regression test: pack with explicit None values should render without crashing."""

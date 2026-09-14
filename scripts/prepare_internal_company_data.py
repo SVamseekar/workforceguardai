@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable
@@ -78,6 +79,13 @@ PAYROLL_OUTPUT_COLUMNS = [
     "worker_category_id",
     "gender",
     "base_pay_amount",
+    "variable_pay_amount",
+    "weekly_hours",
+    "pay_frequency",
+    "hours_basis",
+    "hourly_base",
+    "hourly_variable",
+    "hourly_total",
     "pay_currency",
     "snapshot_date",
     "employment_status",
@@ -128,6 +136,13 @@ LEARNING_SKILL_OUTPUT_COLUMNS = [
     "last_observed_date",
     "version",
 ]
+
+
+BACKEND_DIR = Path(__file__).resolve().parents[1] / "dashboard" / "backend"
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
+
+from pay_gap_metrics import enrich_payroll_rows  # noqa: E402
 
 
 def load_yaml(path: Path) -> dict:
@@ -209,6 +224,13 @@ def prepare_payroll_snapshot(frame: pd.DataFrame, version: str) -> pd.DataFrame:
     pay_amount = pd.to_numeric(frame["base_pay_amount"], errors="coerce")
     normalized_gender = frame["gender"].map(normalize_gender)
 
+    if "variable_pay_amount" not in frame.columns and "bonus" in frame.columns:
+        frame = frame.copy()
+        frame["variable_pay_amount"] = frame["bonus"]
+    if "weekly_hours" not in frame.columns and "contracted_weekly_hours" in frame.columns:
+        frame = frame.copy()
+        frame["weekly_hours"] = frame["contracted_weekly_hours"]
+
     output = pd.DataFrame(
         {
             "employee_id": frame["employee_id"],
@@ -218,6 +240,13 @@ def prepare_payroll_snapshot(frame: pd.DataFrame, version: str) -> pd.DataFrame:
             "worker_category_id": frame["worker_category_id"],
             "gender": normalized_gender,
             "base_pay_amount": pay_amount,
+            "variable_pay_amount": pd.to_numeric(frame["variable_pay_amount"], errors="coerce")
+            if "variable_pay_amount" in frame.columns
+            else 0.0,
+            "weekly_hours": pd.to_numeric(frame["weekly_hours"], errors="coerce")
+            if "weekly_hours" in frame.columns
+            else pd.NA,
+            "pay_frequency": frame["pay_frequency"] if "pay_frequency" in frame.columns else "annual",
             "pay_currency": frame["pay_currency"].map(normalize_currency),
             "snapshot_date": parsed_dates.dt.strftime("%Y-%m-%d"),
             "employment_status": frame["employment_status"].map(normalize_status),
@@ -227,6 +256,9 @@ def prepare_payroll_snapshot(frame: pd.DataFrame, version: str) -> pd.DataFrame:
     output = output.dropna(
         subset=["employee_id", "job_code", "country_code", "worker_category_id", "gender", "base_pay_amount", "snapshot_date"]
     )
+    enriched = pd.DataFrame(enrich_payroll_rows(output.to_dict(orient="records")))
+    if not enriched.empty:
+        output = enriched
     output = stringify_columns(
         output,
         [
@@ -236,12 +268,15 @@ def prepare_payroll_snapshot(frame: pd.DataFrame, version: str) -> pd.DataFrame:
             "country_code",
             "worker_category_id",
             "gender",
+            "pay_frequency",
+            "hours_basis",
             "pay_currency",
             "snapshot_date",
             "employment_status",
             "version",
         ],
     )
+    output = output[[column for column in PAYROLL_OUTPUT_COLUMNS if column in output.columns]]
     return output.drop_duplicates(subset=["employee_id", "snapshot_date"]).reset_index(drop=True)
 
 
